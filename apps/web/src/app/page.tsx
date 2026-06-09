@@ -1,7 +1,7 @@
 "use client";
 
+import { api } from "@instello/backend/convex/_generated/api";
 import { Button } from "@instello/ui/components/button";
-import { api } from "@packages/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { PlusIcon } from "lucide-react";
 

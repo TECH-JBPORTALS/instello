@@ -26,6 +26,7 @@
         "next": "^16.2.4",
         "react": "catalog:",
         "react-dom": "catalog:",
+        "tailwind-merge": "^3.6.0",
       },
       "devDependencies": {
         "@biomejs/biome": "catalog:",
