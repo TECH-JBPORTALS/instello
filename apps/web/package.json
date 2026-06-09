@@ -1,0 +1,34 @@
+{
+	"name": "web",
+	"version": "0.1.0",
+	"private": true,
+	"scripts": {
+		"dev": "next dev",
+		"build": "next build",
+		"start": "next start",
+		"typecheck": "tsc --noEmit",
+		"check": "biome check",
+		"fix": "biome check --write",
+		"fix:unsafe": "biome check --write --unsafe"
+	},
+	"dependencies": {
+		"@instello/backend": "workspace:*",
+		"@instello/ui": "workspace:*",
+		"convex": "^1.35.1",
+		"lucide-react": "^1.17.0",
+		"next": "^16.2.4",
+		"react": "catalog:",
+		"react-dom": "catalog:"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "catalog:",
+		"@tailwindcss/forms": "0.5.11",
+		"@tailwindcss/postcss": "4.2.4",
+		"@types/node": "^25.6.0",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
+		"postcss": "8.5.10",
+		"tailwindcss": "catalog:",
+		"typescript": "catalog:"
+	}
+}

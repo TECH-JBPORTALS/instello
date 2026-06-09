@@ -1,0 +1,23 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.4.16/schema.json",
+	"extends": "//",
+	"linter": {
+		"rules": {
+			"correctness": {
+				"noNextAsyncClientComponent": "warn"
+			},
+			"performance": {
+				"noImgElement": "warn",
+				"useGoogleFontPreconnect": "warn"
+			},
+			"style": {
+				"noHeadElement": "warn"
+			},
+			"suspicious": {
+				"noDocumentImportInPage": "error",
+				"noHeadImportInDocument": "error",
+				"useGoogleFontDisplay": "warn"
+			}
+		}
+	}
+}

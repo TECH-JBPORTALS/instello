@@ -1,0 +1,16 @@
+{
+	"compilerOptions": {
+		"moduleResolution": "bundler",
+		"module": "preserve",
+		"resolvePackageJsonImports": true,
+		"jsx": "react-jsx",
+		"allowJs": true,
+		"skipLibCheck": true,
+		"strict": true,
+		"noEmit": true,
+		"esModuleInterop": true,
+		"paths": {
+			"@/*": ["./*"]
+		}
+	}
+}

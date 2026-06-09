@@ -1,0 +1,27 @@
+{
+	"name": "@instello/backend",
+	"version": "1.0.0",
+	"description": "",
+	"scripts": {
+		"dev": "convex dev",
+		"setup": "convex dev --until-success",
+		"typecheck": "tsc --noEmit",
+		"check": "biome check",
+		"fix": "biome check --write",
+		"fix:unsafe": "biome check --write --unsafe",
+		"test": "vitest run"
+	},
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"convex": "^1.35.1"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "catalog:",
+		"@edge-runtime/vm": "^5.0.0",
+		"convex-test": "^0.0.53",
+		"typescript": "6.0.3",
+		"vite": "catalog:",
+		"vitest": "catalog:"
+	}
+}
