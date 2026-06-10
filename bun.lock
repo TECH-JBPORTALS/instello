@@ -19,7 +19,7 @@
       "name": "web",
       "version": "0.1.0",
       "dependencies": {
-        "@instello/backend": "workspace:*",
+        "@instello/convex": "workspace:*",
         "@instello/ui": "workspace:*",
         "convex": "^1.35.1",
         "lucide-react": "^1.17.0",
@@ -40,8 +40,8 @@
         "typescript": "catalog:",
       },
     },
-    "packages/backend": {
-      "name": "@instello/backend",
+    "packages/convex": {
+      "name": "@instello/convex",
       "version": "1.0.0",
       "dependencies": {
         "convex": "^1.35.1",
@@ -306,7 +306,7 @@
 
     "@img/sharp-win32-x64": ["@img/sharp-win32-x64@0.34.5", "", { "os": "win32", "cpu": "x64" }, "sha512-+29YMsqY2/9eFEiW93eqWnuLcWcufowXewwSNIT6UwZdUUCrM3oFjMWH/Z6/TMmb4hlFenmfAVbpWeup2jryCw=="],
 
-    "@instello/backend": ["@instello/backend@workspace:packages/backend"],
+    "@instello/convex": ["@instello/convex@workspace:packages/convex"],
 
     "@instello/ui": ["@instello/ui@workspace:packages/ui"],
 

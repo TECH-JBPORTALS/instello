@@ -12,7 +12,7 @@
 		"fix:unsafe": "biome check --write --unsafe"
 	},
 	"dependencies": {
-		"@instello/backend": "workspace:*",
+		"@instello/convex": "workspace:*",
 		"@instello/ui": "workspace:*",
 		"convex": "^1.35.1",
 		"lucide-react": "^1.17.0",

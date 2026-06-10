@@ -20,5 +20,5 @@
 		"noEmit": true
 	},
 	"include": ["./**/*"],
-	"exclude": ["./convex/_generated"]
+	"exclude": ["functions/_generated"]
 }

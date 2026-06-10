@@ -1,7 +1,7 @@
 import { convexTest } from "convex-test";
 import { beforeAll, describe, expect, it } from "vitest";
-import { api } from "../convex/_generated/api";
-import schema from "../convex/schema";
+import { api } from "../functions/_generated/api";
+import schema from "../functions/schema";
 import { modules } from "./test.setup";
 
 describe("Programs", () => {

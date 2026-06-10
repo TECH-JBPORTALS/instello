@@ -1,7 +1,14 @@
 {
-	"name": "@instello/backend",
+	"name": "@instello/convex",
 	"version": "1.0.0",
 	"description": "",
+	"exports": {
+		"./*": {
+			"types": "./functions/_generated/*.d.ts",
+			"default": "./functions/_generated/*.js"
+		},
+		"./schema": "./functions/schema.ts"
+	},
 	"scripts": {
 		"dev": "convex dev",
 		"setup": "convex dev --until-success",
