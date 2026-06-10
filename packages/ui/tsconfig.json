@@ -1,5 +1,7 @@
 {
 	"compilerOptions": {
+		"target": "ESNext",
+		"lib": ["ES2021", "dom"],
 		"moduleResolution": "bundler",
 		"module": "preserve",
 		"resolvePackageJsonImports": true,

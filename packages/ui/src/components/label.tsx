@@ -1,8 +1,9 @@
 import { cn } from "@instello/ui/lib/utils";
-import * as React from "react";
+import type * as React from "react";
 
 function Label({ className, ...props }: React.ComponentProps<"label">) {
 	return (
+		// biome-ignore lint/a11y/noLabelWithoutControl: <it will be used with a control element>
 		<label
 			data-slot="label"
 			className={cn(

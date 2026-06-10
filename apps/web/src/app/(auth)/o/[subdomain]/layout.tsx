@@ -1,5 +1,5 @@
 import { SidebarInset, SidebarProvider } from "@instello/ui/components/sidebar";
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { OrganizationSidebar } from "@/components/sidebars/organization-sidebar";
 
 export async function generateMetadata({

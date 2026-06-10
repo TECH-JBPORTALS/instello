@@ -23,7 +23,7 @@ import type { FunctionReference } from "convex/server";
  */
 export type ComponentApi<Name extends string | undefined = string | undefined> =
   {
-    adapters: {
+    adapter: {
       create: FunctionReference<
         "mutation",
         "internal",

@@ -4,12 +4,13 @@ import {
 	Sidebar,
 	SidebarContent,
 	SidebarGroup,
-	SidebarGroupLabel,
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
 } from "@instello/ui/components/sidebar";
 import { Building2Icon, ChartGanttIcon } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { AppSidebarHeader } from "@/components/common/app-sidebar-header";
 
 const items = [
@@ -28,16 +29,20 @@ const items = [
 ];
 
 export function OrganizationSidebar() {
+	const pathname = usePathname();
+
 	return (
 		<Sidebar>
 			<AppSidebarHeader />
 			<SidebarContent>
 				<SidebarGroup>
-					<SidebarGroupLabel>Organization</SidebarGroupLabel>
 					<SidebarMenu>
 						{items.map((item) => (
 							<SidebarMenuItem key={item.id}>
-								<SidebarMenuButton>
+								<SidebarMenuButton
+									isActive={pathname === item.href}
+									render={<Link href={item.href} />}
+								>
 									<item.icon className="w-4 h-4" />
 									{item.label}
 								</SidebarMenuButton>

@@ -14,12 +14,9 @@ export function AppSidebarHeader() {
 			<SidebarGroup>
 				<SidebarMenu>
 					<SidebarMenuItem>
-						<Image
-							src={"/instello.svg"}
-							alt="Instello"
-							width={92}
-							height={18}
-						/>
+						<div className="w-24 h-5 relative">
+							<Image src={"/instello.svg"} alt="Instello" fill />
+						</div>
 					</SidebarMenuItem>
 				</SidebarMenu>
 			</SidebarGroup>
