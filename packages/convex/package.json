@@ -7,7 +7,9 @@
 			"types": "./functions/_generated/*.d.ts",
 			"default": "./functions/_generated/*.js"
 		},
-		"./schema": "./functions/schema.ts"
+		"./schema": "./functions/schema.ts",
+		"./better-auth/*": "./better-auth/*.ts",
+		"./better-auth/provider": "./better-auth/provider.tsx"
 	},
 	"scripts": {
 		"dev": "convex dev",
@@ -16,16 +18,23 @@
 		"check": "biome check",
 		"fix": "biome check --write",
 		"fix:unsafe": "biome check --write --unsafe",
-		"test": "vitest run"
+		"test": "vitest run",
+		"auth:generate": "bunx auth generate --config functions/betterAuth/auth.config.ts --output functions/betterAuth/authSchema.ts"
 	},
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
-		"convex": "^1.35.1"
+		"@convex-dev/better-auth": "^0.12.2",
+		"better-auth": "^1.6.15",
+		"convex": "^1.35.1",
+		"react": "catalog:",
+		"react-dom": "catalog:"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "catalog:",
 		"@edge-runtime/vm": "^5.0.0",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
 		"convex-test": "^0.0.53",
 		"typescript": "6.0.3",
 		"vite": "catalog:",

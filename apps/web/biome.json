@@ -4,7 +4,8 @@
 	"linter": {
 		"rules": {
 			"correctness": {
-				"noNextAsyncClientComponent": "warn"
+				"noNextAsyncClientComponent": "warn",
+				"noUnusedImports": "error"
 			},
 			"performance": {
 				"noImgElement": "warn",

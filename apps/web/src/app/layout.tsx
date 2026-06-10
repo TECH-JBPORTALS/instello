@@ -1,9 +1,8 @@
 import "./globals.css";
-import { TooltipProvider } from "@instello/ui/components/tooltip";
 import { cn } from "@instello/ui/lib/utils";
 import type { Metadata } from "next";
 import { Source_Sans_3 } from "next/font/google";
-import ConvexClientProvider from "./ConvexClientProvider";
+import { Providers } from "@/components/providers";
 
 const sourceSans3 = Source_Sans_3({
 	subsets: ["latin"],
@@ -11,8 +10,11 @@ const sourceSans3 = Source_Sans_3({
 });
 
 export const metadata: Metadata = {
-	title: "Notes App",
-	description: "This is an app to take notes.",
+	title: "Instello",
+	description: "This is an app to manage your organization.",
+	icons: {
+		icon: "/favicon.ico",
+	},
 };
 
 export default function RootLayout({
@@ -23,9 +25,7 @@ export default function RootLayout({
 	return (
 		<html lang="en" className={cn("font-sans", sourceSans3.variable)}>
 			<body className={cn(sourceSans3.variable)}>
-				<TooltipProvider>
-					<ConvexClientProvider>{children}</ConvexClientProvider>
-				</TooltipProvider>
+				<Providers>{children}</Providers>
 			</body>
 		</html>
 	);
