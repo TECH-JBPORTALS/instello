@@ -1,10 +1,10 @@
 import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
-import { components } from "./_generated/api";
-import type { DataModel } from "./_generated/dataModel";
-import { query } from "./_generated/server";
-import authConfig from "./auth.config";
+import { components } from "~/_generated/api";
+import type { DataModel } from "~/_generated/dataModel";
+import authConfig from "~/auth.config";
+import { userQuery } from "~/helpers/customFunctions";
 
 const siteUrl = process.env.SITE_URL;
 
@@ -28,7 +28,7 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
 	return betterAuth(createAuthOptions(ctx));
 };
 
-export const getCurrentUser = query({
+export const getCurrentUser = userQuery({
 	args: {},
 	handler: async (ctx) => {
 		return authComponent.getAuthUser(ctx);

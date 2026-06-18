@@ -1,5 +1,37 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.4.16/schema.json",
 	"root": false,
-	"extends": "//"
+	"extends": "//",
+	"overrides": [
+		{
+			"includes": [
+				"functions/**",
+				"!functions/helpers/**/*",
+				"!functions/betterAuth/**/*"
+			],
+			"linter": {
+				"rules": {
+					"style": {
+						"noRestrictedImports": {
+							"level": "error",
+							"options": {
+								"patterns": [
+									{
+										"group": ["*/_generated/server"],
+										"importNamePattern": "query",
+										"message": "Consider `userQuery` from /helpers/customFunctions"
+									},
+									{
+										"group": ["*/_generated/server"],
+										"importNamePattern": "mutation",
+										"message": "Consider `userMutation` from /helpers/customFunctions"
+									}
+								]
+							}
+						}
+					}
+				}
+			}
+		}
+	]
 }
