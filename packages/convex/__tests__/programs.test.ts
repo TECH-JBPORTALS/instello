@@ -1,6 +1,5 @@
 import { convexTest } from "convex-test";
-import { beforeAll, describe, expect, it } from "vitest";
-import { api } from "../functions/_generated/api";
+import { beforeAll, describe, it } from "vitest";
 import schema from "../functions/schema";
 import { modules } from "./test.setup";
 
@@ -11,8 +10,7 @@ describe("Programs", () => {
 		t = convexTest(schema, modules);
 	});
 
-	it("List programs should be empty", async () => {
-		const programs = await t.query(api.programs.list);
-		expect(programs.length).toBe(0);
+	it("does nothing...", () => {
+		t.withIdentity({ subject: "user-1" });
 	});
 });

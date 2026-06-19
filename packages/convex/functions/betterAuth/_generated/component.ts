@@ -88,6 +88,37 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   publicKey: string;
                 };
                 model: "jwks";
+              }
+            | {
+                data: {
+                  addressLine: string;
+                  city: string;
+                  country: string;
+                  createdAt: number;
+                  name: string;
+                  ownerId: string;
+                  postalCode: string;
+                  slug: string;
+                  state: string;
+                  updatedAt: number;
+                };
+                model: "organization";
+              }
+            | {
+                data: {
+                  createdAt: number;
+                  email: string;
+                  mobileNumber: string;
+                  orgAddress: string;
+                  orgAddressCity: string;
+                  orgAddressCountry: string;
+                  orgAddressState: string;
+                  orgName: string;
+                  orgPostalCode: string;
+                  status: "rejected" | "approved" | "pending";
+                  updatedAt: number;
+                };
+                model: "accessRequests";
               };
           onCreateHandle?: string;
           select?: Array<string>;
@@ -252,6 +283,83 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "privateKey"
                     | "createdAt"
                     | "expiresAt"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "organization";
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "ownerId"
+                    | "name"
+                    | "slug"
+                    | "addressLine"
+                    | "city"
+                    | "state"
+                    | "postalCode"
+                    | "country"
+                    | "createdAt"
+                    | "updatedAt"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "accessRequests";
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "email"
+                    | "mobileNumber"
+                    | "status"
+                    | "orgName"
+                    | "orgAddress"
+                    | "orgAddressCity"
+                    | "orgAddressState"
+                    | "orgAddressCountry"
+                    | "orgPostalCode"
+                    | "createdAt"
+                    | "updatedAt"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -467,6 +575,83 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | Array<number>
                     | null;
                 }>;
+              }
+            | {
+                model: "organization";
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "ownerId"
+                    | "name"
+                    | "slug"
+                    | "addressLine"
+                    | "city"
+                    | "state"
+                    | "postalCode"
+                    | "country"
+                    | "createdAt"
+                    | "updatedAt"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "accessRequests";
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "email"
+                    | "mobileNumber"
+                    | "status"
+                    | "orgName"
+                    | "orgAddress"
+                    | "orgAddressCity"
+                    | "orgAddressState"
+                    | "orgAddressCountry"
+                    | "orgPostalCode"
+                    | "createdAt"
+                    | "updatedAt"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
               };
           onDeleteHandle?: string;
         },
@@ -479,7 +664,14 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         {
           join?: any;
           limit?: number;
-          model: "user" | "session" | "account" | "verification" | "jwks";
+          model:
+            | "user"
+            | "session"
+            | "account"
+            | "verification"
+            | "jwks"
+            | "organization"
+            | "accessRequests";
           offset?: number;
           paginationOpts: {
             cursor: string | null;
@@ -524,7 +716,14 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         "internal",
         {
           join?: any;
-          model: "user" | "session" | "account" | "verification" | "jwks";
+          model:
+            | "user"
+            | "session"
+            | "account"
+            | "verification"
+            | "jwks"
+            | "organization"
+            | "accessRequests";
           select?: Array<string>;
           where?: Array<{
             connector?: "AND" | "OR";
@@ -756,6 +955,108 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "privateKey"
                     | "createdAt"
                     | "expiresAt"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "organization";
+                update: {
+                  addressLine?: string;
+                  city?: string;
+                  country?: string;
+                  createdAt?: number;
+                  name?: string;
+                  ownerId?: string;
+                  postalCode?: string;
+                  slug?: string;
+                  state?: string;
+                  updatedAt?: number;
+                };
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "ownerId"
+                    | "name"
+                    | "slug"
+                    | "addressLine"
+                    | "city"
+                    | "state"
+                    | "postalCode"
+                    | "country"
+                    | "createdAt"
+                    | "updatedAt"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "accessRequests";
+                update: {
+                  createdAt?: number;
+                  email?: string;
+                  mobileNumber?: string;
+                  orgAddress?: string;
+                  orgAddressCity?: string;
+                  orgAddressCountry?: string;
+                  orgAddressState?: string;
+                  orgName?: string;
+                  orgPostalCode?: string;
+                  status?: "rejected" | "approved" | "pending";
+                  updatedAt?: number;
+                };
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "email"
+                    | "mobileNumber"
+                    | "status"
+                    | "orgName"
+                    | "orgAddress"
+                    | "orgAddressCity"
+                    | "orgAddressState"
+                    | "orgAddressCountry"
+                    | "orgPostalCode"
+                    | "createdAt"
+                    | "updatedAt"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -1016,15 +1317,114 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | Array<number>
                     | null;
                 }>;
+              }
+            | {
+                model: "organization";
+                update: {
+                  addressLine?: string;
+                  city?: string;
+                  country?: string;
+                  createdAt?: number;
+                  name?: string;
+                  ownerId?: string;
+                  postalCode?: string;
+                  slug?: string;
+                  state?: string;
+                  updatedAt?: number;
+                };
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "ownerId"
+                    | "name"
+                    | "slug"
+                    | "addressLine"
+                    | "city"
+                    | "state"
+                    | "postalCode"
+                    | "country"
+                    | "createdAt"
+                    | "updatedAt"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "accessRequests";
+                update: {
+                  createdAt?: number;
+                  email?: string;
+                  mobileNumber?: string;
+                  orgAddress?: string;
+                  orgAddressCity?: string;
+                  orgAddressCountry?: string;
+                  orgAddressState?: string;
+                  orgName?: string;
+                  orgPostalCode?: string;
+                  status?: "rejected" | "approved" | "pending";
+                  updatedAt?: number;
+                };
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "email"
+                    | "mobileNumber"
+                    | "status"
+                    | "orgName"
+                    | "orgAddress"
+                    | "orgAddressCity"
+                    | "orgAddressState"
+                    | "orgAddressCountry"
+                    | "orgPostalCode"
+                    | "createdAt"
+                    | "updatedAt"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
               };
           onUpdateHandle?: string;
         },
         any,
         Name
       >;
-    };
-    auth: {
-      getCurrentUser: FunctionReference<"query", "internal", {}, any, Name>;
     };
     users: {
       get: FunctionReference<
