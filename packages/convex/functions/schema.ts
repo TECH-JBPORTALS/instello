@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { typedV } from "convex-helpers/validators";
 
 const tables = {
 	programs: defineTable({
@@ -9,4 +10,8 @@ const tables = {
 	}).index("by_createdBy", ["createdBy"]),
 };
 
-export default defineSchema(tables);
+const schema = defineSchema(tables);
+
+export const vv = typedV(schema);
+
+export default schema;

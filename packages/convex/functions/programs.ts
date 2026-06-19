@@ -1,8 +1,28 @@
-import { userQuery } from "~/helpers/customFunctions";
+import { insMutation, insQuery } from "~/helpers/customFunctions";
+import * as Program from "~/model/programs";
+import { vv } from "./schema";
 
-export const list = userQuery({
-	args: {},
-	handler(ctx) {
-		return ctx.db.query("programs").take(10);
+export const create = insMutation({
+	args: Program.CreateSchema,
+	handler(ctx, args) {
+		return Program.create(ctx, args);
 	},
+});
+
+export const list = insQuery({
+	args: {},
+	returns: vv.array(vv.doc("programs")),
+	handler: Program.list,
+});
+
+export const getById = insQuery({
+	args: Program.GetByIdSchema,
+	return: vv.doc("programs"),
+	handler: Program.getById,
+});
+
+export const updateAlias = insMutation({
+	args: Program.UpdateAliasSchema,
+	return: vv.doc("programs"),
+	handler: Program.updateAlias,
 });
