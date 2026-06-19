@@ -43,6 +43,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               }
             | {
                 data: {
+                  activeInstitutionId?: null | string;
                   createdAt: number;
                   expiresAt: number;
                   ipAddress?: null | string;
@@ -83,6 +84,37 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | {
                 data: {
                   createdAt: number;
+                  logo?: null | string;
+                  metadata?: null | string;
+                  name: string;
+                  slug: string;
+                };
+                model: "institution";
+              }
+            | {
+                data: {
+                  createdAt: number;
+                  organizationId: string;
+                  role: string;
+                  userId: string;
+                };
+                model: "institutionMember";
+              }
+            | {
+                data: {
+                  createdAt: number;
+                  email: string;
+                  expiresAt: number;
+                  inviterId: string;
+                  organizationId: string;
+                  role?: null | string;
+                  status: string;
+                };
+                model: "institutionInvitations";
+              }
+            | {
+                data: {
+                  createdAt: number;
                   expiresAt?: null | number;
                   privateKey: string;
                   publicKey: string;
@@ -106,15 +138,18 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               }
             | {
                 data: {
+                  approvedAt?: number;
                   createdAt: number;
                   email: string;
-                  mobileNumber: string;
                   orgAddress: string;
                   orgAddressCity: string;
                   orgAddressCountry: string;
                   orgAddressState: string;
                   orgName: string;
                   orgPostalCode: string;
+                  phoneNumber: string;
+                  rejectedAt?: number;
+                  rejectedReason?: number;
                   status: "rejected" | "approved" | "pending";
                   updatedAt: number;
                 };
@@ -178,6 +213,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "ipAddress"
                     | "userAgent"
                     | "userId"
+                    | "activeInstitutionId"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -251,6 +287,106 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "expiresAt"
                     | "createdAt"
                     | "updatedAt"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "institution";
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "name"
+                    | "slug"
+                    | "logo"
+                    | "createdAt"
+                    | "metadata"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "institutionMember";
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "organizationId"
+                    | "userId"
+                    | "role"
+                    | "createdAt"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "institutionInvitations";
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "organizationId"
+                    | "email"
+                    | "role"
+                    | "status"
+                    | "expiresAt"
+                    | "createdAt"
+                    | "inviterId"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -350,7 +486,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   connector?: "AND" | "OR";
                   field:
                     | "email"
-                    | "mobileNumber"
+                    | "phoneNumber"
                     | "status"
                     | "orgName"
                     | "orgAddress"
@@ -358,6 +494,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "orgAddressState"
                     | "orgAddressCountry"
                     | "orgPostalCode"
+                    | "approvedAt"
+                    | "rejectedAt"
+                    | "rejectedReason"
                     | "createdAt"
                     | "updatedAt"
                     | "_id";
@@ -448,6 +587,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "ipAddress"
                     | "userAgent"
                     | "userId"
+                    | "activeInstitutionId"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -521,6 +661,106 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "expiresAt"
                     | "createdAt"
                     | "updatedAt"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "institution";
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "name"
+                    | "slug"
+                    | "logo"
+                    | "createdAt"
+                    | "metadata"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "institutionMember";
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "organizationId"
+                    | "userId"
+                    | "role"
+                    | "createdAt"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "institutionInvitations";
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "organizationId"
+                    | "email"
+                    | "role"
+                    | "status"
+                    | "expiresAt"
+                    | "createdAt"
+                    | "inviterId"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -620,7 +860,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   connector?: "AND" | "OR";
                   field:
                     | "email"
-                    | "mobileNumber"
+                    | "phoneNumber"
                     | "status"
                     | "orgName"
                     | "orgAddress"
@@ -628,6 +868,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "orgAddressState"
                     | "orgAddressCountry"
                     | "orgPostalCode"
+                    | "approvedAt"
+                    | "rejectedAt"
+                    | "rejectedReason"
                     | "createdAt"
                     | "updatedAt"
                     | "_id";
@@ -669,6 +912,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | "session"
             | "account"
             | "verification"
+            | "institution"
+            | "institutionMember"
+            | "institutionInvitations"
             | "jwks"
             | "organization"
             | "accessRequests";
@@ -721,6 +967,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | "session"
             | "account"
             | "verification"
+            | "institution"
+            | "institutionMember"
+            | "institutionInvitations"
             | "jwks"
             | "organization"
             | "accessRequests";
@@ -805,6 +1054,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | {
                 model: "session";
                 update: {
+                  activeInstitutionId?: null | string;
                   createdAt?: number;
                   expiresAt?: number;
                   ipAddress?: null | string;
@@ -823,6 +1073,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "ipAddress"
                     | "userAgent"
                     | "userId"
+                    | "activeInstitutionId"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -941,6 +1192,128 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
+                model: "institution";
+                update: {
+                  createdAt?: number;
+                  logo?: null | string;
+                  metadata?: null | string;
+                  name?: string;
+                  slug?: string;
+                };
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "name"
+                    | "slug"
+                    | "logo"
+                    | "createdAt"
+                    | "metadata"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "institutionMember";
+                update: {
+                  createdAt?: number;
+                  organizationId?: string;
+                  role?: string;
+                  userId?: string;
+                };
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "organizationId"
+                    | "userId"
+                    | "role"
+                    | "createdAt"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "institutionInvitations";
+                update: {
+                  createdAt?: number;
+                  email?: string;
+                  expiresAt?: number;
+                  inviterId?: string;
+                  organizationId?: string;
+                  role?: null | string;
+                  status?: string;
+                };
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "organizationId"
+                    | "email"
+                    | "role"
+                    | "status"
+                    | "expiresAt"
+                    | "createdAt"
+                    | "inviterId"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
                 model: "jwks";
                 update: {
                   createdAt?: number;
@@ -1031,15 +1404,18 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | {
                 model: "accessRequests";
                 update: {
+                  approvedAt?: number;
                   createdAt?: number;
                   email?: string;
-                  mobileNumber?: string;
                   orgAddress?: string;
                   orgAddressCity?: string;
                   orgAddressCountry?: string;
                   orgAddressState?: string;
                   orgName?: string;
                   orgPostalCode?: string;
+                  phoneNumber?: string;
+                  rejectedAt?: number;
+                  rejectedReason?: number;
                   status?: "rejected" | "approved" | "pending";
                   updatedAt?: number;
                 };
@@ -1047,7 +1423,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   connector?: "AND" | "OR";
                   field:
                     | "email"
-                    | "mobileNumber"
+                    | "phoneNumber"
                     | "status"
                     | "orgName"
                     | "orgAddress"
@@ -1055,6 +1431,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "orgAddressState"
                     | "orgAddressCountry"
                     | "orgPostalCode"
+                    | "approvedAt"
+                    | "rejectedAt"
+                    | "rejectedReason"
                     | "createdAt"
                     | "updatedAt"
                     | "_id";
@@ -1145,6 +1524,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | {
                 model: "session";
                 update: {
+                  activeInstitutionId?: null | string;
                   createdAt?: number;
                   expiresAt?: number;
                   ipAddress?: null | string;
@@ -1163,6 +1543,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "ipAddress"
                     | "userAgent"
                     | "userId"
+                    | "activeInstitutionId"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -1281,6 +1662,128 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
+                model: "institution";
+                update: {
+                  createdAt?: number;
+                  logo?: null | string;
+                  metadata?: null | string;
+                  name?: string;
+                  slug?: string;
+                };
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "name"
+                    | "slug"
+                    | "logo"
+                    | "createdAt"
+                    | "metadata"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "institutionMember";
+                update: {
+                  createdAt?: number;
+                  organizationId?: string;
+                  role?: string;
+                  userId?: string;
+                };
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "organizationId"
+                    | "userId"
+                    | "role"
+                    | "createdAt"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
+                model: "institutionInvitations";
+                update: {
+                  createdAt?: number;
+                  email?: string;
+                  expiresAt?: number;
+                  inviterId?: string;
+                  organizationId?: string;
+                  role?: null | string;
+                  status?: string;
+                };
+                where?: Array<{
+                  connector?: "AND" | "OR";
+                  field:
+                    | "organizationId"
+                    | "email"
+                    | "role"
+                    | "status"
+                    | "expiresAt"
+                    | "createdAt"
+                    | "inviterId"
+                    | "_id";
+                  mode?: "sensitive" | "insensitive";
+                  operator?:
+                    | "lt"
+                    | "lte"
+                    | "gt"
+                    | "gte"
+                    | "eq"
+                    | "in"
+                    | "not_in"
+                    | "ne"
+                    | "contains"
+                    | "starts_with"
+                    | "ends_with";
+                  value:
+                    | string
+                    | number
+                    | boolean
+                    | Array<string>
+                    | Array<number>
+                    | null;
+                }>;
+              }
+            | {
                 model: "jwks";
                 update: {
                   createdAt?: number;
@@ -1371,15 +1874,18 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | {
                 model: "accessRequests";
                 update: {
+                  approvedAt?: number;
                   createdAt?: number;
                   email?: string;
-                  mobileNumber?: string;
                   orgAddress?: string;
                   orgAddressCity?: string;
                   orgAddressCountry?: string;
                   orgAddressState?: string;
                   orgName?: string;
                   orgPostalCode?: string;
+                  phoneNumber?: string;
+                  rejectedAt?: number;
+                  rejectedReason?: number;
                   status?: "rejected" | "approved" | "pending";
                   updatedAt?: number;
                 };
@@ -1387,7 +1893,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   connector?: "AND" | "OR";
                   field:
                     | "email"
-                    | "mobileNumber"
+                    | "phoneNumber"
                     | "status"
                     | "orgName"
                     | "orgAddress"
@@ -1395,6 +1901,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "orgAddressState"
                     | "orgAddressCountry"
                     | "orgPostalCode"
+                    | "approvedAt"
+                    | "rejectedAt"
+                    | "rejectedReason"
                     | "createdAt"
                     | "updatedAt"
                     | "_id";
@@ -1426,7 +1935,24 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         Name
       >;
     };
-    users: {
+    institution: {
+      getById: FunctionReference<
+        "query",
+        "internal",
+        { id: string },
+        {
+          _creationTime: number;
+          _id: string;
+          createdAt: number;
+          logo?: null | string;
+          metadata?: null | string;
+          name: string;
+          slug: string;
+        },
+        Name
+      >;
+    };
+    user: {
       get: FunctionReference<
         "query",
         "internal",

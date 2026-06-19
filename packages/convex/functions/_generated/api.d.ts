@@ -10,7 +10,9 @@
 
 import type * as helpers_auth from "../helpers/auth.js";
 import type * as helpers_customFunctions from "../helpers/customFunctions.js";
+import type * as helpers_errors from "../helpers/errors.js";
 import type * as http from "../http.js";
+import type * as model_programs from "../model/programs.js";
 import type * as programs from "../programs.js";
 
 import type {
@@ -22,7 +24,9 @@ import type {
 declare const fullApi: ApiFromModules<{
   "helpers/auth": typeof helpers_auth;
   "helpers/customFunctions": typeof helpers_customFunctions;
+  "helpers/errors": typeof helpers_errors;
   http: typeof http;
+  "model/programs": typeof model_programs;
   programs: typeof programs;
 }>;
 

@@ -5,7 +5,7 @@ import { organization } from "better-auth/plugins/organization";
 import { components } from "~/_generated/api";
 import type { DataModel } from "~/_generated/dataModel";
 import authConfig from "~/auth.config";
-import { ac, owner, principal, faculty } from "~/permissions";
+import { ac, faculty, owner, principal } from "~/permissions";
 
 const siteUrl = process.env.SITE_URL;
 
@@ -37,12 +37,31 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 					member: { modelName: "institutionMember" },
 					/** Represents institution invitations - faculty invitations to join the institution*/
 					invitation: { modelName: "institutionInvitations" },
+					session: {
+						fields: { activeOrganizationId: "activeInstitutionId" },
+					},
 				},
 				/** Number of institutions owner can create in his organization */
 				organizationLimit: 10,
 				cancelPendingInvitationsOnReInvite: true,
 			}),
-			convex({ authConfig }),
+			convex({
+				authConfig,
+				jwt: {
+					expirationSeconds: 60 * 30, // 30 minutes
+
+					/* This payload defines the jwt session passed to the convex funtions context
+					 * WARNING: Be careful when your modifying this part, think twice.
+					 * extended `UserIdentity` interface are placed in globals.d.ts
+					 */
+					definePayload: ({ user, session }) => ({
+						name: user.name,
+						email: user.email,
+						sesionId: session.id,
+						activeInstitutionId: session.activeInstitutionId,
+					}),
+				},
+			}),
 		],
 	} satisfies BetterAuthOptions;
 };

@@ -4,14 +4,37 @@ import type { DataModel } from "~/_generated/dataModel";
 import { ERROR_CODES } from "./errors";
 
 /**
- * Helper function to validate the user identitiy and return the userId
+ * Helper function to validate the sessionId exists convex identitiy and
+ * @returns `session`
+ *
  */
 export const requireSession = async (ctx: GenericCtx<DataModel>) => {
 	const identity = await ctx.auth.getUserIdentity();
 
-	if (!identity) {
-		throw new ConvexError(ERROR_CODES.UNAUTHORIZED.message);
-	}
+	if (!identity?.sessionId)
+		throw new ConvexError(ERROR_CODES.BASE.UNAUTHORIZED.message);
 
-	return identity.subject;
+	return {
+		userId: identity.subject,
+		name: identity.name,
+		email: identity.email,
+		id: identity.sessionId,
+	};
+};
+
+/**
+ * Helper function to validate the `activeInstitutionId` exists in the convex identity and
+ * @returns `activeInstitutionId`
+ */
+export const requireInstitution = async (ctx: GenericCtx<DataModel>) => {
+	const identity = await ctx.auth.getUserIdentity();
+
+	if (!identity) throw new ConvexError(ERROR_CODES.BASE.UNAUTHORIZED.message);
+
+	if (!identity.activeInstitutionId)
+		throw new ConvexError(
+			ERROR_CODES.ORGANIZATION.NO_ACTIVE_ORGANIZATION.message,
+		);
+
+	return identity.activeInstitutionId;
 };
