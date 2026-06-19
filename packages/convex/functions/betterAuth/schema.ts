@@ -7,9 +7,9 @@ const schema = defineSchema({
 	...tables,
 
 	/** This model is only for owner who owns an organization.
-	 * Better auth `organization` has been remapped to `institutions`.
+	 * Better auth `organizations` has been remapped to `institutions`.
 	 * For more info checkout [./auth.ts](./auth.ts) */
-	organization: defineTable({
+	organizations: defineTable({
 		ownerId: v.id("user"),
 		name: v.string(),
 		slug: v.string(),

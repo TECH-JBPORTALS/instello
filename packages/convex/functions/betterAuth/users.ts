@@ -7,10 +7,10 @@ import { vv } from "./schema";
  */
 export const get = query({
 	args: { userId: v.string() },
-	returns: vv.doc("user"),
+	returns: vv.doc("users"),
 	async handler(ctx, args) {
 		const user = await ctx.db
-			.query("user")
+			.query("users")
 			.withIndex("userId", (q) => q.eq("userId", args.userId))
 			.first();
 		if (!user) throw new Error("No user found for given userId");

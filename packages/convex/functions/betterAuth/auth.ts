@@ -6,12 +6,19 @@ import { components } from "~/_generated/api";
 import type { DataModel } from "~/_generated/dataModel";
 import authConfig from "~/auth.config";
 import { ac, faculty, owner, principal } from "~/permissions";
+import schema from "./schema";
 
 const siteUrl = process.env.SITE_URL;
 
 // The component client has methods needed for integrating Convex with Better Auth,
 // as well as helper methods for general use.
-export const authComponent = createClient<DataModel>(components.betterAuth);
+export const authComponent = createClient<DataModel, typeof schema>(
+	components.betterAuth,
+	{
+		local: { schema },
+		verbose: false,
+	},
+);
 
 export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 	return {
@@ -21,6 +28,18 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 			enabled: true,
 			requireEmailVerification: false,
 			disableSignUp: true,
+		},
+		user: {
+			modelName: "users",
+		},
+		session: {
+			modelName: "sessions",
+		},
+		account: {
+			modelName: "accounts",
+		},
+		verification: {
+			modelName: "verifications",
 		},
 		plugins: [
 			organization({
@@ -32,9 +51,9 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 				},
 				schema: {
 					/** Represents institution */
-					organization: { modelName: "institution" },
+					organization: { modelName: "institutions" },
 					/** Represents institution members - AKA faculty */
-					member: { modelName: "institutionMember" },
+					member: { modelName: "institutionMembers" },
 					/** Represents institution invitations - faculty invitations to join the institution*/
 					invitation: { modelName: "institutionInvitations" },
 					session: {

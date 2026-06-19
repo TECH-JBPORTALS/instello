@@ -19,6 +19,7 @@
 		"fix": "biome check --write",
 		"fix:unsafe": "biome check --write --unsafe",
 		"test": "vitest run",
+		"test:watch": "vitest",
 		"auth:generate": "bunx auth generate --config functions/betterAuth/auth.config.ts --output functions/betterAuth/authSchema.ts"
 	},
 	"author": "",

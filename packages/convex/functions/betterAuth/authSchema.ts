@@ -13,7 +13,7 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export const tables = {
-  user: defineTable({
+  users: defineTable({
     name: v.string(),
     email: v.string(),
     emailVerified: v.boolean(),
@@ -25,7 +25,7 @@ export const tables = {
     .index("email_name", ["email","name"])
     .index("name", ["name"])
     .index("userId", ["userId"]),
-  session: defineTable({
+  sessions: defineTable({
     expiresAt: v.number(),
     token: v.string(),
     createdAt: v.number(),
@@ -39,7 +39,7 @@ export const tables = {
     .index("expiresAt_userId", ["expiresAt","userId"])
     .index("token", ["token"])
     .index("userId", ["userId"]),
-  account: defineTable({
+  accounts: defineTable({
     accountId: v.string(),
     providerId: v.string(),
     userId: v.string(),
@@ -57,7 +57,7 @@ export const tables = {
     .index("accountId_providerId", ["accountId","providerId"])
     .index("providerId_userId", ["providerId","userId"])
     .index("userId", ["userId"]),
-  verification: defineTable({
+  verifications: defineTable({
     identifier: v.string(),
     value: v.string(),
     expiresAt: v.number(),
@@ -66,7 +66,7 @@ export const tables = {
   })
     .index("expiresAt", ["expiresAt"])
     .index("identifier", ["identifier"]),
-  institution: defineTable({
+  institutions: defineTable({
     name: v.string(),
     slug: v.string(),
     logo: v.optional(v.union(v.null(), v.string())),
@@ -75,7 +75,7 @@ export const tables = {
   })
     .index("name", ["name"])
     .index("slug", ["slug"]),
-  institutionMember: defineTable({
+  institutionMembers: defineTable({
     organizationId: v.string(),
     userId: v.string(),
     role: v.string(),

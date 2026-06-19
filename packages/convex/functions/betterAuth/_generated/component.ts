@@ -39,7 +39,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   updatedAt: number;
                   userId?: null | string;
                 };
-                model: "user";
+                model: "users";
               }
             | {
                 data: {
@@ -52,7 +52,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   userAgent?: null | string;
                   userId: string;
                 };
-                model: "session";
+                model: "sessions";
               }
             | {
                 data: {
@@ -69,7 +69,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   updatedAt: number;
                   userId: string;
                 };
-                model: "account";
+                model: "accounts";
               }
             | {
                 data: {
@@ -79,7 +79,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   updatedAt: number;
                   value: string;
                 };
-                model: "verification";
+                model: "verifications";
               }
             | {
                 data: {
@@ -89,7 +89,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   name: string;
                   slug: string;
                 };
-                model: "institution";
+                model: "institutions";
               }
             | {
                 data: {
@@ -98,7 +98,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   role: string;
                   userId: string;
                 };
-                model: "institutionMember";
+                model: "institutionMembers";
               }
             | {
                 data: {
@@ -134,7 +134,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   state: string;
                   updatedAt: number;
                 };
-                model: "organization";
+                model: "organizations";
               }
             | {
                 data: {
@@ -167,7 +167,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         {
           input:
             | {
-                model: "user";
+                model: "users";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -202,7 +202,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "session";
+                model: "sessions";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -238,7 +238,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "account";
+                model: "accounts";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -278,7 +278,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "verification";
+                model: "verifications";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -311,7 +311,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "institution";
+                model: "institutions";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -344,7 +344,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "institutionMember";
+                model: "institutionMembers";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -443,7 +443,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "organization";
+                model: "organizations";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -541,7 +541,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         {
           input:
             | {
-                model: "user";
+                model: "users";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -576,7 +576,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "session";
+                model: "sessions";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -612,7 +612,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "account";
+                model: "accounts";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -652,7 +652,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "verification";
+                model: "verifications";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -685,7 +685,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "institution";
+                model: "institutions";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -718,7 +718,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "institutionMember";
+                model: "institutionMembers";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -817,7 +817,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "organization";
+                model: "organizations";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -908,15 +908,15 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           join?: any;
           limit?: number;
           model:
-            | "user"
-            | "session"
-            | "account"
-            | "verification"
-            | "institution"
-            | "institutionMember"
+            | "users"
+            | "sessions"
+            | "accounts"
+            | "verifications"
+            | "institutions"
+            | "institutionMembers"
             | "institutionInvitations"
             | "jwks"
-            | "organization"
+            | "organizations"
             | "accessRequests";
           offset?: number;
           paginationOpts: {
@@ -963,15 +963,15 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         {
           join?: any;
           model:
-            | "user"
-            | "session"
-            | "account"
-            | "verification"
-            | "institution"
-            | "institutionMember"
+            | "users"
+            | "sessions"
+            | "accounts"
+            | "verifications"
+            | "institutions"
+            | "institutionMembers"
             | "institutionInvitations"
             | "jwks"
-            | "organization"
+            | "organizations"
             | "accessRequests";
           select?: Array<string>;
           where?: Array<{
@@ -1008,7 +1008,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         {
           input:
             | {
-                model: "user";
+                model: "users";
                 update: {
                   createdAt?: number;
                   email?: string;
@@ -1052,7 +1052,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "session";
+                model: "sessions";
                 update: {
                   activeInstitutionId?: null | string;
                   createdAt?: number;
@@ -1098,7 +1098,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "account";
+                model: "accounts";
                 update: {
                   accessToken?: null | string;
                   accessTokenExpiresAt?: null | number;
@@ -1152,7 +1152,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "verification";
+                model: "verifications";
                 update: {
                   createdAt?: number;
                   expiresAt?: number;
@@ -1192,7 +1192,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "institution";
+                model: "institutions";
                 update: {
                   createdAt?: number;
                   logo?: null | string;
@@ -1232,7 +1232,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "institutionMember";
+                model: "institutionMembers";
                 update: {
                   createdAt?: number;
                   organizationId?: string;
@@ -1352,7 +1352,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "organization";
+                model: "organizations";
                 update: {
                   addressLine?: string;
                   city?: string;
@@ -1478,7 +1478,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         {
           input:
             | {
-                model: "user";
+                model: "users";
                 update: {
                   createdAt?: number;
                   email?: string;
@@ -1522,7 +1522,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "session";
+                model: "sessions";
                 update: {
                   activeInstitutionId?: null | string;
                   createdAt?: number;
@@ -1568,7 +1568,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "account";
+                model: "accounts";
                 update: {
                   accessToken?: null | string;
                   accessTokenExpiresAt?: null | number;
@@ -1622,7 +1622,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "verification";
+                model: "verifications";
                 update: {
                   createdAt?: number;
                   expiresAt?: number;
@@ -1662,7 +1662,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "institution";
+                model: "institutions";
                 update: {
                   createdAt?: number;
                   logo?: null | string;
@@ -1702,7 +1702,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "institutionMember";
+                model: "institutionMembers";
                 update: {
                   createdAt?: number;
                   organizationId?: string;
@@ -1822,7 +1822,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "organization";
+                model: "organizations";
                 update: {
                   addressLine?: string;
                   city?: string;
@@ -1935,7 +1935,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         Name
       >;
     };
-    institution: {
+    institutions: {
       getById: FunctionReference<
         "query",
         "internal",
@@ -1952,7 +1952,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         Name
       >;
     };
-    user: {
+    users: {
       get: FunctionReference<
         "query",
         "internal",

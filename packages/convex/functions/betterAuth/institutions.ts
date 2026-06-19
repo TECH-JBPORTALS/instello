@@ -8,11 +8,11 @@ import { vv } from "./schema";
  */
 export const getById = query({
 	args: { id: v.string() },
-	returns: vv.doc("institution"),
+	returns: vv.doc("institutions"),
 	async handler(ctx, args) {
 		const institution = await ctx.db
-			.query("institution")
-			.withIndex("by_id", (q) => q.eq("_id", args.id as Id<"institution">))
+			.query("institutions")
+			.withIndex("by_id", (q) => q.eq("_id", args.id as Id<"institutions">))
 			.first();
 		if (!institution) throw new Error("No institution found for given id");
 		return institution;
