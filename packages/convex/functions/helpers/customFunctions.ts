@@ -4,7 +4,6 @@ import {
 	customMutation,
 	customQuery,
 } from "convex-helpers/server/customFunctions";
-import { components } from "~/_generated/api";
 import { mutation, query } from "~/_generated/server";
 import { ensureInstitution, ensureSession } from "./auth";
 
@@ -143,16 +142,8 @@ export const insMutation = customMutation(
 
 		const activeInstitutionId = await ensureInstitution(ctx);
 
-		const institution = await ctx.runQuery(
-			components.betterAuth.institutions.getById,
-			{
-				id: activeInstitutionId,
-			},
-		);
-
 		return {
 			session: { ...session, activeInstitutionId },
-			institution,
 		};
 	}),
 );
