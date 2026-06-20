@@ -4,9 +4,7 @@ import { vv } from "./schema";
 
 export const create = insMutation({
 	args: Program.CreateSchema,
-	handler(ctx, args) {
-		return Program.create(ctx, args);
-	},
+	handler: Program.create,
 });
 
 export const list = insQuery({

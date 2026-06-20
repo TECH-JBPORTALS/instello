@@ -1,11 +1,11 @@
 import { convexTest, type TestConvex } from "convex-test";
 import { beforeEach, describe, expect, it } from "vitest";
 import schema from "../../schema";
-import { requireInstitution, requireSession } from "../auth";
+import { ensureInstitution, ensureSession } from "../auth";
 import { ERROR_CODES } from "../errors";
 import { modules } from "./test.setup";
 
-describe("requireSession", () => {
+describe("ensureSession", () => {
 	let t: TestConvex<typeof schema>;
 
 	beforeEach(() => {
@@ -13,7 +13,7 @@ describe("requireSession", () => {
 	});
 
 	it("rejects when user is not logged in", async () => {
-		const promise = t.query((ctx) => requireSession(ctx));
+		const promise = t.query((ctx) => ensureSession(ctx));
 
 		await expect(promise).rejects.toThrow(
 			ERROR_CODES.BASE.UNAUTHORIZED.message,
@@ -28,7 +28,7 @@ describe("requireSession", () => {
 				email: "jhon@gmail.com",
 				sessionId: "session-1",
 			})
-			.query((ctx) => requireSession(ctx));
+			.query((ctx) => ensureSession(ctx));
 
 		await expect(promise).resolves.toStrictEqual({
 			userId: "user-1",
@@ -39,7 +39,7 @@ describe("requireSession", () => {
 	});
 });
 
-describe("requireInstitution", () => {
+describe("ensureInstitution", () => {
 	let t: TestConvex<typeof schema>;
 
 	beforeEach(() => {
@@ -47,7 +47,7 @@ describe("requireInstitution", () => {
 	});
 
 	it("rejects when user is not logged in", async () => {
-		const promise = t.query((ctx) => requireInstitution(ctx));
+		const promise = t.query((ctx) => ensureInstitution(ctx));
 
 		await expect(promise).rejects.toThrow(
 			ERROR_CODES.BASE.UNAUTHORIZED.message,
@@ -57,7 +57,7 @@ describe("requireInstitution", () => {
 	it("rejects when active institution is not set in the session", async () => {
 		const promise = t
 			.withIdentity({ subject: "user-1" })
-			.query((ctx) => requireInstitution(ctx));
+			.query((ctx) => ensureInstitution(ctx));
 
 		await expect(promise).rejects.toThrow(
 			ERROR_CODES.ORGANIZATION.NO_ACTIVE_ORGANIZATION.message,
@@ -67,7 +67,7 @@ describe("requireInstitution", () => {
 	it("returns the `activeInstitutionId` if it's set in the session", async () => {
 		const promise = t
 			.withIdentity({ subject: "user-1", activeInstitutionId: "ins-1" })
-			.query((ctx) => requireInstitution(ctx));
+			.query((ctx) => ensureInstitution(ctx));
 
 		await expect(promise).resolves.toBe("ins-1");
 	});

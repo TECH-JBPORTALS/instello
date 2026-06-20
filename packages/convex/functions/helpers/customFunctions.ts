@@ -6,7 +6,23 @@ import {
 } from "convex-helpers/server/customFunctions";
 import { components } from "~/_generated/api";
 import { mutation, query } from "~/_generated/server";
-import { requireInstitution, requireSession } from "./auth";
+import { ensureInstitution, ensureSession } from "./auth";
+
+/** Public query will just proceed with handler without any authorization checks */
+export const pubQuery = customQuery(
+	query,
+	customCtx(async () => {
+		return { session: null };
+	}),
+);
+
+/** Public mutation will just proceed with handler without any authorization checks */
+export const pubMutation = customMutation(
+	mutation,
+	customCtx(async () => {
+		return { session: null };
+	}),
+);
 
 /**
  * user-scoped query which validates session before proceeding with the query handler
@@ -29,7 +45,7 @@ import { requireInstitution, requireSession } from "./auth";
 export const userQuery = customQuery(
 	query,
 	customCtx(async (ctx) => {
-		const session = await requireSession(ctx);
+		const session = await ensureSession(ctx);
 
 		return { session };
 	}),
@@ -56,7 +72,7 @@ export type UserQueryCtx = CustomCtx<typeof userQuery>;
 export const userMutation = customMutation(
 	mutation,
 	customCtx(async (ctx) => {
-		const session = await requireSession(ctx);
+		const session = await ensureSession(ctx);
 
 		return { session };
 	}),
@@ -88,9 +104,9 @@ export type UserMutationCtx = CustomCtx<typeof userMutation>;
 export const insQuery = customQuery(
 	query,
 	customCtx(async (ctx) => {
-		const session = await requireSession(ctx);
+		const session = await ensureSession(ctx);
 
-		const activeInstitutionId = await requireInstitution(ctx);
+		const activeInstitutionId = await ensureInstitution(ctx);
 
 		return {
 			session: { ...session, activeInstitutionId },
@@ -123,12 +139,12 @@ export type InsQueryCtx = CustomCtx<typeof insQuery>;
 export const insMutation = customMutation(
 	mutation,
 	customCtx(async (ctx) => {
-		const session = await requireSession(ctx);
+		const session = await ensureSession(ctx);
 
-		const institutionId = await requireInstitution(ctx);
+		const institutionId = await ensureInstitution(ctx);
 
 		const institution = await ctx.runQuery(
-			components.betterAuth.institution.getById,
+			components.betterAuth.institutions.getById,
 			{
 				id: institutionId,
 			},

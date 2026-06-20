@@ -8,7 +8,7 @@ import { ERROR_CODES } from "./errors";
  * @returns `session`
  *
  */
-export const requireSession = async (ctx: GenericCtx<DataModel>) => {
+export const ensureSession = async (ctx: GenericCtx<DataModel>) => {
 	const identity = await ctx.auth.getUserIdentity();
 
 	if (!identity?.sessionId)
@@ -26,7 +26,7 @@ export const requireSession = async (ctx: GenericCtx<DataModel>) => {
  * Helper function to validate the `activeInstitutionId` exists in the convex identity and
  * @returns `activeInstitutionId`
  */
-export const requireInstitution = async (ctx: GenericCtx<DataModel>) => {
+export const ensureInstitution = async (ctx: GenericCtx<DataModel>) => {
 	const identity = await ctx.auth.getUserIdentity();
 
 	if (!identity) throw new ConvexError(ERROR_CODES.BASE.UNAUTHORIZED.message);
