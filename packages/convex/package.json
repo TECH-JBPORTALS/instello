@@ -39,6 +39,7 @@
 		"convex-test": "^0.0.53",
 		"typescript": "6.0.3",
 		"vite": "catalog:",
+		"vite-tsconfig-paths": "^6.1.1",
 		"vitest": "catalog:"
 	}
 }
