@@ -8,7 +8,9 @@ import { vv } from "~/schema";
  * @param ctx `insQuery` ctx
  * @returns programs inside the current institution
  */
-export async function list(ctx: InsQueryCtx) {}
+export async function list(ctx: InsQueryCtx) {
+	return await ctx.db.query("programs").collect();
+}
 
 /**
  * **Get program by it's `id` in the current institution**
@@ -34,9 +36,16 @@ export const GetByIdSchema = vv.object({
 export async function create(
 	ctx: InsMutationCtx,
 	args: Infer<typeof CreateSchema>,
-) {}
+) {
+	return await ctx.db.insert("programs", {
+		...args,
+		institutionId: ctx.session.activeInstitutionId,
+		createdBy: ctx.session.userId,
+		status: "active",
+	});
+}
 
-export const CreateSchema = vv.doc("programs");
+export const CreateSchema = vv.doc("programs").pick("name", "alias");
 
 /**
  * **Update program's unique alias to new one within the institution**

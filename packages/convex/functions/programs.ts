@@ -4,6 +4,7 @@ import { vv } from "./schema";
 
 export const create = insMutation({
 	args: Program.CreateSchema,
+	returns: vv.id("programs"),
 	handler: Program.create,
 });
 

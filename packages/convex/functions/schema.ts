@@ -5,9 +5,11 @@ import { typedV } from "convex-helpers/validators";
 const tables = {
 	programs: defineTable({
 		createdBy: v.string(),
-		title: v.string(),
+		name: v.string(),
 		alias: v.string(),
-	}).index("by_createdBy", ["createdBy"]),
+		status: v.union(v.literal("inactive"), v.literal("active")),
+		institutionId: v.string(),
+	}).index("by_institution", ["institutionId"]),
 };
 
 const schema = defineSchema(tables);

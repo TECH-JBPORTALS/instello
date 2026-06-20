@@ -141,22 +141,18 @@ export const insMutation = customMutation(
 	customCtx(async (ctx) => {
 		const session = await ensureSession(ctx);
 
-		const institutionId = await ensureInstitution(ctx);
+		const activeInstitutionId = await ensureInstitution(ctx);
 
 		const institution = await ctx.runQuery(
 			components.betterAuth.institutions.getById,
 			{
-				id: institutionId,
+				id: activeInstitutionId,
 			},
 		);
 
 		return {
-			institution: {
-				id: institution._id,
-				name: institution.name,
-				slug: institution.slug,
-			},
-			session,
+			session: { ...session, activeInstitutionId },
+			institution,
 		};
 	}),
 );
