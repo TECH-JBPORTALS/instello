@@ -21,10 +21,12 @@ export async function list(ctx: InsQueryCtx) {
 export async function getById(
 	ctx: InsQueryCtx,
 	args: Infer<typeof GetByIdSchema>,
-) {}
+) {
+	return await ctx.db.get("programs", args.id);
+}
 
 export const GetByIdSchema = vv.object({
-	id: vv.string(),
+	id: vv.id("programs"),
 });
 
 /**

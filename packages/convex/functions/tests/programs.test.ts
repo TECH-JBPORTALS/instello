@@ -50,3 +50,70 @@ describe("programs.create", () => {
 		});
 	});
 });
+
+describe("programs.getById", () => {
+	// Authentication
+	it("rejects unauthenticated user", async () => {
+		const t = createTest(); // without identity
+
+		const id = await t.run((ctx) =>
+			ctx.db.insert("programs", {
+				alias: "CSE",
+				name: "Computer Science Engineering",
+				createdBy: "user-1",
+				institutionId: "ins-1",
+				status: "active",
+			}),
+		);
+
+		const r = t.query(api.programs.getById, { id });
+
+		await expect(r).rejects.toThrow(ERROR_CODES.BASE.UNAUTHORIZED.message);
+	});
+
+	it("rejects no active insitution in the session", async () => {
+		const t = createTest({ sessionId: "ses-1", subject: "user-1" });
+
+		const id = await t.run((ctx) =>
+			ctx.db.insert("programs", {
+				alias: "CSE",
+				name: "Computer Science Engineering",
+				createdBy: "user-1",
+				institutionId: "ins-1",
+				status: "active",
+			}),
+		);
+
+		const r = t.query(api.programs.getById, { id });
+
+		await expect(r).rejects.toThrow(
+			ERROR_CODES.ORGANIZATION.NO_ACTIVE_ORGANIZATION.message,
+		);
+	});
+
+	// Expectations based on the authorization
+	it("get's program with given id", async () => {
+		const t = createTest({
+			sessionId: "ses-1",
+			subject: "user-1",
+			activeInstitutionId: "ins-1",
+		});
+
+		const id = await t.run((ctx) =>
+			ctx.db.insert("programs", {
+				alias: "CSE",
+				name: "Computer Science Engineering",
+				createdBy: "user-1",
+				institutionId: "ins-1",
+				status: "active",
+			}),
+		);
+
+		const program = await t.query(api.programs.getById, { id });
+
+		expect(program).toMatchObject({
+			name: "Computer Science Engineering",
+			alias: "CSE",
+		});
+	});
+});
