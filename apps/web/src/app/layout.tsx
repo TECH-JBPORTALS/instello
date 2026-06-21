@@ -1,4 +1,5 @@
 import "./globals.css";
+import { getToken } from "@instello/convex/better-auth/server";
 import { cn } from "@instello/ui/lib/utils";
 import type { Metadata } from "next";
 import { Source_Sans_3 } from "next/font/google";
@@ -17,15 +18,17 @@ export const metadata: Metadata = {
 	},
 };
 
-export default function RootLayout({
+export default async function RootLayout({
 	children,
 }: {
 	children: React.ReactNode;
 }) {
+	const token = await getToken();
+
 	return (
 		<html lang="en" className={cn("font-sans", sourceSans3.variable)}>
 			<body className={cn(sourceSans3.variable)}>
-				<Providers>{children}</Providers>
+				<Providers initialToken={token}>{children}</Providers>
 			</body>
 		</html>
 	);

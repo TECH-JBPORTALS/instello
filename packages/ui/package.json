@@ -19,6 +19,7 @@
 		"@fontsource-variable/source-sans-3": "^5.2.9",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
+		"input-otp": "^1.4.2",
 		"lucide-react": "^1.17.0",
 		"react": "catalog:",
 		"react-dom": "catalog:",
