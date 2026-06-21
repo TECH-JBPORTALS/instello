@@ -231,7 +231,3 @@ Frontend → functions/ (auth + access control) → model/ (business logic) → 
 - Write tests for all public Convex functions
 - Follow existing patterns before introducing new abstractions
 - For Convex-specific work, see [packages/convex/README.md](packages/convex/README.md)
-
-## License
-
-No licence - It's a private repo, it shouldn't be re-used / sell as SASS by other thirdparty. It's complete ownership & copyrights belongs to JB PORTALS ® company. It's truly a private repository.
