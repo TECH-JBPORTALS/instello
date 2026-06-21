@@ -15,6 +15,7 @@
 		"@instello/convex": "workspace:*",
 		"@instello/ui": "workspace:*",
 		"@tanstack/react-form-nextjs": "^1.33.0",
+		"@tabler/icons-react": "catalog:",
 		"convex": "^1.35.1",
 		"lucide-react": "^1.17.0",
 		"next": "^16.2.4",

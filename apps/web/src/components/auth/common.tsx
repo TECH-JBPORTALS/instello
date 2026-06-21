@@ -8,6 +8,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
 				src={"/instello.svg"}
 				height={60}
 				width={120}
+				loading="eager"
 				alt="Instello Logo"
 			/>
 			{children}

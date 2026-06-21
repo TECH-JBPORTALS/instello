@@ -16,8 +16,8 @@
 		"components": "@/components",
 		"utils": "@instello/ui/lib/utils",
 		"ui": "@instello/ui/components",
-		"lib": "@/lib",
-		"hooks": "@/hooks"
+		"lib": "@instello/ui/lib",
+		"hooks": "@instello/ui/hooks"
 	},
 	"menuColor": "default",
 	"menuAccent": "subtle",

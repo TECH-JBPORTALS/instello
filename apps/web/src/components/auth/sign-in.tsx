@@ -1,4 +1,10 @@
 "use client";
+import { authClient } from "@instello/convex/better-auth/client";
+import {
+	Alert,
+	AlertDescription,
+	AlertTitle,
+} from "@instello/ui/components/alert";
 import { Button } from "@instello/ui/components/button";
 import {
 	Card,
@@ -20,7 +26,11 @@ import {
 	InputGroupButton,
 	InputGroupInput,
 } from "@instello/ui/components/input-group";
+import { IconAlertCircle, IconEye, IconEyeClosed } from "@tabler/icons-react";
 import { useForm } from "@tanstack/react-form-nextjs";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import * as v from "valibot";
 
 const SignInSchema = v.object({
@@ -29,21 +39,41 @@ const SignInSchema = v.object({
 });
 
 export function SignIn() {
+	const [showPassword, setShowPassword] = useState(false);
+	const [globalError, setGlobalError] = useState<null | string>(null);
+	const router = useRouter();
+
 	const form = useForm({
 		defaultValues: {
 			email: "",
 			password: "",
 		},
 		validators: {
-			onSubmit: SignInSchema,
+			onChange: SignInSchema,
 		},
 		onSubmit: async ({ value }) => {
-			alert("submitted!");
+			try {
+				setGlobalError(null);
+				await authClient.signIn.email({
+					email: value.email,
+					password: value.password,
+					fetchOptions: {
+						onSuccess() {
+							router.refresh();
+						},
+						onError(context) {
+							setGlobalError(context.error.message);
+						},
+					},
+				});
+			} catch (_e) {
+				setGlobalError("something went wrong");
+			}
 		},
 	});
 
 	return (
-		<Card className="sm:min-w-xs min-w-full max-w-min">
+		<Card className="sm:min-w-sm min-w-full max-w-min">
 			<CardHeader>
 				<CardTitle className="text-center">Sign in to your account</CardTitle>
 				<CardDescription className="text-center">
@@ -58,6 +88,17 @@ export function SignIn() {
 						form.handleSubmit();
 					}}
 				>
+					<FieldGroup className="mb-3">
+						{globalError && (
+							<Alert variant={"destructive"}>
+								<IconAlertCircle />
+								<AlertTitle>{globalError}</AlertTitle>
+								<AlertDescription>
+									Check invalid details displayed in the message.
+								</AlertDescription>
+							</Alert>
+						)}
+					</FieldGroup>
 					<FieldGroup>
 						{/** Email address */}
 						<form.Field
@@ -103,8 +144,13 @@ export function SignIn() {
 												onChange={(e) => field.handleChange(e.target.value)}
 												aria-invalid={isInvalid}
 												autoComplete="off"
+												type={showPassword ? "text" : "password"}
 											/>
-											<InputGroupButton>D</InputGroupButton>
+											<InputGroupButton
+												onClick={() => setShowPassword((show) => !show)}
+											>
+												{showPassword ? <IconEye /> : <IconEyeClosed />}
+											</InputGroupButton>
 										</InputGroup>
 										{isInvalid && (
 											<FieldError errors={field.state.meta.errors} />
@@ -118,9 +164,25 @@ export function SignIn() {
 			</CardContent>
 			<CardFooter>
 				<Field>
-					<Button className={"w-full"} type="submit" form="sign-in-form">
+					<Button
+						className={"w-full"}
+						loading={form.state.isSubmitting}
+						loadingText="Signing in..."
+						disabled={!form.state.canSubmit}
+						type="submit"
+						form="sign-in-form"
+					>
 						Sign in
 					</Button>
+					<p className="text-center">
+						Did you forgot your password?{" "}
+						<Link
+							className="text-primary/90 hover:text-primary"
+							href={"/reset-password"}
+						>
+							Reset
+						</Link>
+					</p>
 				</Field>
 			</CardFooter>
 		</Card>
