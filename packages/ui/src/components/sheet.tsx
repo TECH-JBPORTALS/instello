@@ -1,8 +1,10 @@
+"use client";
+
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
 import { Button } from "@instello/ui/components/button";
 
 import { cn } from "@instello/ui/lib/utils";
-import { XIcon } from "lucide-react";
+import { IconX } from "@tabler/icons-react";
 import type * as React from "react";
 
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
@@ -68,7 +70,7 @@ function SheetContent({
 							/>
 						}
 					>
-						<XIcon />
+						<IconX />
 						<span className="sr-only">Close</span>
 					</SheetPrimitive.Close>
 				)}

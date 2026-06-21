@@ -56,8 +56,8 @@ export const CreateSchema = vv.doc("programs").pick("name", "alias");
  * @returns updated program with new slug
  */
 export async function updateAlias(
-	ctx: InsMutationCtx,
-	args: Infer<typeof UpdateAliasSchema>,
+	_ctx: InsMutationCtx,
+	_args: Infer<typeof UpdateAliasSchema>,
 ) {}
 
 export const UpdateAliasSchema = vv.object({
@@ -73,8 +73,8 @@ export const UpdateAliasSchema = vv.object({
  * @returns programs inside the current institution
  */
 export async function remove(
-	ctx: InsMutationCtx,
-	args: Infer<typeof RemoveSchema>,
+	_ctx: InsMutationCtx,
+	_args: Infer<typeof RemoveSchema>,
 ) {}
 
 export const RemoveSchema = vv.object({

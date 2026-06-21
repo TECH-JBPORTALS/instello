@@ -1,6 +1,6 @@
 import { cn } from "@instello/ui/lib/utils";
+import { IconMinus } from "@tabler/icons-react";
 import { OTPInput, OTPInputContext } from "input-otp";
-import { MinusIcon } from "lucide-react";
 import * as React from "react";
 
 function InputOTP({
@@ -74,7 +74,7 @@ function InputOTPSeparator({ ...props }: React.ComponentProps<"div">) {
 			className="flex items-center [&_svg:not([class*='size-'])]:size-4"
 			{...props}
 		>
-			<MinusIcon />
+			<IconMinus />
 		</div>
 	);
 }
