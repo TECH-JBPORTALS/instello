@@ -60,15 +60,4 @@ describe("Create Student", () => {
 - Write tests for all public functions.
 - Follow existing patterns before introducing new ones.
 
-```
-:::
-
-The two additions I like most are:
-
-1. **Development Philosophy** section — tells teammates *how* Instello is built.
-2. **Workflow** section — gives a repeatable process:
-   `Contract → Test → Implement → Refactor`.
-
-That workflow alone will prevent a lot of random AI-generated code from creeping into the codebase.
-```
 

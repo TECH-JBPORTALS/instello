@@ -14,6 +14,7 @@ import type * as helpers_errors from "../helpers/errors.js";
 import type * as http from "../http.js";
 import type * as model_programs from "../model/programs.js";
 import type * as programs from "../programs.js";
+import type * as seed_users from "../seed/users.js";
 
 import type {
   ApiFromModules,
@@ -28,6 +29,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   "model/programs": typeof model_programs;
   programs: typeof programs;
+  "seed/users": typeof seed_users;
 }>;
 
 /**

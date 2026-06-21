@@ -1,6 +1,7 @@
 import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
+import { admin } from "better-auth/plugins";
 import { organization } from "better-auth/plugins/organization";
 import { components } from "~/_generated/api";
 import type { DataModel } from "~/_generated/dataModel";
@@ -27,7 +28,6 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 		emailAndPassword: {
 			enabled: true,
 			requireEmailVerification: false,
-			disableSignUp: true,
 		},
 		user: {
 			modelName: "users",
@@ -41,7 +41,9 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 		verification: {
 			modelName: "verifications",
 		},
+
 		plugins: [
+			admin(),
 			organization({
 				ac,
 				roles: {

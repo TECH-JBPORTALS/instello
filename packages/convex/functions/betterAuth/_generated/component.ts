@@ -31,11 +31,15 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           input:
             | {
                 data: {
+                  banExpires?: null | number;
+                  banReason?: null | string;
+                  banned?: null | boolean;
                   createdAt: number;
                   email: string;
                   emailVerified: boolean;
                   image?: null | string;
                   name: string;
+                  role?: null | string;
                   updatedAt: number;
                   userId?: null | string;
                 };
@@ -46,6 +50,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   activeInstitutionId?: null | string;
                   createdAt: number;
                   expiresAt: number;
+                  impersonatedBy?: null | string;
                   ipAddress?: null | string;
                   token: string;
                   updatedAt: number;
@@ -134,7 +139,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   state: string;
                   updatedAt: number;
                 };
-                model: "organizations";
+                model: "ownerOrganizations";
               }
             | {
                 data: {
@@ -177,6 +182,10 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "image"
                     | "createdAt"
                     | "updatedAt"
+                    | "role"
+                    | "banned"
+                    | "banReason"
+                    | "banExpires"
                     | "userId"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
@@ -213,6 +222,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "ipAddress"
                     | "userAgent"
                     | "userId"
+                    | "impersonatedBy"
                     | "activeInstitutionId"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
@@ -443,7 +453,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "organizations";
+                model: "ownerOrganizations";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -551,6 +561,10 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "image"
                     | "createdAt"
                     | "updatedAt"
+                    | "role"
+                    | "banned"
+                    | "banReason"
+                    | "banExpires"
                     | "userId"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
@@ -587,6 +601,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "ipAddress"
                     | "userAgent"
                     | "userId"
+                    | "impersonatedBy"
                     | "activeInstitutionId"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
@@ -817,7 +832,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "organizations";
+                model: "ownerOrganizations";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -916,7 +931,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | "institutionMembers"
             | "institutionInvitations"
             | "jwks"
-            | "organizations"
+            | "ownerOrganizations"
             | "accessRequests";
           offset?: number;
           paginationOpts: {
@@ -971,7 +986,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | "institutionMembers"
             | "institutionInvitations"
             | "jwks"
-            | "organizations"
+            | "ownerOrganizations"
             | "accessRequests";
           select?: Array<string>;
           where?: Array<{
@@ -1010,11 +1025,15 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | {
                 model: "users";
                 update: {
+                  banExpires?: null | number;
+                  banReason?: null | string;
+                  banned?: null | boolean;
                   createdAt?: number;
                   email?: string;
                   emailVerified?: boolean;
                   image?: null | string;
                   name?: string;
+                  role?: null | string;
                   updatedAt?: number;
                   userId?: null | string;
                 };
@@ -1027,6 +1046,10 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "image"
                     | "createdAt"
                     | "updatedAt"
+                    | "role"
+                    | "banned"
+                    | "banReason"
+                    | "banExpires"
                     | "userId"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
@@ -1057,6 +1080,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   activeInstitutionId?: null | string;
                   createdAt?: number;
                   expiresAt?: number;
+                  impersonatedBy?: null | string;
                   ipAddress?: null | string;
                   token?: string;
                   updatedAt?: number;
@@ -1073,6 +1097,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "ipAddress"
                     | "userAgent"
                     | "userId"
+                    | "impersonatedBy"
                     | "activeInstitutionId"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
@@ -1352,7 +1377,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "organizations";
+                model: "ownerOrganizations";
                 update: {
                   addressLine?: string;
                   city?: string;
@@ -1480,11 +1505,15 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | {
                 model: "users";
                 update: {
+                  banExpires?: null | number;
+                  banReason?: null | string;
+                  banned?: null | boolean;
                   createdAt?: number;
                   email?: string;
                   emailVerified?: boolean;
                   image?: null | string;
                   name?: string;
+                  role?: null | string;
                   updatedAt?: number;
                   userId?: null | string;
                 };
@@ -1497,6 +1526,10 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "image"
                     | "createdAt"
                     | "updatedAt"
+                    | "role"
+                    | "banned"
+                    | "banReason"
+                    | "banExpires"
                     | "userId"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
@@ -1527,6 +1560,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   activeInstitutionId?: null | string;
                   createdAt?: number;
                   expiresAt?: number;
+                  impersonatedBy?: null | string;
                   ipAddress?: null | string;
                   token?: string;
                   updatedAt?: number;
@@ -1543,6 +1577,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "ipAddress"
                     | "userAgent"
                     | "userId"
+                    | "impersonatedBy"
                     | "activeInstitutionId"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
@@ -1822,7 +1857,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "organizations";
+                model: "ownerOrganizations";
                 update: {
                   addressLine?: string;
                   city?: string;
@@ -1952,22 +1987,65 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         Name
       >;
     };
+    ownerOrganizations: {
+      create: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          addressLine: string;
+          city: string;
+          country: string;
+          name: string;
+          ownerId: string;
+          postalCode: string;
+          slug: string;
+          state: string;
+        },
+        any,
+        Name
+      >;
+    };
     users: {
-      get: FunctionReference<
+      getById: FunctionReference<
         "query",
         "internal",
         { userId: string },
         {
           _creationTime: number;
           _id: string;
+          banExpires?: null | number;
+          banReason?: null | string;
+          banned?: null | boolean;
           createdAt: number;
           email: string;
           emailVerified: boolean;
           image?: null | string;
           name: string;
+          role?: null | string;
           updatedAt: number;
           userId?: null | string;
         },
+        Name
+      >;
+      safeGetByEmail: FunctionReference<
+        "query",
+        "internal",
+        { email: string },
+        {
+          _creationTime: number;
+          _id: string;
+          banExpires?: null | number;
+          banReason?: null | string;
+          banned?: null | boolean;
+          createdAt: number;
+          email: string;
+          emailVerified: boolean;
+          image?: null | string;
+          name: string;
+          role?: null | string;
+          updatedAt: number;
+          userId?: null | string;
+        } | null,
         Name
       >;
     };
