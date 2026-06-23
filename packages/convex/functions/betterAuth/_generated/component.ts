@@ -1971,6 +1971,21 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
       >;
     };
     institutions: {
+      firstByUser: FunctionReference<
+        "query",
+        "internal",
+        { userId: string },
+        {
+          _creationTime: number;
+          _id: string;
+          createdAt: number;
+          logo?: null | string;
+          metadata?: null | string;
+          name: string;
+          slug: string;
+        } | null,
+        Name
+      >;
       getById: FunctionReference<
         "query",
         "internal",

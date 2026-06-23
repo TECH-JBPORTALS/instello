@@ -18,7 +18,7 @@ import { ConvexError } from "convex/values";
 import { components } from "~/_generated/api";
 import { internalMutation } from "~/_generated/server";
 import type { Doc as BetterAuthDoc } from "~/betterAuth/_generated/dataModel";
-import { authComponent, createAuth } from "~/betterAuth/auth";
+import { authComponent, createAuth } from "~/auth";
 import type { OwnerOrg } from "~/betterAuth/ownerOrganizations";
 
 const ownersList: Owner[] = [
