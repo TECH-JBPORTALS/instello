@@ -20,14 +20,16 @@
 		"fix:unsafe": "biome check --write --unsafe",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"auth:generate": "bunx auth generate --config functions/betterAuth/auth.config.ts --output functions/betterAuth/authSchema.ts"
+		"auth:generate": "bunx auth generate --config functions/betterAuth/auth.config.ts --output functions/betterAuth/authSchema.ts",
+		"clean": "rm -rf .turbo dist node_modules"
 	},
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
-		"@convex-dev/better-auth": "^0.12.2",
+		"@convex-dev/better-auth": "^0.12.4",
 		"better-auth": "^1.6.15",
-		"convex": "^1.35.1",
+		"convex": "^1.42.0",
+		"convex-helpers": "^0.1.120",
 		"react": "catalog:",
 		"react-dom": "catalog:"
 	},

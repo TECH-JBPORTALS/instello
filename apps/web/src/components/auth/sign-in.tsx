@@ -54,18 +54,17 @@ export function SignIn() {
 		onSubmit: async ({ value }) => {
 			try {
 				setGlobalError(null);
-				await authClient.signIn.email({
+				const { error } = await authClient.signIn.email({
 					email: value.email,
 					password: value.password,
-					fetchOptions: {
-						onSuccess() {
-							router.refresh();
-						},
-						onError(context) {
-							setGlobalError(context.error.message);
-						},
-					},
 				});
+
+				if (error?.message) {
+					setGlobalError(error.message);
+					return;
+				}
+
+				router.refresh();
 			} catch (_e) {
 				setGlobalError("something went wrong");
 			}

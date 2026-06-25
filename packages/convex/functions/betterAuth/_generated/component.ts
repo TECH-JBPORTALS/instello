@@ -43,7 +43,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   updatedAt: number;
                   userId?: null | string;
                 };
-                model: "users";
+                model: "user";
               }
             | {
                 data: {
@@ -57,7 +57,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   userAgent?: null | string;
                   userId: string;
                 };
-                model: "sessions";
+                model: "session";
               }
             | {
                 data: {
@@ -74,7 +74,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   updatedAt: number;
                   userId: string;
                 };
-                model: "accounts";
+                model: "account";
               }
             | {
                 data: {
@@ -84,7 +84,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   updatedAt: number;
                   value: string;
                 };
-                model: "verifications";
+                model: "verification";
               }
             | {
                 data: {
@@ -94,7 +94,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   name: string;
                   slug: string;
                 };
-                model: "institutions";
+                model: "institution";
               }
             | {
                 data: {
@@ -103,7 +103,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   role: string;
                   userId: string;
                 };
-                model: "institutionMembers";
+                model: "institutionMember";
               }
             | {
                 data: {
@@ -115,7 +115,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   role?: null | string;
                   status: string;
                 };
-                model: "institutionInvitations";
+                model: "institutionInvitation";
               }
             | {
                 data: {
@@ -125,40 +125,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   publicKey: string;
                 };
                 model: "jwks";
-              }
-            | {
-                data: {
-                  addressLine: string;
-                  city: string;
-                  country: string;
-                  createdAt: number;
-                  name: string;
-                  ownerId: string;
-                  postalCode: string;
-                  slug: string;
-                  state: string;
-                  updatedAt: number;
-                };
-                model: "ownerOrganizations";
-              }
-            | {
-                data: {
-                  approvedAt?: number;
-                  createdAt: number;
-                  email: string;
-                  orgAddress: string;
-                  orgAddressCity: string;
-                  orgAddressCountry: string;
-                  orgAddressState: string;
-                  orgName: string;
-                  orgPostalCode: string;
-                  phoneNumber: string;
-                  rejectedAt?: number;
-                  rejectedReason?: number;
-                  status: "rejected" | "approved" | "pending";
-                  updatedAt: number;
-                };
-                model: "accessRequests";
               };
           onCreateHandle?: string;
           select?: Array<string>;
@@ -172,7 +138,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         {
           input:
             | {
-                model: "users";
+                model: "user";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -211,7 +177,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "sessions";
+                model: "session";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -248,7 +214,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "accounts";
+                model: "account";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -288,7 +254,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "verifications";
+                model: "verification";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -321,7 +287,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "institutions";
+                model: "institution";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -354,7 +320,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "institutionMembers";
+                model: "institutionMember";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -386,7 +352,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "institutionInvitations";
+                model: "institutionInvitation";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -429,86 +395,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "privateKey"
                     | "createdAt"
                     | "expiresAt"
-                    | "_id";
-                  mode?: "sensitive" | "insensitive";
-                  operator?:
-                    | "lt"
-                    | "lte"
-                    | "gt"
-                    | "gte"
-                    | "eq"
-                    | "in"
-                    | "not_in"
-                    | "ne"
-                    | "contains"
-                    | "starts_with"
-                    | "ends_with";
-                  value:
-                    | string
-                    | number
-                    | boolean
-                    | Array<string>
-                    | Array<number>
-                    | null;
-                }>;
-              }
-            | {
-                model: "ownerOrganizations";
-                where?: Array<{
-                  connector?: "AND" | "OR";
-                  field:
-                    | "ownerId"
-                    | "name"
-                    | "slug"
-                    | "addressLine"
-                    | "city"
-                    | "state"
-                    | "postalCode"
-                    | "country"
-                    | "createdAt"
-                    | "updatedAt"
-                    | "_id";
-                  mode?: "sensitive" | "insensitive";
-                  operator?:
-                    | "lt"
-                    | "lte"
-                    | "gt"
-                    | "gte"
-                    | "eq"
-                    | "in"
-                    | "not_in"
-                    | "ne"
-                    | "contains"
-                    | "starts_with"
-                    | "ends_with";
-                  value:
-                    | string
-                    | number
-                    | boolean
-                    | Array<string>
-                    | Array<number>
-                    | null;
-                }>;
-              }
-            | {
-                model: "accessRequests";
-                where?: Array<{
-                  connector?: "AND" | "OR";
-                  field:
-                    | "email"
-                    | "phoneNumber"
-                    | "status"
-                    | "orgName"
-                    | "orgAddress"
-                    | "orgAddressCity"
-                    | "orgAddressState"
-                    | "orgAddressCountry"
-                    | "orgPostalCode"
-                    | "approvedAt"
-                    | "rejectedAt"
-                    | "rejectedReason"
-                    | "createdAt"
-                    | "updatedAt"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -551,7 +437,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         {
           input:
             | {
-                model: "users";
+                model: "user";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -590,7 +476,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "sessions";
+                model: "session";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -627,7 +513,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "accounts";
+                model: "account";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -667,7 +553,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "verifications";
+                model: "verification";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -700,7 +586,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "institutions";
+                model: "institution";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -733,7 +619,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "institutionMembers";
+                model: "institutionMember";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -765,7 +651,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "institutionInvitations";
+                model: "institutionInvitation";
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
@@ -830,86 +716,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | Array<number>
                     | null;
                 }>;
-              }
-            | {
-                model: "ownerOrganizations";
-                where?: Array<{
-                  connector?: "AND" | "OR";
-                  field:
-                    | "ownerId"
-                    | "name"
-                    | "slug"
-                    | "addressLine"
-                    | "city"
-                    | "state"
-                    | "postalCode"
-                    | "country"
-                    | "createdAt"
-                    | "updatedAt"
-                    | "_id";
-                  mode?: "sensitive" | "insensitive";
-                  operator?:
-                    | "lt"
-                    | "lte"
-                    | "gt"
-                    | "gte"
-                    | "eq"
-                    | "in"
-                    | "not_in"
-                    | "ne"
-                    | "contains"
-                    | "starts_with"
-                    | "ends_with";
-                  value:
-                    | string
-                    | number
-                    | boolean
-                    | Array<string>
-                    | Array<number>
-                    | null;
-                }>;
-              }
-            | {
-                model: "accessRequests";
-                where?: Array<{
-                  connector?: "AND" | "OR";
-                  field:
-                    | "email"
-                    | "phoneNumber"
-                    | "status"
-                    | "orgName"
-                    | "orgAddress"
-                    | "orgAddressCity"
-                    | "orgAddressState"
-                    | "orgAddressCountry"
-                    | "orgPostalCode"
-                    | "approvedAt"
-                    | "rejectedAt"
-                    | "rejectedReason"
-                    | "createdAt"
-                    | "updatedAt"
-                    | "_id";
-                  mode?: "sensitive" | "insensitive";
-                  operator?:
-                    | "lt"
-                    | "lte"
-                    | "gt"
-                    | "gte"
-                    | "eq"
-                    | "in"
-                    | "not_in"
-                    | "ne"
-                    | "contains"
-                    | "starts_with"
-                    | "ends_with";
-                  value:
-                    | string
-                    | number
-                    | boolean
-                    | Array<string>
-                    | Array<number>
-                    | null;
-                }>;
               };
           onDeleteHandle?: string;
         },
@@ -923,16 +729,14 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           join?: any;
           limit?: number;
           model:
-            | "users"
-            | "sessions"
-            | "accounts"
-            | "verifications"
-            | "institutions"
-            | "institutionMembers"
-            | "institutionInvitations"
-            | "jwks"
-            | "ownerOrganizations"
-            | "accessRequests";
+            | "user"
+            | "session"
+            | "account"
+            | "verification"
+            | "institution"
+            | "institutionMember"
+            | "institutionInvitation"
+            | "jwks";
           offset?: number;
           paginationOpts: {
             cursor: string | null;
@@ -978,16 +782,14 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         {
           join?: any;
           model:
-            | "users"
-            | "sessions"
-            | "accounts"
-            | "verifications"
-            | "institutions"
-            | "institutionMembers"
-            | "institutionInvitations"
-            | "jwks"
-            | "ownerOrganizations"
-            | "accessRequests";
+            | "user"
+            | "session"
+            | "account"
+            | "verification"
+            | "institution"
+            | "institutionMember"
+            | "institutionInvitation"
+            | "jwks";
           select?: Array<string>;
           where?: Array<{
             connector?: "AND" | "OR";
@@ -1023,7 +825,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         {
           input:
             | {
-                model: "users";
+                model: "user";
                 update: {
                   banExpires?: null | number;
                   banReason?: null | string;
@@ -1075,7 +877,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "sessions";
+                model: "session";
                 update: {
                   activeInstitutionId?: null | string;
                   createdAt?: number;
@@ -1123,7 +925,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "accounts";
+                model: "account";
                 update: {
                   accessToken?: null | string;
                   accessTokenExpiresAt?: null | number;
@@ -1177,7 +979,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "verifications";
+                model: "verification";
                 update: {
                   createdAt?: number;
                   expiresAt?: number;
@@ -1217,7 +1019,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "institutions";
+                model: "institution";
                 update: {
                   createdAt?: number;
                   logo?: null | string;
@@ -1257,7 +1059,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "institutionMembers";
+                model: "institutionMember";
                 update: {
                   createdAt?: number;
                   organizationId?: string;
@@ -1295,7 +1097,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "institutionInvitations";
+                model: "institutionInvitation";
                 update: {
                   createdAt?: number;
                   email?: string;
@@ -1353,114 +1155,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "privateKey"
                     | "createdAt"
                     | "expiresAt"
-                    | "_id";
-                  mode?: "sensitive" | "insensitive";
-                  operator?:
-                    | "lt"
-                    | "lte"
-                    | "gt"
-                    | "gte"
-                    | "eq"
-                    | "in"
-                    | "not_in"
-                    | "ne"
-                    | "contains"
-                    | "starts_with"
-                    | "ends_with";
-                  value:
-                    | string
-                    | number
-                    | boolean
-                    | Array<string>
-                    | Array<number>
-                    | null;
-                }>;
-              }
-            | {
-                model: "ownerOrganizations";
-                update: {
-                  addressLine?: string;
-                  city?: string;
-                  country?: string;
-                  createdAt?: number;
-                  name?: string;
-                  ownerId?: string;
-                  postalCode?: string;
-                  slug?: string;
-                  state?: string;
-                  updatedAt?: number;
-                };
-                where?: Array<{
-                  connector?: "AND" | "OR";
-                  field:
-                    | "ownerId"
-                    | "name"
-                    | "slug"
-                    | "addressLine"
-                    | "city"
-                    | "state"
-                    | "postalCode"
-                    | "country"
-                    | "createdAt"
-                    | "updatedAt"
-                    | "_id";
-                  mode?: "sensitive" | "insensitive";
-                  operator?:
-                    | "lt"
-                    | "lte"
-                    | "gt"
-                    | "gte"
-                    | "eq"
-                    | "in"
-                    | "not_in"
-                    | "ne"
-                    | "contains"
-                    | "starts_with"
-                    | "ends_with";
-                  value:
-                    | string
-                    | number
-                    | boolean
-                    | Array<string>
-                    | Array<number>
-                    | null;
-                }>;
-              }
-            | {
-                model: "accessRequests";
-                update: {
-                  approvedAt?: number;
-                  createdAt?: number;
-                  email?: string;
-                  orgAddress?: string;
-                  orgAddressCity?: string;
-                  orgAddressCountry?: string;
-                  orgAddressState?: string;
-                  orgName?: string;
-                  orgPostalCode?: string;
-                  phoneNumber?: string;
-                  rejectedAt?: number;
-                  rejectedReason?: number;
-                  status?: "rejected" | "approved" | "pending";
-                  updatedAt?: number;
-                };
-                where?: Array<{
-                  connector?: "AND" | "OR";
-                  field:
-                    | "email"
-                    | "phoneNumber"
-                    | "status"
-                    | "orgName"
-                    | "orgAddress"
-                    | "orgAddressCity"
-                    | "orgAddressState"
-                    | "orgAddressCountry"
-                    | "orgPostalCode"
-                    | "approvedAt"
-                    | "rejectedAt"
-                    | "rejectedReason"
-                    | "createdAt"
-                    | "updatedAt"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -1503,7 +1197,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         {
           input:
             | {
-                model: "users";
+                model: "user";
                 update: {
                   banExpires?: null | number;
                   banReason?: null | string;
@@ -1555,7 +1249,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "sessions";
+                model: "session";
                 update: {
                   activeInstitutionId?: null | string;
                   createdAt?: number;
@@ -1603,7 +1297,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "accounts";
+                model: "account";
                 update: {
                   accessToken?: null | string;
                   accessTokenExpiresAt?: null | number;
@@ -1657,7 +1351,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "verifications";
+                model: "verification";
                 update: {
                   createdAt?: number;
                   expiresAt?: number;
@@ -1697,7 +1391,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "institutions";
+                model: "institution";
                 update: {
                   createdAt?: number;
                   logo?: null | string;
@@ -1737,7 +1431,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "institutionMembers";
+                model: "institutionMember";
                 update: {
                   createdAt?: number;
                   organizationId?: string;
@@ -1775,7 +1469,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "institutionInvitations";
+                model: "institutionInvitation";
                 update: {
                   createdAt?: number;
                   email?: string;
@@ -1833,114 +1527,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "privateKey"
                     | "createdAt"
                     | "expiresAt"
-                    | "_id";
-                  mode?: "sensitive" | "insensitive";
-                  operator?:
-                    | "lt"
-                    | "lte"
-                    | "gt"
-                    | "gte"
-                    | "eq"
-                    | "in"
-                    | "not_in"
-                    | "ne"
-                    | "contains"
-                    | "starts_with"
-                    | "ends_with";
-                  value:
-                    | string
-                    | number
-                    | boolean
-                    | Array<string>
-                    | Array<number>
-                    | null;
-                }>;
-              }
-            | {
-                model: "ownerOrganizations";
-                update: {
-                  addressLine?: string;
-                  city?: string;
-                  country?: string;
-                  createdAt?: number;
-                  name?: string;
-                  ownerId?: string;
-                  postalCode?: string;
-                  slug?: string;
-                  state?: string;
-                  updatedAt?: number;
-                };
-                where?: Array<{
-                  connector?: "AND" | "OR";
-                  field:
-                    | "ownerId"
-                    | "name"
-                    | "slug"
-                    | "addressLine"
-                    | "city"
-                    | "state"
-                    | "postalCode"
-                    | "country"
-                    | "createdAt"
-                    | "updatedAt"
-                    | "_id";
-                  mode?: "sensitive" | "insensitive";
-                  operator?:
-                    | "lt"
-                    | "lte"
-                    | "gt"
-                    | "gte"
-                    | "eq"
-                    | "in"
-                    | "not_in"
-                    | "ne"
-                    | "contains"
-                    | "starts_with"
-                    | "ends_with";
-                  value:
-                    | string
-                    | number
-                    | boolean
-                    | Array<string>
-                    | Array<number>
-                    | null;
-                }>;
-              }
-            | {
-                model: "accessRequests";
-                update: {
-                  approvedAt?: number;
-                  createdAt?: number;
-                  email?: string;
-                  orgAddress?: string;
-                  orgAddressCity?: string;
-                  orgAddressCountry?: string;
-                  orgAddressState?: string;
-                  orgName?: string;
-                  orgPostalCode?: string;
-                  phoneNumber?: string;
-                  rejectedAt?: number;
-                  rejectedReason?: number;
-                  status?: "rejected" | "approved" | "pending";
-                  updatedAt?: number;
-                };
-                where?: Array<{
-                  connector?: "AND" | "OR";
-                  field:
-                    | "email"
-                    | "phoneNumber"
-                    | "status"
-                    | "orgName"
-                    | "orgAddress"
-                    | "orgAddressCity"
-                    | "orgAddressState"
-                    | "orgAddressCountry"
-                    | "orgPostalCode"
-                    | "approvedAt"
-                    | "rejectedAt"
-                    | "rejectedReason"
-                    | "createdAt"
-                    | "updatedAt"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -2002,44 +1588,12 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         Name
       >;
     };
-    ownerOrganizations: {
-      create: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          addressLine: string;
-          city: string;
-          country: string;
-          name: string;
-          ownerId: string;
-          postalCode: string;
-          slug: string;
-          state: string;
-        },
-        any,
-        Name
-      >;
-    };
     users: {
       getById: FunctionReference<
         "query",
         "internal",
         { userId: string },
-        {
-          _creationTime: number;
-          _id: string;
-          banExpires?: null | number;
-          banReason?: null | string;
-          banned?: null | boolean;
-          createdAt: number;
-          email: string;
-          emailVerified: boolean;
-          image?: null | string;
-          name: string;
-          role?: null | string;
-          updatedAt: number;
-          userId?: null | string;
-        },
+        { _id: string; email: string; image: string | null; name: string },
         Name
       >;
       safeGetByEmail: FunctionReference<

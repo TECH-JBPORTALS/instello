@@ -160,8 +160,8 @@ instello/
 │   │       ├── seed/                 # Internal seed mutations
 │   │       ├── tests/                # Vitest + convex-test
 │   │       ├── schema.ts             # App tables (programs, etc.)
-│   │       ├── programs.ts           # Public API entry points
-│   │       └── http.ts               # HTTP routes
+│   │       ├── (.. place all public entry funtions files)
+│   │       └── http.ts               # HTTP routes config for betterAuth
 │   └── ui/                           # Shared design system (@instello/ui)
 │       └── src/components/           # shadcn-style primitives
 ├── .github/workflows/ci.yml          # Biome, typecheck, backend tests

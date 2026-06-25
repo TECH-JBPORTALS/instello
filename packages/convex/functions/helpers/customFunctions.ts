@@ -4,7 +4,7 @@ import {
 	customMutation,
 	customQuery,
 } from "convex-helpers/server/customFunctions";
-import { mutation, query } from "~/_generated/server";
+import { mutation, query } from "../_generated/server";
 import { ensureInstitution, ensureSession } from "./auth";
 
 /** Public query will just proceed with handler without any authorization checks */

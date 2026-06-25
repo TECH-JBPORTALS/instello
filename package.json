@@ -7,7 +7,7 @@
 		"test": "turbo run test",
 		"test:backend": "turbo run --filter=@instello/backend test",
 		"typecheck": "turbo run typecheck",
-		"clean": "turbo run clean && rm -rf node_modules",
+		"clean": "turbo run clean && rm -rf node_modules .turbo",
 		"check": "turbo run check",
 		"fix": "turbo run fix",
 		"fix:unsafe": "turbo run fix:unsafe"

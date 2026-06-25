@@ -2,8 +2,8 @@
 
 import type { UserIdentity } from "convex/server";
 import { convexTest } from "convex-test";
-import betterAuthSchema from "~/betterAuth/schema";
-import schema from "~/schema";
+import betterAuthSchema from "../betterAuth/schema";
+import schema from "../schema";
 
 export const modules = import.meta.glob(["../**/*.ts"]);
 export const betterAuthModules = import.meta.glob(["../betterAuth/**/*.ts"]);

@@ -14,12 +14,12 @@
  * ADMIN_EMAIL = <email>
  */
 
-import { ConvexError } from "convex/values";
-import { components } from "~/_generated/api";
-import { internalMutation } from "~/_generated/server";
-import type { Doc as BetterAuthDoc } from "~/betterAuth/_generated/dataModel";
-import { authComponent, createAuth } from "~/auth";
-import type { OwnerOrg } from "~/betterAuth/ownerOrganizations";
+import { ConvexError, type Infer } from "convex/values";
+import { components } from "../_generated/api";
+import { internalMutation } from "../_generated/server";
+import { authComponent, createAuth } from "../auth";
+import type { Doc as BetterAuthDoc } from "../betterAuth/_generated/dataModel";
+import * as OwnerOrganization from "../model/ownerOrganization";
 
 const ownersList: Owner[] = [
 	{
@@ -97,9 +97,11 @@ export const admin = internalMutation({
 	},
 });
 
-type User = Pick<BetterAuthDoc<"users">, "email" | "name">;
+type User = Pick<BetterAuthDoc<"user">, "email" | "name">;
 
-type Owner = User & { org: Omit<OwnerOrg, "ownerId"> };
+type Owner = User & {
+	org: Omit<Infer<typeof OwnerOrganization.OwnerOrgSchema>, "ownerId">;
+};
 
 /**
  * Seeds list of owners with their organization details.
@@ -132,10 +134,7 @@ export const owners = internalMutation({
 				},
 			});
 
-			await ctx.runMutation(components.betterAuth.ownerOrganizations.create, {
-				...owner.org,
-				ownerId: user.id,
-			});
+			await OwnerOrganization.create(ctx, { ...owner.org, ownerId: user.id });
 
 			console.info(`Owner ${owner.name} in the house ✅`);
 		}

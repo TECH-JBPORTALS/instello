@@ -7,14 +7,26 @@ import { vv } from "./schema";
  */
 export const getById = query({
 	args: { userId: v.string() },
-	returns: vv.doc("users"),
+	returns: {
+		_id: vv.id("user"),
+		name: vv.string(),
+		email: vv.string(),
+		image: vv.nullable(vv.string()),
+	},
 	async handler(ctx, args) {
 		const user = await ctx.db
-			.query("users")
+			.query("user")
 			.withIndex("userId", (q) => q.eq("userId", args.userId))
 			.first();
+
 		if (!user) throw new ConvexError("No user found for given userId");
-		return user;
+
+		return {
+			_id: user._id,
+			name: user.name,
+			email: user.email,
+			image: user.image ?? null,
+		};
 	},
 });
 
@@ -23,10 +35,10 @@ export const getById = query({
  */
 export const safeGetByEmail = query({
 	args: { email: v.string() },
-	returns: vv.nullable(vv.doc("users")),
+	returns: vv.nullable(vv.doc("user")),
 	async handler(ctx, args) {
 		const user = await ctx.db
-			.query("users")
+			.query("user")
 			.withIndex("email_name", (q) => q.eq("email", args.email))
 			.first();
 		return user;

@@ -20,9 +20,9 @@
 		"noEmit": true,
 		"jsx": "preserve",
 		"paths": {
-			"~/*": ["./functions/*", "./better-auth/*"]
+			"~/*": ["./better-auth/*"]
 		}
 	},
 	"include": ["./**/*"],
-	"exclude": ["functions/_generated"]
+	"exclude": ["**/_generated/**/*"]
 }

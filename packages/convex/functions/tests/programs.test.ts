@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { api } from "~/_generated/api";
-import { ERROR_CODES } from "~/helpers/errors";
+import { api } from "../_generated/api";
+import { ERROR_CODES } from "../helpers/errors";
 import { createTest } from "./test.setup";
 
 describe("programs.create", () => {

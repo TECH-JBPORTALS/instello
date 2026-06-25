@@ -1,5 +1,5 @@
-import { insMutation, insQuery } from "~/helpers/customFunctions";
-import * as Program from "~/model/programs";
+import { insMutation, insQuery } from "./helpers/customFunctions";
+import * as Program from "./model/program";
 import { vv } from "./schema";
 
 export const create = insMutation({

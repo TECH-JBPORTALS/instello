@@ -7,11 +7,11 @@ import { vv } from "./schema";
  */
 export const getById = query({
 	args: { id: vv.string() },
-	returns: vv.doc("institutions"),
+	returns: vv.doc("institution"),
 	async handler(ctx, args) {
 		const institution = await ctx.db
-			.query("institutions")
-			.withIndex("by_id", (q) => q.eq("_id", args.id as Id<"institutions">))
+			.query("institution")
+			.withIndex("by_id", (q) => q.eq("_id", args.id as Id<"institution">))
 			.first();
 		if (!institution) throw new Error("No institution found for given id");
 		return institution;
@@ -20,19 +20,19 @@ export const getById = query({
 
 export const firstByUser = query({
 	args: { userId: vv.string() },
-	returns: vv.nullable(vv.doc("institutions")),
+	returns: vv.nullable(vv.doc("institution")),
 	handler: async (ctx, args) => {
-		const institutionMembership = await ctx.db
-			.query("institutionMembers")
+		const institutionMemberhip = await ctx.db
+			.query("institutionMember")
 			.withIndex("userId", (q) => q.eq("userId", args.userId))
 			.first();
 
-		if (!institutionMembership) return null;
+		if (!institutionMemberhip) return null;
 
 		const institution = await ctx.db
-			.query("institutions")
+			.query("institution")
 			.withIndex("by_id", (q) =>
-				q.eq("_id", institutionMembership.organizationId as Id<"institutions">),
+				q.eq("_id", institutionMemberhip.organizationId as Id<"institution">),
 			)
 			.first();
 

@@ -1,6 +1,6 @@
 import type { Infer } from "convex/values";
-import type { InsMutationCtx, InsQueryCtx } from "~/helpers/customFunctions";
-import { vv } from "~/schema";
+import type { InsMutationCtx, InsQueryCtx } from "../helpers/customFunctions";
+import { vv } from "../schema";
 
 /**
  * **List all programs inside the current institution**
