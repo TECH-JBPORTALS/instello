@@ -10,12 +10,22 @@ Before making changes to the `/functions` directory, please review the Convex Be
 ## Folder Structure
 
 ```text
-packages/functions
-├── __tests__          # Tests for public Convex functions
-├── better-auth        # Exposed authentication clients for frontend apps
-└── functions          # Convex backend implementation
-    ├── _generated     # Auto-generated Convex files (Do not modify)
-    └── betterAuth     # Better Auth Convex component
+packages/convex
+├── better-auth                # Exposed authentication clients for frontend apps
+└── functions                  # Convex backend implementation
+    ├── _generated             # Auto-generated Convex files (Do not modify)
+    ├── betterAuth             # Better Auth Convex component
+    ├── helpers                # Helper functions
+    ├── seed                   # Seed internal functions (can only run using terminal/dashboard)
+    ├── model                  # Entity models containing buisness logic
+    ├── tests                  # Public functions tests
+    ├── auth.config.ts         # Better auth local install config
+    ├── auth.ts                # Better auth config + auth public functions
+    ├── convex.config.ts       # Convex config for app
+    ├── http.ts                # Register HTTP routes
+    ├── schema.ts              # App schema file
+    └── ... you functions goes here
+
 ```
 
 ## Development Philosophy
@@ -24,13 +34,50 @@ We follow Test-Driven Development (TDD).
 
 Before implementing a feature, write tests that describe the expected behavior of the system. Tests should focus on inputs and outputs rather than implementation details (black-box testing).
 
-### Workflow
+# Development Workflow (TDD)
 
-1. Define the API contract.
-2. Write failing tests.
-3. Implement the feature.
-4. Make tests pass.
-5. Refactor if necessary.
+Follow this workflow for every feature.
+
+1. Define or update the Convex schema.
+2. Create the public API function in `functions/`.
+  - Define arguments.
+  - Define return type.
+  - Add JSDoc.
+3. Create the corresponding test file.
+4. Write failing test cases for every public method.
+5. Implement the business logic inside `functions/model`.
+6. Make all tests pass.
+7. Refactor if needed.
+
+### Model Layer
+
+The `model` layer should:
+
+- contain database operations
+- contain business logic
+- never perform authentication
+- never perform authorization
+- clearly document every exported method
+
+### Public Functions
+
+Public Convex functions should:
+
+- validate inputs
+- perform authentication
+- perform authorization
+- call model methods
+- define clear input/output types
+- include JSDoc
+
+### Helpers
+
+If logic is shared:
+
+- place it inside `functions/helpers`
+- write tests if the helper contains non-trivial logic or could easily regress and cause bugs/break the part of the application in nearer future
+
+---
 
 ## Testing
 
@@ -59,5 +106,4 @@ describe("Create Student", () => {
 - Never modify files inside `_generated`.
 - Write tests for all public functions.
 - Follow existing patterns before introducing new ones.
-
 

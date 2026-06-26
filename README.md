@@ -1,242 +1,177 @@
-<div style="text-align: center;">
- <img height="72px" width="200px" src="apps/web/public/instello.svg"/>
+<div>
+  <img src="./apps/web/public/instello.svg" height="64px" width="180px"/>
 </div>
 
-**instello** is a multi-tenant institution management platform. **Owners** register organizations and operate them on dedicated subdomains (`{org-slug}.yourdomain.com`). Each owner can create multiple **institutions** (Better Auth organizations, remapped in code). Within an institution, role-based access supports **principal**, **faculty**, and related workflows — including **programs** and future student/academic features.
+---
+**Instello** is a multi-tenant institution management platform built with Next.js, Convex, and Better Auth.
 
-**Tech stack:** Bun monorepo (Turborepo), Next.js 16, Convex, Better Auth, shared `@instello/ui` (shadcn-style components), Biome, Vitest.
+## Tech Stack
 
-```mermaid
-flowchart TB
-  subgraph tenants [Multi-tenant routing]
-    RootDomain["Root domain — sign-in / marketing"]
-    OrgSubdomain["org-slug.domain — owner dashboard"]
-    InstitutionRoute["/i/institution — institution dashboard"]
-  end
-  WebApp["apps/web — Next.js"]
-  ConvexBackend["packages/convex — Convex + Better Auth"]
-  WebApp --> ConvexBackend
-  RootDomain --> WebApp
-  OrgSubdomain --> WebApp
-  InstitutionRoute --> WebApp
-```
+- Bun (Monorepo + Turborepo)
+- Next.js 16
+- Convex
+- Better Auth
+- Vitest
+- Biome
+- Shared `@instello/ui`
 
+---
 
+# Getting Started
 
 ## Prerequisites
 
-- **Bun** `>= 1.2.2` (package manager)
-- **Node.js** `>= 20.20.0`
-- **Convex account** (for backend deployment)
-- Optional for local subdomains: ability to use `{slug}.localhost:3000` (handled by `apps/web/src/proxy.ts`)
+- Bun >= 1.2
+- Node.js >= 20
+- Convex account
 
-## Setup
+---
 
-1. **Clone and install**
-  ```bash
-   git clone <repo-url> instello && cd instello
-   bun install
-  ```
-2. **Configure local env files** (copy from examples — see [Environment variables](#environment-variables))
-  ```bash
-   cp apps/web/.env.local.example apps/web/.env.local
-   cp packages/convex/.env.local.example packages/convex/.env.local
-  ```
-3. **Initialize Convex backend**
-  ```bash
-   cd packages/convex
-   bun run setup   # runs: convex dev --until-success
-  ```
-   This creates/links a Convex deployment and writes `packages/convex/.env.local`.
-4. **Set Convex server environment variables** (once per deployment, from `packages/convex`):
-  ```bash
-   bun x convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)
-   bun x convex env set SITE_URL http://localhost:3000
-  ```
-5. **Sync web env** — copy `CONVEX_URL` and site URL values from `packages/convex/.env.local` into `apps/web/.env.local` as `NEXT_PUBLIC_CONVEX_URL` and `NEXT_PUBLIC_CONVEX_SITE_URL` (`.cloud` vs `.site` suffixes as noted in the example file).
-6. **Start development**
-Before starting dev server, you need to generate SSL certificate using `mkcert` inside `apps/web` folder
-  - Generate mkcert certificate
-  It should create two files in `apps/web` - `_wildcard.localtest.me-key.pem` and `_wildcard.localtest.me.pem`. It must not include in git track files list.
-    ```bash
-      #from apps/web
-      bun x mkcert *.localtest.me
-    ```
-    
-  - Run dev server
-    ```bash
-      #from root repo
-      bun dev
-    ```
-   Turbo runs `web` (Next.js on `:3000`) and `@instello/convex` (`convex dev`) in parallel.
-7. **Verify** — open `https://app.localtest.me:3000`. The sign-in page should show the Instello logo.
+## Installation
 
-## Environment variables
+Clone the repository and install dependencies.
 
-### `apps/web/.env.local` (local Next.js)
-
-
-| Variable                      | Required | Description                                                                |
-| ----------------------------- | -------- | -------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_CONVEX_URL`      | Yes      | Convex deployment URL (ends in `.cloud`)                                   |
-| `NEXT_PUBLIC_CONVEX_SITE_URL` | Yes      | Convex HTTP actions URL (ends in `.site`)                                  |
-| `NEXT_PUBLIC_ROOT_DOMAIN`     | No       | Production root domain for subdomain routing; defaults to `localhost:3000` |
-
-
-### `packages/convex/.env.local` (Convex CLI — auto-managed)
-
-
-| Variable            | Description                           |
-| ------------------- | ------------------------------------- |
-| `CONVEX_DEPLOYMENT` | Deployment identifier (`dev:...`)     |
-| `CONVEX_URL`        | Same as `NEXT_PUBLIC_CONVEX_URL`      |
-| `CONVEX_SITE_URL`   | Same as `NEXT_PUBLIC_CONVEX_SITE_URL` |
-
-
-### Convex Dashboard / `convex env set` (server-side runtime)
-
-
-| Variable             | Required when       | Description                                                                  |
-| -------------------- | ------------------- | ---------------------------------------------------------------------------- |
-| `BETTER_AUTH_SECRET` | Always              | Auth signing secret                                                          |
-| `SITE_URL`           | Always              | Public app URL (e.g. `http://localhost:3000` in dev, production URL in prod) |
-| `ADMIN_EMAIL`        | Seeding admin       | Email for super-admin seed (use `+test@resend.dev` pattern in dev)           |
-| `SEED_MODE`          | Dev owner seed only | Must be `true`; blocks owner seed in production                              |
-| `SEED_PASSWORD`      | Dev owner seed only | Shared password for seeded user accounts                                     |
-
-
-> **Note:** `SITE_URL` is set via Convex env (dashboard or CLI), not in `apps/web/.env.local`.
-
-## Seeding initial admin and owners
-
-Seed functions live in `packages/convex/functions/seed/users.tsx` and are **internal mutations** — they must never be exposed to the frontend. Remove or disable `SEED_MODE` in production.
-
-### Seed super admin
-
-1. Set in Convex dashboard or CLI (from `packages/convex`):
-  ```bash
-   bun x convex env set ADMIN_EMAIL "you+test@resend.dev"
-  ```
-2. Run the seed:
-  ```bash
-   bun x convex run seed/users:admin
-  ```
-
-- Creates a Better Auth user with role `admin`, email verified, **no password** (passwordless admin — suitable for production via dashboard run).
-- Idempotent: skips if admin already exists.
-
-### Seed demo owners and organizations (development only)
-
-1. Set Convex env (from `packages/convex`):
-  ```bash
-   bun x convex env set SEED_MODE true
-   bun x convex env set SEED_PASSWORD "your-dev-password"
-  ```
-2. Run the seed:
-  ```bash
-   bun x convex run seed/users:owners
-  ```
-
-- Seeds two owners (Walter White / Empire Kingpin, Rajamatha / Mahishmathi Samsthanam) with organization records.
-- **Guarded:** throws if `SEED_MODE` or `SEED_PASSWORD` is missing; intended for dev only.
-- Sign in at `/` with a seeded email and `SEED_PASSWORD`.
-
-## Folder structure
-
-```text
-instello/
-├── apps/
-│   └── web/                          # Next.js 16 frontend
-│       ├── public/                   # Static assets (instello.svg)
-│       └── src/
-│           ├── app/
-│           │   ├── (unauth)/         # Public routes (sign-in)
-│           │   ├── (auth)/
-│           │   │   ├── o/[subdomain]/ # Owner org dashboard (subdomain rewrite)
-│           │   │   └── i/[institution]/ # Institution-scoped routes
-│           │   └── api/auth/         # Better Auth catch-all route
-│           ├── components/           # App-specific UI (auth, sidebars)
-│           ├── hooks/
-│           └── lib/                  # Utilities (subdomain root domain)
-├── packages/
-│   ├── convex/                       # Backend (@instello/convex)
-│   │   ├── better-auth/              # Auth client, server helpers, provider for web
-│   │   └── functions/
-│   │       ├── _generated/           # Auto-generated — do not edit
-│   │       ├── betterAuth/           # Better Auth Convex component + schema
-│   │       ├── helpers/              # Auth guards, custom query/mutation wrappers
-│   │       ├── model/                # Domain logic (no auth checks here)
-│   │       ├── seed/                 # Internal seed mutations
-│   │       ├── tests/                # Vitest + convex-test
-│   │       ├── schema.ts             # App tables (programs, etc.)
-│   │       ├── (.. place all public entry funtions files)
-│   │       └── http.ts               # HTTP routes config for betterAuth
-│   └── ui/                           # Shared design system (@instello/ui)
-│       └── src/components/           # shadcn-style primitives
-├── .github/workflows/ci.yml          # Biome, typecheck, backend tests
-├── turbo.json
-└── biome.json
+```bash
+git clone <repo-url> instello
+cd instello
+bun install
 ```
 
+---
 
-| Path                              | Purpose                                                                 |
-| --------------------------------- | ----------------------------------------------------------------------- |
-| `apps/web`                        | Next.js frontend — routing, auth UI, and tenant-aware pages             |
-| `packages/convex`                 | Convex backend with Better Auth integration                             |
-| `packages/convex/better-auth`     | Auth client, server helpers, and React provider exported to the web app |
-| `packages/convex/functions`       | Public Convex API — auth checks and access control live here            |
-| `packages/convex/functions/model` | Domain business logic and database operations (no auth)                 |
-| `packages/convex/functions/seed`  | Internal-only seed mutations for admin and demo data                    |
-| `packages/ui`                     | Shared UI components consumed by the web app                            |
+## Configure Web Environment
 
+Copy the example file.
 
-## Guidelines
-
-### Architecture
-
-```text
-Frontend → functions/ (auth + access control) → model/ (business logic) → Convex DB
+```bash
+cp apps/web/.env.local.example apps/web/.env.local
 ```
 
-- Public Convex functions in `functions/` enforce auth via helpers like `ensureSession`, `ensureInstitution` and wrappers in `packages/convex/functions/helpers/customFunctions.ts` (`userQuery`, `insQuery`, etc.).
-- `model/` must **not** perform auth, authorization, or access checks. See [packages/convex/functions/model/README.md](packages/convex/functions/model/README.md).
+Fill in the values.
 
-### Roles
+```env
+NEXT_PUBLIC_CONVEX_URL=
+NEXT_PUBLIC_CONVEX_SITE_URL=
+NEXT_PUBLIC_ROOT_DOMAIN=app.localtest.me
+```
 
+---
 
-| Role          | Description                                              |
-| ------------- | -------------------------------------------------------- |
-| **admin**     | Global super-admin (Better Auth admin plugin)            |
-| **owner**     | Organization owner; manages institutions under their org |
-| **principal** | Institution admin                                        |
-| **faculty**   | Institution member (read-heavy program access)           |
+## Configure Convex
 
+Move into the Convex package.
 
-### Workflow (TDD)
+```bash
+cd packages/convex
+```
 
-1. Define API contract
-2. Write failing tests
-3. Implement the feature
-4. Make tests pass
-5. Refactor if necessary
+Run Convex.
 
-### Commands
+```bash
+bun run dev
+```
 
+If this is your first time, Convex CLI will ask you to create or select a project.
 
-| Command                | Purpose                           |
-| ---------------------- | --------------------------------- |
-| `bun run dev`          | Start web + Convex                |
-| `bun run check`        | Biome lint/format across monorepo |
-| `bun run fix`          | Auto-fix Biome issues             |
-| `bun run typecheck`    | TypeScript check all packages     |
-| `bun run test:backend` | Vitest for Convex functions       |
+After setup it automatically creates:
 
+```
+packages/convex/.env.local
+```
 
-### Rules of thumb
+with the required deployment values.
 
-- Never edit `functions/_generated/` or `betterAuth/_generated/`
-- Validate all external input; use Convex validators on every public function
-- Keep functions small; prefer shared helpers over duplication
-- Write tests for all public Convex functions
-- Follow existing patterns before introducing new abstractions
-- For Convex-specific work, see [packages/convex/README.md](packages/convex/README.md)
+---
+
+## Required Convex Environment Variables
+
+The following variables are validated automatically by `convex.config.ts`.
+
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `SITE_URL` | Yes | Public application URL |
+| `BETTER_AUTH_SECRET` | Yes | Better Auth secret |
+| `SUPER_ADMIN_EMAIL` | Yes | Super administrator email |
+| `SEED_MODE` | Optional | Enable development seeds |
+| `SEED_PASSWORD` | Optional | Password for seeded users |
+
+Example:
+
+```bash
+bun x convex env set SITE_URL https://app.localtest.me:3000
+bun x convex env set BETTER_AUTH_SECRET "<secret>"
+bun x convex env set SUPER_ADMIN_EMAIL "admin@example.com"
+```
+
+---
+
+## Local HTTPS
+
+Generate a wildcard certificate once.
+
+```bash
+cd apps/web
+
+bun x mkcert -install
+bun x mkcert "*.localtest.me"
+```
+
+This creates:
+
+```
+_wildcard.localtest.me.pem
+_wildcard.localtest.me-key.pem
+```
+
+Do **not** commit these files.
+
+---
+
+## Run Development Server
+
+From the repository root.
+
+```bash
+bun dev
+```
+
+Open:
+
+```
+https://app.localtest.me:3000
+```
+
+---
+
+# Testing
+
+Run Convex tests.
+
+```bash
+bun run test:convex
+```
+
+Installing the **Vitest** VS Code extension is recommended for running and debugging tests directly from the editor.
+
+---
+
+# Useful Commands
+
+```bash
+bun dev              # Start web + Convex
+bun run check        # Lint & format
+bun run fix          # Auto-fix formatting
+bun run typecheck    # Type checking
+bun run test:convex  # Run Convex tests
+```
+
+---
+
+# Rules
+
+- Never edit generated files.
+- Validate all public function inputs.
+- Keep functions small.
+- Reuse helpers instead of duplicating logic.
+- Write tests for every public API.
+- Keep authentication and authorization out of the model layer.
