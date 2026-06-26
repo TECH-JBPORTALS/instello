@@ -10,6 +10,7 @@ import type { DataModel } from "./_generated/dataModel";
 import authConfig from "./auth.config";
 import authSchema, { vv } from "./betterAuth/schema";
 import { userQuery } from "./helpers/customFunctions";
+import { formInstitutionUrl } from "./helpers/utils";
 import * as OwnerOrganizations from "./model/ownerOrganization";
 
 const siteUrl = process.env.SITE_URL;
@@ -148,7 +149,7 @@ export const resolveLandingPath = userQuery({
 
 			return {
 				redirectUrl: institution
-					? `http://${institution.slug}.localhost:3000`
+					? formInstitutionUrl(institution.slug)
 					: "/institution-not-found",
 			};
 		}
