@@ -60,4 +60,6 @@ export async function seedPrograms(ctx: AppMutationCtx) {
 		institutionId: "ins-2",
 		status: "active",
 	});
+
+	return ctx.db.query("programs").collect();
 }

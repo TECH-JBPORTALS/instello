@@ -66,7 +66,7 @@ export const getById = insQuery({
 		createdAt: vv.number(),
 	}),
 	handler: async (ctx, args) => {
-		const program = await Program.getById(ctx, args);
+		const program = await Program.getById(ctx, args.id);
 
 		if (!program) throw new ConvexError("Program not found");
 
@@ -88,18 +88,15 @@ export const getById = insQuery({
  */
 export const updateName = insMutation({
 	args: {
-		id: vv.string(),
+		id: vv.id("programs"),
 		body: vv.object({ name: vv.string() }),
 	},
-	returns: vv.object({
-		_id: vv.id("programs"),
-		name: vv.string(),
-		alias: vv.string(),
-		createdAt: vv.string(),
-		updatedAt: vv.string(),
-	}),
-	handler: (ctx, args) => {
-		return new ConvexError("Not implemented");
+	handler: async (ctx, args) => {
+		const program = await Program.getById(ctx, args.id);
+
+		if (!program) throw new ConvexError("Program not found");
+
+		await Program.patch(ctx, args.id, args.body);
 	},
 });
 
@@ -111,17 +108,14 @@ export const updateName = insMutation({
  */
 export const updateAlias = insMutation({
 	args: {
-		id: vv.string(),
+		id: vv.id("programs"),
 		body: vv.object({ alias: vv.string() }),
 	},
-	returns: vv.object({
-		_id: vv.id("programs"),
-		name: vv.string(),
-		alias: vv.string(),
-		createdAt: vv.string(),
-		updatedAt: vv.string(),
-	}),
-	handler: (ctx, args) => {
-		return new ConvexError("Not implemented");
+	handler: async (ctx, args) => {
+		const program = await Program.getById(ctx, args.id);
+
+		if (!program) throw new ConvexError("Program not found");
+
+		await Program.patch(ctx, args.id, args.body);
 	},
 });

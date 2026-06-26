@@ -80,12 +80,24 @@ export async function list(
 }
 
 /**
- * **Create program**
- * @returns programs inside the current institution
+ * **Get program by id**
+ * @returns null if program doesn't exists
  */
-export async function getById(ctx: AppQueryCtx, args: { id: Id<"programs"> }) {
+export async function getById(ctx: AppQueryCtx, id: Id<"programs">) {
 	return await ctx.db
 		.query("programs")
-		.withIndex("by_id", (q) => q.eq("_id", args.id))
+		.withIndex("by_id", (q) => q.eq("_id", id))
 		.first();
+}
+
+/**
+ * **Update program**
+ * @returns nothing
+ */
+export async function patch(
+	ctx: AppMutationCtx,
+	id: Id<"programs">,
+	body: { name?: string; alias?: string },
+) {
+	return await ctx.db.patch("programs", id, { ...body, updatedAt: Date.now() });
 }
