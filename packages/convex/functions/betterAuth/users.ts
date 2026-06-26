@@ -1,4 +1,6 @@
 import { ConvexError, v } from "convex/values";
+import { ERROR_CODES } from "../helpers/errors";
+import type { Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { vv } from "./schema";
 
@@ -12,20 +14,22 @@ export const getById = query({
 		name: vv.string(),
 		email: vv.string(),
 		image: vv.nullable(vv.string()),
+		role: vv.string(),
 	},
 	async handler(ctx, args) {
 		const user = await ctx.db
 			.query("user")
-			.withIndex("userId", (q) => q.eq("userId", args.userId))
+			.withIndex("by_id", (q) => q.eq("_id", args.userId as Id<"user">))
 			.first();
 
-		if (!user) throw new ConvexError("No user found for given userId");
+		if (!user) throw new ConvexError(ERROR_CODES.BASE.USER_NOT_FOUND.message);
 
 		return {
 			_id: user._id,
 			name: user.name,
 			email: user.email,
 			image: user.image ?? null,
+			role: user.role ?? "user",
 		};
 	},
 });

@@ -5,13 +5,13 @@ import { OrganizationSidebar } from "@/components/sidebars/organization-sidebar"
 export async function generateMetadata({
 	params,
 }: {
-	params: Promise<{ subdomain: string }>;
+	params: Promise<{ orgSlug: string }>;
 }): Promise<Metadata> {
-	const { subdomain } = await params;
+	const { orgSlug } = await params;
 
 	return {
-		title: `Instello - ${subdomain.toLocaleUpperCase()}`,
-		description: `Manage your organization ${subdomain.toLocaleUpperCase()}.`,
+		title: `Instello - ${orgSlug.toLocaleUpperCase()}`,
+		description: `Manage your organization ${orgSlug.toLocaleUpperCase()}.`,
 		icons: {
 			icon: "/favicon.ico",
 		},

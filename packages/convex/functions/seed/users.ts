@@ -62,7 +62,7 @@ const adminEmail = process.env.ADMIN_EMAIL;
  * bun x convex run seed/users:admin
  * ```
  */
-export const admin = internalMutation({
+export const superadmin = internalMutation({
 	args: {},
 	handler: async (ctx) => {
 		if (!adminEmail)
@@ -83,7 +83,7 @@ export const admin = internalMutation({
 			await auth.api.createUser({
 				body: {
 					email: adminEmail,
-					role: "admin",
+					role: "superadmin",
 					name: "Instello Admin",
 					data: { emailVerified: true },
 				},
@@ -129,6 +129,7 @@ export const owners = internalMutation({
 				body: {
 					name: owner.name,
 					email: owner.email,
+					role: "owner",
 					password: process.env.SEED_PASSWORD,
 					data: { emailVerified: true },
 				},

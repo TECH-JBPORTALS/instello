@@ -1593,7 +1593,13 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         "query",
         "internal",
         { userId: string },
-        { _id: string; email: string; image: string | null; name: string },
+        {
+          _id: string;
+          email: string;
+          image: string | null;
+          name: string;
+          role: string;
+        },
         Name
       >;
       safeGetByEmail: FunctionReference<

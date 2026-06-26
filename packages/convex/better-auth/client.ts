@@ -1,17 +1,25 @@
 import { convexClient } from "@convex-dev/better-auth/client/plugins";
 import { adminClient, organizationClient } from "better-auth/client/plugins";
 import { createAuthClient, type ErrorContext } from "better-auth/react";
-import { ac, faculty, owner, principal } from "./permissions";
+import * as InsPermissions from "./institution-permissions";
+import * as UserPermissions from "./user-permissions";
 
 export const authClient = createAuthClient({
 	plugins: [
-		adminClient(),
-		organizationClient({
-			ac,
+		adminClient({
+			ac: UserPermissions.ac,
 			roles: {
-				owner,
-				principal,
-				faculty,
+				superadmin: UserPermissions.superadmin,
+				owner: UserPermissions.owner,
+				user: UserPermissions.user,
+			},
+		}),
+		organizationClient({
+			ac: InsPermissions.ac,
+			roles: {
+				owner: InsPermissions.owner,
+				principal: InsPermissions.principal,
+				faculty: InsPermissions.faculty,
 			},
 		}),
 		convexClient(),

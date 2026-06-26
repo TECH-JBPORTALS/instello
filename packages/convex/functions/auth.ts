@@ -3,7 +3,8 @@ import { convex } from "@convex-dev/better-auth/plugins";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
 import { admin } from "better-auth/plugins";
 import { organization } from "better-auth/plugins/organization";
-import { ac, faculty, owner, principal } from "~/permissions";
+import * as InsPermissions from "~/institution-permissions";
+import * as UserPermissions from "~/user-permissions";
 import { components } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import authConfig from "./auth.config";
@@ -24,8 +25,17 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
 
 export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 	return {
-		baseURL: siteUrl,
+		baseURL: {
+			allowedHosts: ["*.localtest.me", "*.vercel.app"],
+			fallback: siteUrl,
+		},
 		database: authComponent.adapter(ctx),
+		advanced: {
+			crossSubDomainCookies: {
+				enabled: true,
+				domain: ".localtest.me",
+			},
+		},
 		emailAndPassword: {
 			enabled: true,
 			requireEmailVerification: false,
@@ -49,13 +59,21 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 			},
 		},
 		plugins: [
-			admin(),
-			organization({
-				ac,
+			admin({
+				adminRoles: ["superadmin"],
+				ac: UserPermissions.ac,
 				roles: {
-					owner,
-					principal,
-					faculty,
+					superadmin: UserPermissions.superadmin,
+					owner: UserPermissions.owner,
+					user: UserPermissions.user,
+				},
+			}),
+			organization({
+				ac: InsPermissions.ac,
+				roles: {
+					owner: InsPermissions.owner,
+					principal: InsPermissions.principal,
+					faculty: InsPermissions.faculty,
 				},
 				schema: {
 					/** Represents institution */
@@ -98,35 +116,45 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
 	return betterAuth(createAuthOptions(ctx));
 };
 
-export const getUserResource = userQuery({
+export const resolveLandingPath = userQuery({
 	args: {},
 	returns: {
-		role: vv.union(
-			vv.literal("owner"),
-			vv.literal("principal"),
-			vv.literal("faculty"),
-		),
-		resourceSlug: vv.optional(vv.string()),
+		redirectUrl: vv.string(),
 	},
 	handler: async (ctx) => {
-		const { headers, auth } = await authComponent.getAuth(createAuth, ctx);
+		const user = await ctx.runQuery(components.betterAuth.users.getById, {
+			userId: ctx.session.userId,
+		});
 
-		const { role } = await auth.api.getActiveMemberRole({ headers });
-
-		if (role === "owner") {
+		if (user.role === "owner") {
 			const organization = await OwnerOrganizations.getByUserId(ctx, {
 				userId: ctx.session.userId,
 			});
 
 			return {
-				role,
-				resourceSlug: organization?.slug,
+				redirectUrl: organization
+					? `/${organization.slug}`
+					: "/owner/onboarding",
+			};
+		}
+
+		if (ctx.session.activeInstitutionId) {
+			const institution = await ctx.runQuery(
+				components.betterAuth.institutions.getById,
+				{
+					id: ctx.session.activeInstitutionId,
+				},
+			);
+
+			return {
+				redirectUrl: institution
+					? `http://${institution.slug}.localhost:3000`
+					: "/institution-not-found",
 			};
 		}
 
 		return {
-			role,
-			resourceSlug: "some",
+			redirectUrl: "/not-part-of-any-institution",
 		};
 	},
 });

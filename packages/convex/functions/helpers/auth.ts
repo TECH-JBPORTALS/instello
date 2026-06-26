@@ -19,6 +19,7 @@ export const ensureSession = async (ctx: GenericCtx<DataModel>) => {
 		name: identity.name,
 		email: identity.email,
 		id: identity.sessionId,
+		activeInstitutionId: identity.activeInstitutionId,
 	};
 };
 
