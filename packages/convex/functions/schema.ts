@@ -46,6 +46,8 @@ const tables = {
 		alias: v.string(),
 		status: v.union(v.literal("inactive"), v.literal("active")),
 		institutionId: v.string(),
+		createdAt: v.number(),
+		updatedAt: v.number(),
 	}).index("by_institution", ["institutionId"]),
 };
 
