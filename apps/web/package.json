@@ -3,7 +3,7 @@
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {
-		"dev": "next dev --hostname app.localtest.me --port 3000",
+		"dev": "next dev  --port 3000 --hostname app.localtest.me --experimental-https --experimental-https-key ./_wildcard.localtest.me-key.pem --experimental-https-cert ./_wildcard.localtest.me.pem",
 		"build": "next build",
 		"start": "next start",
 		"typecheck": "tsc --noEmit",

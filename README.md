@@ -55,12 +55,21 @@ flowchart TB
   ```
 5. **Sync web env** — copy `CONVEX_URL` and site URL values from `packages/convex/.env.local` into `apps/web/.env.local` as `NEXT_PUBLIC_CONVEX_URL` and `NEXT_PUBLIC_CONVEX_SITE_URL` (`.cloud` vs `.site` suffixes as noted in the example file).
 6. **Start development**
-  ```bash
-   # from repo root
-   bun run dev
-  ```
+Before starting dev server, you need to generate SSL certificate using `mkcert` inside `apps/web` folder
+  - Generate mkcert certificate
+  It should create two files in `apps/web` - `_wildcard.localtest.me-key.pem` and `_wildcard.localtest.me.pem`. It must not include in git track files list.
+    ```bash
+      #from apps/web
+      bun x mkcert *.localtest.me
+    ```
+    
+  - Run dev server
+    ```bash
+      #from root repo
+      bun dev
+    ```
    Turbo runs `web` (Next.js on `:3000`) and `@instello/convex` (`convex dev`) in parallel.
-7. **Verify** — open `http://localhost:3000`. The sign-in page should show the Instello logo.
+7. **Verify** — open `https://app.localtest.me:3000`. The sign-in page should show the Instello logo.
 
 ## Environment variables
 
