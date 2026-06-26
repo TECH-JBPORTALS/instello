@@ -7,13 +7,16 @@ import * as InsPermissions from "~/institution-permissions";
 import * as UserPermissions from "~/user-permissions";
 import { components } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
+import { env } from "./_generated/server";
 import authConfig from "./auth.config";
 import authSchema, { vv } from "./betterAuth/schema";
 import { userQuery } from "./helpers/customFunctions";
 import { formInstitutionUrl } from "./helpers/utils";
 import * as OwnerOrganizations from "./model/ownerOrganization";
 
-const siteUrl = process.env.SITE_URL;
+const siteUrl = env.SITE_URL;
+const betterAuthSecret = env.BETTER_AUTH_SECRET;
+
 // The component client has methods needed for integrating Convex with Better Auth,
 // as well as helper methods for general use.
 export const authComponent = createClient<DataModel, typeof authSchema>(
@@ -30,6 +33,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 			allowedHosts: ["*.localtest.me", "*.vercel.app"],
 			fallback: siteUrl,
 		},
+		secret: betterAuthSecret,
 		database: authComponent.adapter(ctx),
 		advanced: {
 			crossSubDomainCookies: {

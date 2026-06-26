@@ -16,7 +16,7 @@
 
 import { ConvexError, type Infer } from "convex/values";
 import { components } from "../_generated/api";
-import { internalMutation } from "../_generated/server";
+import { env, internalMutation } from "../_generated/server";
 import { authComponent, createAuth } from "../auth";
 import type { Doc as BetterAuthDoc } from "../betterAuth/_generated/dataModel";
 import * as OwnerOrganization from "../model/ownerOrganization";
@@ -50,7 +50,7 @@ const ownersList: Owner[] = [
 	},
 ];
 
-const adminEmail = process.env.ADMIN_EMAIL;
+const adminEmail = env.SUPER_ADMIN_EMAIL;
 
 /**
  * Seeds an admin which is set in the dashboard environment vars without password.
@@ -65,11 +65,6 @@ const adminEmail = process.env.ADMIN_EMAIL;
 export const superadmin = internalMutation({
 	args: {},
 	handler: async (ctx) => {
-		if (!adminEmail)
-			throw new ConvexError(
-				"SUPER_ADMIN_EMAIL env variable not set in the convex dashboard",
-			);
-
 		console.info("Seeding super admin 🌱");
 
 		const { auth } = await authComponent.getAuth(createAuth, ctx);
@@ -114,11 +109,8 @@ type Owner = User & {
 export const owners = internalMutation({
 	args: {},
 	handler: async (ctx) => {
-		if (!process.env.SEED_MODE)
+		if (!env.SEED_MODE)
 			throw new ConvexError("You can't seed in production environment");
-
-		if (!process.env.SEED_PASSWORD)
-			throw new ConvexError("SEED_PASSWORD not set in the convex dashboard");
 
 		console.info("Seeding owners with their organization 🌱");
 
@@ -130,7 +122,7 @@ export const owners = internalMutation({
 					name: owner.name,
 					email: owner.email,
 					role: "owner",
-					password: process.env.SEED_PASSWORD,
+					password: env.SEED_PASSWORD,
 					data: { emailVerified: true },
 				},
 			});

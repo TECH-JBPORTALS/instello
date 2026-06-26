@@ -1,4 +1,3 @@
-import { ConvexError } from "convex/values";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { formInstitutionUrl } from "../utils";
 
@@ -26,9 +25,6 @@ describe("formInstitutionUrl", () => {
 
 	it("throws when SITE_URL is not configured", () => {
 		delete process.env.SITE_URL;
-		expect(() => formInstitutionUrl("demo")).toThrow(ConvexError);
-		expect(() => formInstitutionUrl("demo")).toThrow(
-			"SITE_URL not set in the convex dashboard",
-		);
+		expect(() => formInstitutionUrl("demo")).toThrow("Invalid URL");
 	});
 });

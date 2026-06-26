@@ -1,11 +1,7 @@
-import { ConvexError } from "convex/values";
+import { env } from "../_generated/server";
 
 export function formInstitutionUrl(slug: string) {
-	const siteUrl = process.env.SITE_URL;
-
-	if (!siteUrl) {
-		throw new ConvexError("SITE_URL not set in the convex dashboard");
-	}
+	const siteUrl = env.SITE_URL;
 
 	const url = new URL(siteUrl);
 
