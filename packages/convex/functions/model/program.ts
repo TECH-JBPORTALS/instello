@@ -1,6 +1,6 @@
 import type { Infer } from "convex/values";
 import { components } from "../_generated/api";
-import type { Doc } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import { vv } from "../schema";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 
@@ -20,6 +20,11 @@ export async function create(
 	});
 }
 
+/**
+ * **Lists program**
+ * @param query - optional query to search the programs by name
+ * @returns programs inside the current institution
+ */
 export const CreateSchema = vv
 	.doc("programs")
 	.pick("name", "alias", "createdBy", "institutionId");
@@ -30,7 +35,7 @@ export async function list(
 ) {
 	let programs: Doc<"programs">[];
 
-	if (args.query)
+	if (args.query) {
 		programs = await ctx.db
 			.query("programs")
 			.withSearchIndex("search_by_name", (q) =>
@@ -39,7 +44,7 @@ export async function list(
 					.eq("institutionId", args.institutionId),
 			)
 			.take(50);
-	else
+	} else {
 		programs = await ctx.db
 			.query("programs")
 			.withIndex("by_institution_name", (q) =>
@@ -47,6 +52,7 @@ export async function list(
 			)
 			.order("asc")
 			.take(50);
+	}
 
 	const programsWithUser = await Promise.all(
 		programs.map(async (pro) => {
@@ -71,4 +77,15 @@ export async function list(
 	);
 
 	return programsWithUser;
+}
+
+/**
+ * **Create program**
+ * @returns programs inside the current institution
+ */
+export async function getById(ctx: AppQueryCtx, args: { id: Id<"programs"> }) {
+	return await ctx.db
+		.query("programs")
+		.withIndex("by_id", (q) => q.eq("_id", args.id))
+		.first();
 }

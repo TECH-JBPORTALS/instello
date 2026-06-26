@@ -103,3 +103,81 @@ describe("programs.list", () => {
 		expect(query2).toMatchObject([]);
 	});
 });
+
+describe("programs.getById", () => {
+	it("rejects unthencticated user", async () => {
+		const t = createTest();
+
+		const programId = await t.run(async (ctx) => {
+			return await ctx.db.insert("programs", {
+				name: "Mechanical Engineering",
+				alias: "ME",
+				createdAt: Date.now(),
+				updatedAt: Date.now(),
+				createdBy: "user-1",
+				institutionId: "ins-1",
+				status: "active",
+			});
+		});
+
+		await expect(
+			t.query(api.programs.getById, { id: programId }),
+		).rejects.toThrow(ERROR_CODES.BASE.UNAUTHORIZED.message);
+	});
+
+	it("gets program by id", async () => {
+		const t = createTest({
+			subject: "user-1",
+			activeInstitutionId: "ins-1",
+			sessionId: "ses-1",
+		});
+
+		const programId = await t.run(async (ctx) => {
+			return await ctx.db.insert("programs", {
+				name: "Mechanical Engineering",
+				alias: "ME",
+				createdAt: Date.now(),
+				updatedAt: Date.now(),
+				createdBy: "user-1",
+				institutionId: "ins-1",
+				status: "active",
+			});
+		});
+
+		const programs = await t.query(api.programs.getById, { id: programId });
+
+		expect(programs).toMatchObject({
+			name: "Mechanical Engineering",
+			alias: "ME",
+			status: "active",
+		});
+	});
+
+	it("throws error if program doesn't exists", async () => {
+		const t = createTest({
+			subject: "user-1",
+			activeInstitutionId: "ins-1",
+			sessionId: "ses-1",
+		});
+
+		const programId = await t.run(async (ctx) => {
+			const id = await ctx.db.insert("programs", {
+				name: "Mechanical Engineering",
+				alias: "ME",
+				createdAt: Date.now(),
+				updatedAt: Date.now(),
+				createdBy: "user-1",
+				institutionId: "ins-1",
+				status: "active",
+			});
+
+			await ctx.db.delete("programs", id);
+
+			return id;
+		});
+
+		await expect(
+			t.query(api.programs.getById, { id: programId }),
+		).rejects.toThrow("Program not found");
+	});
+});

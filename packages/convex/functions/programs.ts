@@ -62,10 +62,21 @@ export const getById = insQuery({
 		_id: vv.id("programs"),
 		name: vv.string(),
 		alias: vv.string(),
-		createdAt: vv.string(),
+		status: vv.union(vv.literal("active"), vv.literal("inactive")),
+		createdAt: vv.number(),
 	}),
-	handler: (ctx, args) => {
-		return new ConvexError("Not implemented");
+	handler: async (ctx, args) => {
+		const program = await Program.getById(ctx, args);
+
+		if (!program) throw new ConvexError("Program not found");
+
+		return {
+			_id: program._id,
+			name: program.name,
+			alias: program.alias,
+			status: program.status,
+			createdAt: program.createdAt,
+		};
 	},
 });
 
