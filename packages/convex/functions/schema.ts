@@ -48,7 +48,12 @@ const tables = {
 		institutionId: v.string(),
 		createdAt: v.number(),
 		updatedAt: v.number(),
-	}).index("by_institution", ["institutionId"]),
+	})
+		.index("by_institution_name", ["institutionId", "name"])
+		.searchIndex("search_by_name", {
+			searchField: "name",
+			filterFields: ["institutionId"],
+		}),
 };
 
 const schema = defineSchema(tables);

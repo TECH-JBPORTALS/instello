@@ -26,22 +26,29 @@ export const create = insMutation({
  * @returns programs
  */
 export const list = insQuery({
-	args: {},
+	args: {
+		query: vv.optional(vv.nullable(vv.string())),
+	},
 	returns: vv.array(
 		vv.object({
 			_id: vv.id("programs"),
 			name: vv.string(),
 			alias: vv.string(),
-			createdAt: vv.string(),
+			createdAt: vv.number(),
+			status: vv.union(vv.literal("active"), vv.literal("inactive")),
 			user: vv.object({
 				_id: vv.string(),
 				name: vv.string(),
-				image: vv.string(),
+				email: vv.string(),
+				image: vv.nullable(vv.string()),
 			}),
 		}),
 	),
-	handler: (ctx, args) => {
-		return new ConvexError("Not implemented");
+	handler: async (ctx, args) => {
+		return await Program.list(ctx, {
+			institutionId: ctx.session.activeInstitutionId,
+			query: args?.query,
+		});
 	},
 });
 

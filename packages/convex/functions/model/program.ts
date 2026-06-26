@@ -1,6 +1,8 @@
 import type { Infer } from "convex/values";
+import { components } from "../_generated/api";
+import type { Doc } from "../_generated/dataModel";
 import { vv } from "../schema";
-import type { AppMutationCtx } from "./common.types";
+import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 
 /**
  * **Create program**
@@ -21,3 +23,52 @@ export async function create(
 export const CreateSchema = vv
 	.doc("programs")
 	.pick("name", "alias", "createdBy", "institutionId");
+
+export async function list(
+	ctx: AppQueryCtx,
+	args: { institutionId: string; query?: string | null },
+) {
+	let programs: Doc<"programs">[];
+
+	if (args.query)
+		programs = await ctx.db
+			.query("programs")
+			.withSearchIndex("search_by_name", (q) =>
+				q
+					.search("name", args.query ?? "")
+					.eq("institutionId", args.institutionId),
+			)
+			.take(50);
+	else
+		programs = await ctx.db
+			.query("programs")
+			.withIndex("by_institution_name", (q) =>
+				q.eq("institutionId", args.institutionId),
+			)
+			.order("asc")
+			.take(50);
+
+	const programsWithUser = await Promise.all(
+		programs.map(async (pro) => {
+			const user = await ctx.runQuery(components.betterAuth.users.getById, {
+				userId: pro.createdBy,
+			});
+
+			return {
+				_id: pro._id,
+				name: pro.name,
+				alias: pro.alias,
+				createdAt: pro.createdAt,
+				status: pro.status,
+				user: {
+					_id: user._id,
+					name: user.name,
+					email: user.email,
+					image: user.image,
+				},
+			};
+		}),
+	);
+
+	return programsWithUser;
+}
