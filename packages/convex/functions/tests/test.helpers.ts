@@ -1,6 +1,5 @@
 import { fakerEN_IN as faker } from "@faker-js/faker";
 import { components } from "../_generated/api";
-import { authComponent, createAuth } from "../auth";
 import type { AppMutationCtx } from "../model/common.types";
 
 export async function seedOwners(ctx: AppMutationCtx) {
@@ -39,24 +38,51 @@ export async function seedInstitutions(
 	ctx: AppMutationCtx,
 	args: { user1: { _id: string }; user2: { _id: string } },
 ) {
-	const { auth } = await authComponent.getAuth(createAuth, ctx);
-
 	const COUNT = 2;
 
 	// Static seed info
 	faker.seed(123);
 
-	type Institution = { id: string; name: string; slug: string; userId: string };
+	type Institution = {
+		_id: string;
+		name: string;
+		slug: string;
+		userId: string;
+		createdAt: string;
+	};
 
 	const institutions: Institution[] = [];
+	const createdAt = Date.now();
 
 	for (const owner of [args.user1, args.user2]) {
 		for (let i = 0; i < COUNT; i++) {
 			const name = `${faker.person.firstName()} ${faker.helpers.arrayElement(["Polytechnic", "PU College", "Degree College", "University", "High School", "Engineering College"])}`;
 			const slug = faker.helpers.slugify(name).toLowerCase();
 
-			const institution = await auth.api.createOrganization({
-				body: { name, slug, userId: owner._id },
+			const institution = await ctx.runMutation(
+				components.betterAuth.adapter.create,
+				{
+					input: {
+						model: "institution",
+						data: {
+							name,
+							slug,
+							createdAt,
+						},
+					},
+				},
+			);
+
+			await ctx.runMutation(components.betterAuth.adapter.create, {
+				input: {
+					model: "institutionMember",
+					data: {
+						organizationId: institution._id,
+						userId: owner._id,
+						role: "owner",
+						createdAt,
+					},
+				},
 			});
 
 			institutions.push({ ...institution, userId: owner._id });

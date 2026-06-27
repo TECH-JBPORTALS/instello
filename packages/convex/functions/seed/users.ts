@@ -14,6 +14,7 @@
  * ADMIN_EMAIL = <email>
  */
 
+import { fakerEN_IN as faker } from "@faker-js/faker";
 import { ConvexError, type Infer } from "convex/values";
 import { components } from "../_generated/api";
 import { env, internalMutation } from "../_generated/server";
@@ -53,12 +54,13 @@ const ownersList: Owner[] = [
 const adminEmail = env.SUPER_ADMIN_EMAIL;
 
 /**
- * Seeds an admin which is set in the dashboard environment vars without password.
+ * **Seeds an admin which is set in the dashboard environment vars without password**
+ *
  * Run this function using dashboard in production to insert the admin creds into the app.
  * You can also run this function using convex run command in terminal only in development environment.
  *
- * To seed an admin first make sure your in convex folder then run:
- * ```shell
+ * ```bash
+ * # inside packages/convex
  * bun x convex run seed/users:admin
  * ```
  */
@@ -99,10 +101,10 @@ type Owner = User & {
 };
 
 /**
- * Seeds list of owners with their organization details.
+ * **Seeds list of owners with their organization details.**
  *
- * To seed first make sure your in convex folder then run:
- * ```shell
+ * ```bash
+ * # inside packages/convex
  * bun x convex run seed/users:owners
  * ```
  */
@@ -130,6 +132,54 @@ export const owners = internalMutation({
 			await OwnerOrganization.create(ctx, { ...owner.org, ownerId: user.id });
 
 			console.info(`Owner ${owner.name} in the house ✅`);
+		}
+	},
+});
+
+/**
+ * **Seed institutions into owner organization**
+ *
+ * Before running this function make sure you have owners in your db
+ *
+ * ```bash
+ * # inside packages/convex
+ * bun x convex run seed/users:institutions
+ * ```
+ */
+export const institutions = internalMutation({
+	args: {},
+	handler: async (ctx) => {
+		if (!env.SEED_MODE)
+			throw new ConvexError("You can't seed in production environment");
+
+		console.info(" 🌱 Seeding institutions");
+
+		const { auth } = await authComponent.getAuth(createAuth, ctx);
+
+		// Get all owners _id's inside the users table
+		const owners = await ctx.runQuery(components.betterAuth.adapter.findMany, {
+			model: "user",
+			select: ["id"],
+			paginationOpts: { numItems: 10, cursor: null },
+			where: [{ field: "role", operator: "eq", value: "owner" }],
+		});
+
+		const COUNT = 5;
+
+		// Static seed info
+		faker.seed(123);
+
+		for (const owner of owners.page) {
+			for (let i = 0; i < COUNT; i++) {
+				const name = `${faker.person.firstName()} ${faker.helpers.arrayElement(["Polytechnic", "PU College", "Degree College", "University", "High School", "Engineering College"])}`;
+				const slug = faker.helpers.slugify(name).toLowerCase();
+
+				await auth.api.createOrganization({
+					body: { name, slug, userId: owner._id },
+				});
+
+				console.info(` ✅ ${name} created`);
+			}
 		}
 	},
 });
