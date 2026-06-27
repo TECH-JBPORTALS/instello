@@ -5,10 +5,9 @@ import { tables } from "./authSchema";
 const schema = defineSchema({
 	...tables,
 	user: tables.user.index("role", ["role"]),
-	institutionMember: tables.institutionMember.index("by_role_user", [
-		"role",
-		"userId",
-	]),
+	institutionMember: tables.institutionMember
+		.index("by_role_user", ["role", "userId"])
+		.index("by_organization_user", ["organizationId", "userId"]),
 
 	// Define auth schema idex
 });

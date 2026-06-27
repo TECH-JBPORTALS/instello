@@ -4,8 +4,14 @@ import {
 	customMutation,
 	customQuery,
 } from "convex-helpers/server/customFunctions";
+import type { InsPermission } from "~/ins-permissions";
 import { mutation, query } from "../_generated/server";
-import { ensureInstitution, ensureSession } from "./auth";
+import { ensureInsPermission, ensureInstitution, ensureSession } from "./auth";
+import { components } from "../_generated/api";
+import { ConvexError } from "convex/values";
+import { ERROR_CODES } from "./errors";
+
+// import * as insPermissions from "~/ins-permissions";
 
 /** Public query will just proceed with handler without any authorization checks */
 export const pubQuery = customQuery(
@@ -102,10 +108,14 @@ export type UserMutationCtx = CustomCtx<typeof userMutation>;
  */
 export const insQuery = customQuery(
 	query,
-	customCtx(async (ctx) => {
+	customCtx(async (ctx, { permissions }: { permissions?: InsPermission[] }) => {
 		const session = await ensureSession(ctx);
 
 		const activeInstitutionId = await ensureInstitution(ctx);
+
+		if (permissions) {
+			await ensureInsPermission("owner", permissions);
+		}
 
 		return {
 			session: { ...session, activeInstitutionId },
@@ -137,10 +147,35 @@ export type InsQueryCtx = CustomCtx<typeof insQuery>;
  */
 export const insMutation = customMutation(
 	mutation,
-	customCtx(async (ctx) => {
+	customCtx(async (ctx, { permissions }: { permissions?: InsPermission[] }) => {
 		const session = await ensureSession(ctx);
 
 		const activeInstitutionId = await ensureInstitution(ctx);
+
+		if (permissions) {
+			const insMembership = await ctx.runQuery(
+				components.betterAuth.adapter.findOne,
+				{
+					model: "institutionMember",
+					select: ["role"],
+					where: [
+						{ field: "userId", operator: "eq", value: session.userId },
+						{
+							field: "organizationId",
+							operator: "eq",
+							value: activeInstitutionId,
+						},
+					],
+				},
+			);
+
+			if (!insMembership)
+				throw new ConvexError(
+					ERROR_CODES.ORGANIZATION.USER_IS_NOT_A_MEMBER_OF_THE_ORGANIZATION,
+				);
+
+			await ensureInsPermission(insMembership.role, permissions);
+		}
 
 		return {
 			session: { ...session, activeInstitutionId },

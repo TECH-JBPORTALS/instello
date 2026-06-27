@@ -1,7 +1,7 @@
 import { convexClient } from "@convex-dev/better-auth/client/plugins";
 import { adminClient, organizationClient } from "better-auth/client/plugins";
 import { createAuthClient, type ErrorContext } from "better-auth/react";
-import * as InsPermissions from "./institution-permissions";
+import * as InsPermissions from "./ins-permissions";
 import * as UserPermissions from "./user-permissions";
 
 export const authClient = createAuthClient({

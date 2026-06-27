@@ -1,18 +1,15 @@
 import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
-import { admin } from "better-auth/plugins";
+import { admin } from "better-auth/plugins/admin";
 import { organization } from "better-auth/plugins/organization";
-import * as InsPermissions from "~/institution-permissions";
+import * as InsPermissions from "~/ins-permissions";
 import * as UserPermissions from "~/user-permissions";
 import { components } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import { env } from "./_generated/server";
 import authConfig from "./auth.config";
-import authSchema, { vv } from "./betterAuth/schema";
-import { userQuery } from "./helpers/customFunctions";
-import { formInstitutionUrl } from "./helpers/utils";
-import * as OwnerOrganizations from "./model/ownerOrganization";
+import authSchema from "./betterAuth/schema";
 
 const siteUrl = env.SITE_URL;
 const betterAuthSecret = env.BETTER_AUTH_SECRET;
@@ -120,46 +117,3 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 export const createAuth = (ctx: GenericCtx<DataModel>) => {
 	return betterAuth(createAuthOptions(ctx));
 };
-
-export const resolveLandingPath = userQuery({
-	args: {},
-	returns: {
-		redirectUrl: vv.string(),
-	},
-	handler: async (ctx) => {
-		const user = await ctx.runQuery(components.betterAuth.users.getById, {
-			userId: ctx.session.userId,
-		});
-
-		if (user.role === "owner") {
-			const organization = await OwnerOrganizations.getByUserId(ctx, {
-				userId: ctx.session.userId,
-			});
-
-			return {
-				redirectUrl: organization
-					? `/${organization.slug}`
-					: "/owner/onboarding",
-			};
-		}
-
-		if (ctx.session.activeInstitutionId) {
-			const institution = await ctx.runQuery(
-				components.betterAuth.institutions.getById,
-				{
-					id: ctx.session.activeInstitutionId,
-				},
-			);
-
-			return {
-				redirectUrl: institution
-					? formInstitutionUrl(institution.slug)
-					: "/institution-not-found",
-			};
-		}
-
-		return {
-			redirectUrl: "/not-part-of-any-institution",
-		};
-	},
-});

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { api } from "../_generated/api";
 import { ERROR_CODES } from "../helpers/errors";
-import { seedOwners, seedPrograms } from "./test.helpers";
+import { seedInstitutions, seedOwners, seedPrograms } from "./test.helpers";
 import { createTest } from "./test.setup";
 
 describe("programs.create", () => {
@@ -17,16 +17,24 @@ describe("programs.create", () => {
 	});
 
 	it("creates program for active institution", async () => {
-		const t = createTest().withIdentity({
-			subject: "user-1",
-			activeInstitutionId: "ins-1",
-			sessionId: "ses-1",
-		});
+		const t = createTest();
 
-		const programId = await t.mutation(api.programs.create, {
-			name: "Computer Science",
-			alias: "CS",
-		});
+		const { user1, user2 } = await t.run(seedOwners);
+		const institutions = await t.run((ctx) =>
+			seedInstitutions(ctx, { user1, user2 }),
+		);
+		const firstIns = institutions[0];
+
+		const programId = await t
+			.withIdentity({
+				subject: firstIns.userId,
+				activeInstitutionId: firstIns._id,
+				sessionId: "ses-1",
+			})
+			.mutation(api.programs.create, {
+				name: "Computer Science",
+				alias: "CS",
+			});
 
 		expect(programId).toBeDefined();
 
@@ -53,13 +61,19 @@ describe("programs.list", () => {
 		const t = createTest();
 
 		const { user1, user2 } = await t.run(seedOwners);
+		const institutions = await t.run((ctx) =>
+			seedInstitutions(ctx, { user1, user2 }),
+		);
 
-		await t.run((ctx) => seedPrograms(ctx, { user1, user2 }));
+		const ins1 = institutions[0];
+		const ins2 = institutions[1];
+
+		await t.run((ctx) => seedPrograms(ctx, { user1, user2, ins1, ins2 }));
 
 		const programs = await t
 			.withIdentity({
 				subject: user1._id,
-				activeInstitutionId: "ins-1",
+				activeInstitutionId: ins1._id,
 				sessionId: "ses-1",
 			})
 			.query(api.programs.list, {});
@@ -85,14 +99,20 @@ describe("programs.list", () => {
 		const t = createTest();
 
 		const { user1, user2 } = await t.run(seedOwners);
+		const institutions = await t.run((ctx) =>
+			seedInstitutions(ctx, { user1, user2 }),
+		);
 
-		await t.run((ctx) => seedPrograms(ctx, { user1, user2 }));
+		const ins1 = institutions[0];
+		const ins2 = institutions[1];
+
+		await t.run((ctx) => seedPrograms(ctx, { user1, user2, ins1, ins2 }));
 
 		// Check the query string
 		const query1 = await t
 			.withIdentity({
 				subject: user1._id,
-				activeInstitutionId: "ins-1",
+				activeInstitutionId: ins1._id,
 				sessionId: "ses-1",
 			})
 			.query(api.programs.list, { query: "computer" });
@@ -227,19 +247,26 @@ describe("programs.updateName", () => {
 	});
 
 	it("updates program name", async () => {
-		const tt = createTest();
-
-		const { user1, user2 } = await tt.run(seedOwners);
-
 		const t = createTest();
 
-		const programs = await t.run((ctx) => seedPrograms(ctx, { user1, user2 }));
+		const { user1, user2 } = await t.run(seedOwners);
+		const institutions = await t.run((ctx) =>
+			seedInstitutions(ctx, { user1, user2 }),
+		);
+
+		const ins1 = institutions[0];
+		const ins2 = institutions[1];
+
+		const programs = await t.run((ctx) =>
+			seedPrograms(ctx, { user1, user2, ins1, ins2 }),
+		);
+
 		const computerScience = programs[0];
 
 		await t
 			.withIdentity({
 				subject: user1._id,
-				activeInstitutionId: "ins-1",
+				activeInstitutionId: ins1._id,
 				sessionId: "ses-1",
 			})
 			.mutation(api.programs.updateName, {
@@ -265,9 +292,15 @@ describe("programs.updateName", () => {
 		const t = createTest();
 
 		const { user1, user2 } = await t.run(seedOwners);
+		const institutions = await t.run((ctx) =>
+			seedInstitutions(ctx, { user1, user2 }),
+		);
+
+		const ins1 = institutions[0];
+		const ins2 = institutions[1];
 
 		const programId = await t.run(async (ctx) => {
-			const programs = await seedPrograms(ctx, { user1, user2 });
+			const programs = await seedPrograms(ctx, { user1, user2, ins1, ins2 });
 			const computerScience = programs[0];
 			ctx.db.delete("programs", computerScience._id);
 			return computerScience._id;
@@ -277,7 +310,7 @@ describe("programs.updateName", () => {
 			t
 				.withIdentity({
 					subject: user1._id,
-					activeInstitutionId: "ins-1",
+					activeInstitutionId: ins1._id,
 					sessionId: "ses-1",
 				})
 				.mutation(api.programs.updateName, {
@@ -314,16 +347,23 @@ describe("programs.updateAlias", () => {
 
 	it("updates program alias", async () => {
 		const t = createTest();
-
 		const { user1, user2 } = await t.run(seedOwners);
+		const institutions = await t.run((ctx) =>
+			seedInstitutions(ctx, { user1, user2 }),
+		);
 
-		const programs = await t.run((ctx) => seedPrograms(ctx, { user1, user2 }));
+		const ins1 = institutions[0];
+		const ins2 = institutions[1];
+
+		const programs = await t.run((ctx) =>
+			seedPrograms(ctx, { user1, user2, ins1, ins2 }),
+		);
 		const computerScience = programs[0];
 
 		await t
 			.withIdentity({
 				subject: user1._id,
-				activeInstitutionId: "ins-1",
+				activeInstitutionId: ins1._id,
 				sessionId: "ses-1",
 			})
 			.mutation(api.programs.updateAlias, {
@@ -349,9 +389,15 @@ describe("programs.updateAlias", () => {
 		const t = createTest();
 
 		const { user1, user2 } = await t.run(seedOwners);
+		const institutions = await t.run((ctx) =>
+			seedInstitutions(ctx, { user1, user2 }),
+		);
+
+		const ins1 = institutions[0];
+		const ins2 = institutions[1];
 
 		const programId = await t.run(async (ctx) => {
-			const programs = await seedPrograms(ctx, { user1, user2 });
+			const programs = await seedPrograms(ctx, { user1, user2, ins1, ins2 });
 			const computerScience = programs[0];
 			ctx.db.delete("programs", computerScience._id);
 			return computerScience._id;
@@ -361,7 +407,7 @@ describe("programs.updateAlias", () => {
 			t
 				.withIdentity({
 					subject: user1._id,
-					activeInstitutionId: "ins-1",
+					activeInstitutionId: ins1._id,
 					sessionId: "ses-1",
 				})
 				.mutation(api.programs.updateAlias, {

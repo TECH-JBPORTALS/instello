@@ -1,5 +1,6 @@
 "use client";
 
+import { authClient } from "@instello/convex/better-auth/client";
 import { Button } from "@instello/ui/components/button";
 import { IconPlus } from "@tabler/icons-react";
 import Container from "@/components/common/container";
@@ -13,6 +14,11 @@ import {
 import { InstitutionsList } from "@/components/institution/institutions-list";
 
 export default function Home() {
+	const canCreate = authClient.organization.checkRolePermission({
+		role: "owner",
+		permissions: { program: ["create"] },
+	});
+
 	return (
 		<Container>
 			<PageHeader>
@@ -24,10 +30,12 @@ export default function Home() {
 				</PageHeaderStart>
 
 				<PageHeaderEnd>
-					<Button>
-						<IconPlus />
-						Create
-					</Button>
+					{canCreate && (
+						<Button>
+							<IconPlus />
+							Create
+						</Button>
+					)}
 				</PageHeaderEnd>
 			</PageHeader>
 

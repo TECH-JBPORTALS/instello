@@ -94,7 +94,12 @@ export async function seedInstitutions(
 
 export async function seedPrograms(
 	ctx: AppMutationCtx,
-	args: { user1: { _id: string }; user2: { _id: string } },
+	args: {
+		user1: { _id: string };
+		user2: { _id: string };
+		ins1: { _id: string };
+		ins2: { _id: string };
+	},
 ) {
 	await ctx.db.insert("programs", {
 		name: "Mechanical Engineering",
@@ -102,7 +107,7 @@ export async function seedPrograms(
 		createdAt: Date.now(),
 		updatedAt: Date.now(),
 		createdBy: args.user1._id,
-		institutionId: "ins-1",
+		institutionId: args.ins1._id,
 		status: "active",
 	});
 
@@ -112,7 +117,7 @@ export async function seedPrograms(
 		createdAt: Date.now(),
 		updatedAt: Date.now(),
 		createdBy: args.user1._id,
-		institutionId: "ins-1",
+		institutionId: args.ins1._id,
 		status: "active",
 	});
 
@@ -123,7 +128,7 @@ export async function seedPrograms(
 		createdAt: Date.now(),
 		updatedAt: Date.now(),
 		createdBy: args.user2._id,
-		institutionId: "ins-2",
+		institutionId: args.ins2._id,
 		status: "active",
 	});
 

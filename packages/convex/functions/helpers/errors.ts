@@ -6,6 +6,7 @@ export const ERROR_CODES = {
 		/* Better auth base error codes merged with our customized error codes */
 		...BASE_ERROR_CODES,
 		UNAUTHORIZED: { code: "UNAUTHORIZED", message: "Unauthorized access" },
+		ACCESS_DENIED: { code: "ACCESS_DENIED", message: "Access denied" },
 	},
 	/** Better auth organization error codes */
 	ORGANIZATION: ORGANIZATION_ERROR_CODES,

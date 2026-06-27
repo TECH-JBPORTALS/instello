@@ -8,6 +8,7 @@ import { vv } from "./schema";
  * @throws convex error
  */
 export const create = insMutation({
+	permissions: ["program:create"],
 	args: {
 		name: vv.string(),
 		alias: vv.string(),
@@ -26,6 +27,7 @@ export const create = insMutation({
  * @returns programs
  */
 export const list = insQuery({
+	permissions: ["program:view"],
 	args: {
 		query: vv.optional(vv.nullable(vv.string())),
 	},
@@ -57,6 +59,7 @@ export const list = insQuery({
  * @returns program
  */
 export const getById = insQuery({
+	permissions: ["program:view"],
 	args: { id: vv.id("programs") },
 	returns: vv.object({
 		_id: vv.id("programs"),
@@ -87,6 +90,7 @@ export const getById = insQuery({
  * @throws convex error
  */
 export const updateName = insMutation({
+	permissions: ["program:update"],
 	args: {
 		id: vv.id("programs"),
 		body: vv.object({ name: vv.string() }),
@@ -107,6 +111,7 @@ export const updateName = insMutation({
  * @throws convex error
  */
 export const updateAlias = insMutation({
+	permissions: ["program:update"],
 	args: {
 		id: vv.id("programs"),
 		body: vv.object({ alias: vv.string() }),
