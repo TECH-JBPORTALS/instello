@@ -34,14 +34,13 @@ export async function list(
 	args: { institutionId: string; query?: string | null },
 ) {
 	let programs: Doc<"programs">[];
+	const query = args.query;
 
-	if (args.query) {
+	if (query) {
 		programs = await ctx.db
 			.query("programs")
 			.withSearchIndex("search_by_name", (q) =>
-				q
-					.search("name", args.query ?? "")
-					.eq("institutionId", args.institutionId),
+				q.search("name", query).eq("institutionId", args.institutionId),
 			)
 			.take(50);
 	} else {

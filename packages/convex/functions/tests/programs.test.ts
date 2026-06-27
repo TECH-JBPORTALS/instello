@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { api } from "../_generated/api";
 import { ERROR_CODES } from "../helpers/errors";
-import { seedPrograms } from "./test.helpers";
+import { seedOwners, seedPrograms } from "./test.helpers";
 import { createTest } from "./test.setup";
 
 describe("programs.create", () => {
@@ -17,7 +17,7 @@ describe("programs.create", () => {
 	});
 
 	it("creates program for active institution", async () => {
-		const t = createTest({
+		const t = createTest().withIdentity({
 			subject: "user-1",
 			activeInstitutionId: "ins-1",
 			sessionId: "ses-1",
@@ -50,15 +50,19 @@ describe("programs.list", () => {
 	});
 
 	it("lists programs for the active institution ordered by name", async () => {
-		const t = createTest({
-			subject: "user-1",
-			activeInstitutionId: "ins-1",
-			sessionId: "ses-1",
-		});
+		const t = createTest();
 
-		await t.run(seedPrograms);
+		const { user1, user2 } = await t.run(seedOwners);
 
-		const programs = await t.query(api.programs.list, {});
+		await t.run((ctx) => seedPrograms(ctx, { user1, user2 }));
+
+		const programs = await t
+			.withIdentity({
+				subject: user1._id,
+				activeInstitutionId: "ins-1",
+				sessionId: "ses-1",
+			})
+			.query(api.programs.list, {});
 
 		expect(programs).toHaveLength(2);
 		expect(programs).toMatchObject([
@@ -66,27 +70,32 @@ describe("programs.list", () => {
 				name: "Computer Science",
 				alias: "CS",
 				status: "active",
-				user: { name: "Walter White" },
+				user: { name: user1.name },
 			},
 			{
 				name: "Mechanical Engineering",
 				alias: "ME",
 				status: "active",
-				user: { name: "Walter White" },
+				user: { name: user1.name },
 			},
 		]);
 	});
 
 	it("lists programs by name for given query", async () => {
-		const t = createTest({
-			subject: "user-1",
-			activeInstitutionId: "ins-1",
-			sessionId: "ses-1",
-		});
+		const t = createTest();
 
-		await t.run(seedPrograms);
+		const { user1, user2 } = await t.run(seedOwners);
 
-		const query1 = await t.query(api.programs.list, { query: "computer" });
+		await t.run((ctx) => seedPrograms(ctx, { user1, user2 }));
+
+		// Check the query string
+		const query1 = await t
+			.withIdentity({
+				subject: user1._id,
+				activeInstitutionId: "ins-1",
+				sessionId: "ses-1",
+			})
+			.query(api.programs.list, { query: "computer" });
 
 		expect(query1).toHaveLength(1);
 		expect(query1).toMatchObject([
@@ -98,7 +107,14 @@ describe("programs.list", () => {
 			},
 		]);
 
-		const query2 = await t.query(api.programs.list, { query: "some rubbish!" });
+		// Check for random query string
+		const query2 = await t
+			.withIdentity({
+				subject: user1._id,
+				activeInstitutionId: "ins-1",
+				sessionId: "ses-1",
+			})
+			.query(api.programs.list, { query: "some rubbish!" });
 		expect(query2).toHaveLength(0);
 		expect(query2).toMatchObject([]);
 	});
@@ -126,11 +142,7 @@ describe("programs.getById", () => {
 	});
 
 	it("gets program by id", async () => {
-		const t = createTest({
-			subject: "user-1",
-			activeInstitutionId: "ins-1",
-			sessionId: "ses-1",
-		});
+		const t = createTest();
 
 		const programId = await t.run(async (ctx) => {
 			return await ctx.db.insert("programs", {
@@ -144,7 +156,13 @@ describe("programs.getById", () => {
 			});
 		});
 
-		const programs = await t.query(api.programs.getById, { id: programId });
+		const programs = await t
+			.withIdentity({
+				subject: "user-1",
+				activeInstitutionId: "ins-1",
+				sessionId: "ses-1",
+			})
+			.query(api.programs.getById, { id: programId });
 
 		expect(programs).toMatchObject({
 			name: "Mechanical Engineering",
@@ -154,11 +172,7 @@ describe("programs.getById", () => {
 	});
 
 	it("throws error if program doesn't exists", async () => {
-		const t = createTest({
-			subject: "user-1",
-			activeInstitutionId: "ins-1",
-			sessionId: "ses-1",
-		});
+		const t = createTest();
 
 		const programId = await t.run(async (ctx) => {
 			const id = await ctx.db.insert("programs", {
@@ -177,7 +191,13 @@ describe("programs.getById", () => {
 		});
 
 		await expect(
-			t.query(api.programs.getById, { id: programId }),
+			t
+				.withIdentity({
+					subject: "user-1",
+					activeInstitutionId: "ins-1",
+					sessionId: "ses-1",
+				})
+				.query(api.programs.getById, { id: programId }),
 		).rejects.toThrow("Program not found");
 	});
 });
@@ -207,19 +227,25 @@ describe("programs.updateName", () => {
 	});
 
 	it("updates program name", async () => {
-		const t = createTest({
-			subject: "user-1",
-			activeInstitutionId: "ins-1",
-			sessionId: "ses-1",
-		});
+		const tt = createTest();
 
-		const programs = await t.run(seedPrograms);
+		const { user1, user2 } = await tt.run(seedOwners);
+
+		const t = createTest();
+
+		const programs = await t.run((ctx) => seedPrograms(ctx, { user1, user2 }));
 		const computerScience = programs[0];
 
-		await t.mutation(api.programs.updateName, {
-			id: computerScience._id,
-			body: { name: "Computer Science & Engineering" },
-		});
+		await t
+			.withIdentity({
+				subject: user1._id,
+				activeInstitutionId: "ins-1",
+				sessionId: "ses-1",
+			})
+			.mutation(api.programs.updateName, {
+				id: computerScience._id,
+				body: { name: "Computer Science & Engineering" },
+			});
 
 		const patchedProgram = await t.run((ctx) =>
 			ctx.db
@@ -236,24 +262,28 @@ describe("programs.updateName", () => {
 	});
 
 	it("throws error if trying to update name for non existing program", async () => {
-		const t = createTest({
-			subject: "user-1",
-			activeInstitutionId: "ins-1",
-			sessionId: "ses-1",
-		});
+		const t = createTest();
+
+		const { user1, user2 } = await t.run(seedOwners);
 
 		const programId = await t.run(async (ctx) => {
-			const programs = await seedPrograms(ctx);
+			const programs = await seedPrograms(ctx, { user1, user2 });
 			const computerScience = programs[0];
 			ctx.db.delete("programs", computerScience._id);
 			return computerScience._id;
 		});
 
 		await expect(
-			t.mutation(api.programs.updateName, {
-				id: programId,
-				body: { name: "Computer Science & Engineering" },
-			}),
+			t
+				.withIdentity({
+					subject: user1._id,
+					activeInstitutionId: "ins-1",
+					sessionId: "ses-1",
+				})
+				.mutation(api.programs.updateName, {
+					id: programId,
+					body: { name: "Computer Science & Engineering" },
+				}),
 		).rejects.toThrow("Program not found");
 	});
 });
@@ -283,19 +313,23 @@ describe("programs.updateAlias", () => {
 	});
 
 	it("updates program alias", async () => {
-		const t = createTest({
-			subject: "user-1",
-			activeInstitutionId: "ins-1",
-			sessionId: "ses-1",
-		});
+		const t = createTest();
 
-		const programs = await t.run(seedPrograms);
+		const { user1, user2 } = await t.run(seedOwners);
+
+		const programs = await t.run((ctx) => seedPrograms(ctx, { user1, user2 }));
 		const computerScience = programs[0];
 
-		await t.mutation(api.programs.updateAlias, {
-			id: computerScience._id,
-			body: { alias: "CSE" },
-		});
+		await t
+			.withIdentity({
+				subject: user1._id,
+				activeInstitutionId: "ins-1",
+				sessionId: "ses-1",
+			})
+			.mutation(api.programs.updateAlias, {
+				id: computerScience._id,
+				body: { alias: "CSE" },
+			});
 
 		const patchedProgram = await t.run((ctx) =>
 			ctx.db
@@ -312,24 +346,28 @@ describe("programs.updateAlias", () => {
 	});
 
 	it("throws error if trying to update alias for non existing program", async () => {
-		const t = createTest({
-			subject: "user-1",
-			activeInstitutionId: "ins-1",
-			sessionId: "ses-1",
-		});
+		const t = createTest();
+
+		const { user1, user2 } = await t.run(seedOwners);
 
 		const programId = await t.run(async (ctx) => {
-			const programs = await seedPrograms(ctx);
+			const programs = await seedPrograms(ctx, { user1, user2 });
 			const computerScience = programs[0];
 			ctx.db.delete("programs", computerScience._id);
 			return computerScience._id;
 		});
 
 		await expect(
-			t.mutation(api.programs.updateAlias, {
-				id: programId,
-				body: { alias: "CSE" },
-			}),
+			t
+				.withIdentity({
+					subject: user1._id,
+					activeInstitutionId: "ins-1",
+					sessionId: "ses-1",
+				})
+				.mutation(api.programs.updateAlias, {
+					id: programId,
+					body: { alias: "CSE" },
+				}),
 		).rejects.toThrow("Program not found");
 	});
 });
