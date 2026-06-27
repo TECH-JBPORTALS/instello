@@ -8,28 +8,23 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 } from "@instello/ui/components/sidebar";
-import { Building2Icon, ChartGanttIcon } from "lucide-react";
+import { IconBuildings } from "@tabler/icons-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { AppSidebarHeader } from "@/components/common/app-sidebar-header";
 
-const items = [
+const items = (orgSlug: string) => [
 	{
 		id: 1,
-		href: "/",
-		icon: Building2Icon,
-		label: "Institutions",
-	},
-	{
-		id: 2,
-		href: "/insights",
-		icon: ChartGanttIcon,
-		label: "Insights",
+		href: `/${orgSlug}`,
+		icon: IconBuildings,
+		label: "My Institutions",
 	},
 ];
 
 export function OrganizationSidebar() {
 	const pathname = usePathname();
+	const { orgSlug } = useParams<{ orgSlug: string }>();
 
 	return (
 		<Sidebar>
@@ -37,7 +32,7 @@ export function OrganizationSidebar() {
 			<SidebarContent>
 				<SidebarGroup>
 					<SidebarMenu>
-						{items.map((item) => (
+						{items(orgSlug).map((item) => (
 							<SidebarMenuItem key={item.id}>
 								<SidebarMenuButton
 									isActive={pathname === item.href}

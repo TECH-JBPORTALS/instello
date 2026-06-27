@@ -29,6 +29,8 @@
 		"catalog": {
 			"@biomejs/biome": "2.4.16",
 			"@tabler/icons-react": "^3.44.0",
+			"convex": "^1.42.0",
+			"convex-helpers": "^0.1.120",
 			"react": "^19.2.5",
 			"react-dom": "^19.2.5",
 			"@types/react": "19.2.14",
