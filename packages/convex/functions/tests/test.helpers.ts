@@ -46,6 +46,12 @@ export async function seedInstitutions(
 	type Institution = {
 		_id: string;
 		name: string;
+		code: string;
+		addressLine: string;
+		district: string;
+		state: string;
+		country: string;
+		zipCode: string;
 		slug: string;
 		userId: string;
 		createdAt: string;
@@ -67,6 +73,12 @@ export async function seedInstitutions(
 						data: {
 							name,
 							slug,
+							addressLine: faker.location.streetAddress(),
+							code: faker.number.int({ max: 999 }).toString(),
+							country: "India",
+							district: faker.location.city(),
+							state: faker.location.state(),
+							zipCode: faker.location.zipCode(),
 							createdAt,
 						},
 					},
