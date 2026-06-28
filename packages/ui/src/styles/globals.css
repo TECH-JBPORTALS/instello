@@ -88,10 +88,10 @@
 
 /* Implemented in the future stable verison */
 
-/* .dark {
-	--background: oklch(0.2201 0.0544 253.5);
+.dark {
+	--background: oklch(13.494% 0.02894 244.769);
 	--foreground: oklch(0.987 0.002 197.1);
-	--card: oklch(0.218 0.008 223.9);
+	--card: oklch(20.121% 0.02179 251.864);
 	--card-foreground: oklch(0.987 0.002 197.1);
 	--popover: oklch(0.218 0.008 223.9);
 	--popover-foreground: oklch(0.987 0.002 197.1);
@@ -112,7 +112,7 @@
 	--chart-3: oklch(0.546 0.245 262.881);
 	--chart-4: oklch(0.488 0.243 264.376);
 	--chart-5: oklch(0.424 0.199 265.638);
-	--sidebar: oklch(0.218 0.008 223.9);
+	--sidebar: oklch(20.121% 0.02179 251.864);
 	--sidebar-foreground: oklch(0.987 0.002 197.1);
 	--sidebar-primary: oklch(0.623 0.214 259.815);
 	--sidebar-primary-foreground: oklch(0.97 0.014 254.604);
@@ -120,7 +120,7 @@
 	--sidebar-accent-foreground: oklch(0.987 0.002 197.1);
 	--sidebar-border: oklch(1 0 0 / 10%);
 	--sidebar-ring: oklch(0.56 0.021 213.5);
-} */
+}
 
 @layer base {
 	* {

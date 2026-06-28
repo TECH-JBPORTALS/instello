@@ -26,7 +26,7 @@ export default async function RootLayout({
 	const token = await getToken();
 
 	return (
-		<html lang="en" className={cn("font-sans", sourceSans3.variable)}>
+		<html lang="en" className={cn("font-sans dark", sourceSans3.variable)}>
 			<body className={cn(sourceSans3.variable)}>
 				<Providers initialToken={token}>{children}</Providers>
 			</body>

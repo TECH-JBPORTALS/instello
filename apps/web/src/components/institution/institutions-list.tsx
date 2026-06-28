@@ -52,7 +52,7 @@ export function InstitutionsList() {
 		);
 
 	return (
-		<ItemGroup>
+		<ItemGroup className="bg-card">
 			{institutions.map((ins) => (
 				<Item
 					key={ins._id}
