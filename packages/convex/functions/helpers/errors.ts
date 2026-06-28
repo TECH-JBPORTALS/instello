@@ -7,6 +7,10 @@ export const ERROR_CODES = {
 		...BASE_ERROR_CODES,
 		UNAUTHORIZED: { code: "UNAUTHORIZED", message: "Unauthorized access" },
 		ACCESS_DENIED: { code: "ACCESS_DENIED", message: "Access denied" },
+		INSITUTION_CODE_ALREADY_EXISTS: {
+			code: "INSITUTION_CODE_ALREADY_EXISTS",
+			message: "Institution code already exists",
+		},
 	},
 	/** Better auth organization error codes */
 	ORGANIZATION: ORGANIZATION_ERROR_CODES,

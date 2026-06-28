@@ -19,13 +19,16 @@ import {
 	ItemActions,
 	ItemContent,
 	ItemDescription,
+	ItemGroup,
 	ItemMedia,
 	ItemTitle,
 } from "@instello/ui/components/item";
 import { Skeleton } from "@instello/ui/components/skeleton";
 import { IconBuildings, IconDots } from "@tabler/icons-react";
-import { useQuery } from "convex-helpers/react/cache";
+import { useQuery } from "convex-helpers/react/cache/hooks";
 import { isEmpty, isUndefined } from "lodash";
+import Link from "next/link";
+import { protocol, rootDomain } from "@/lib/utils";
 
 export function InstitutionsList() {
 	const institutions = useQuery(api.institutions.listMyOwned);
@@ -49,12 +52,16 @@ export function InstitutionsList() {
 		);
 
 	return (
-		<div className="rounded-lg border shadow-xs">
+		<ItemGroup>
 			{institutions.map((ins) => (
 				<Item
 					key={ins._id}
-					className="border-x-0 border-t-0 hover:bg-accent/50 last:border-b-0 rounded-none border-border!"
+					className="border-x-0 border-t-0 hover:bg-accent/30 relative last:border-b-0 rounded-none border-border!"
 				>
+					<Link
+						href={`${protocol}://${ins.slug}.${rootDomain}`}
+						className="absolute inset-0"
+					/>
 					<ItemMedia variant={"image"}>
 						<Avatar size="lg" className={"after:rounded-lg"}>
 							{ins.logo && (
@@ -68,7 +75,7 @@ export function InstitutionsList() {
 					<ItemContent>
 						<ItemTitle>{ins.name}</ItemTitle>
 						<ItemDescription>
-							Raguvanahalli, Kanakapura, Banglore - 562108
+							{ins.addressLine}, {ins.district}, {ins.state} - {ins.zipCode}
 						</ItemDescription>
 					</ItemContent>
 					<ItemActions>
@@ -78,7 +85,7 @@ export function InstitutionsList() {
 					</ItemActions>
 				</Item>
 			))}
-		</div>
+		</ItemGroup>
 	);
 }
 

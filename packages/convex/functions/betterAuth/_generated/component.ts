@@ -88,11 +88,17 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               }
             | {
                 data: {
+                  addressLine: string;
+                  code: string;
+                  country: string;
                   createdAt: number;
+                  district: string;
                   logo?: null | string;
                   metadata?: null | string;
                   name: string;
                   slug: string;
+                  state: string;
+                  zipCode: string;
                 };
                 model: "institution";
               }
@@ -296,6 +302,12 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "logo"
                     | "createdAt"
                     | "metadata"
+                    | "code"
+                    | "addressLine"
+                    | "district"
+                    | "state"
+                    | "country"
+                    | "zipCode"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -595,6 +607,12 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "logo"
                     | "createdAt"
                     | "metadata"
+                    | "code"
+                    | "addressLine"
+                    | "district"
+                    | "state"
+                    | "country"
+                    | "zipCode"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -1021,11 +1039,17 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | {
                 model: "institution";
                 update: {
+                  addressLine?: string;
+                  code?: string;
+                  country?: string;
                   createdAt?: number;
+                  district?: string;
                   logo?: null | string;
                   metadata?: null | string;
                   name?: string;
                   slug?: string;
+                  state?: string;
+                  zipCode?: string;
                 };
                 where?: Array<{
                   connector?: "AND" | "OR";
@@ -1035,6 +1059,12 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "logo"
                     | "createdAt"
                     | "metadata"
+                    | "code"
+                    | "addressLine"
+                    | "district"
+                    | "state"
+                    | "country"
+                    | "zipCode"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -1393,11 +1423,17 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | {
                 model: "institution";
                 update: {
+                  addressLine?: string;
+                  code?: string;
+                  country?: string;
                   createdAt?: number;
+                  district?: string;
                   logo?: null | string;
                   metadata?: null | string;
                   name?: string;
                   slug?: string;
+                  state?: string;
+                  zipCode?: string;
                 };
                 where?: Array<{
                   connector?: "AND" | "OR";
@@ -1407,6 +1443,12 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "logo"
                     | "createdAt"
                     | "metadata"
+                    | "code"
+                    | "addressLine"
+                    | "district"
+                    | "state"
+                    | "country"
+                    | "zipCode"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -1564,11 +1606,38 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         {
           _creationTime: number;
           _id: string;
+          addressLine: string;
+          code: string;
+          country: string;
           createdAt: number;
+          district: string;
           logo?: null | string;
           metadata?: null | string;
           name: string;
           slug: string;
+          state: string;
+          zipCode: string;
+        } | null,
+        Name
+      >;
+      getByCode: FunctionReference<
+        "query",
+        "internal",
+        { code: string },
+        {
+          _creationTime: number;
+          _id: string;
+          addressLine: string;
+          code: string;
+          country: string;
+          createdAt: number;
+          district: string;
+          logo?: null | string;
+          metadata?: null | string;
+          name: string;
+          slug: string;
+          state: string;
+          zipCode: string;
         } | null,
         Name
       >;
@@ -1579,11 +1648,17 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         {
           _creationTime: number;
           _id: string;
+          addressLine: string;
+          code: string;
+          country: string;
           createdAt: number;
+          district: string;
           logo?: null | string;
           metadata?: null | string;
           name: string;
           slug: string;
+          state: string;
+          zipCode: string;
         },
         Name
       >;
@@ -1594,11 +1669,17 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         Array<{
           _creationTime: number;
           _id: string;
+          addressLine: string;
+          code: string;
+          country: string;
           createdAt: number;
+          district: string;
           logo?: null | string;
           metadata?: null | string;
           name: string;
           slug: string;
+          state: string;
+          zipCode: string;
         }>,
         Name
       >;

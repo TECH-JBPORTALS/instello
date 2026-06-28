@@ -24,6 +24,11 @@ export async function listByUserRole(
 		slug: ins.slug,
 		logo: ins.logo,
 		createdAt: ins.createdAt,
-		metadata: ins.metadata,
+		code: ins.code,
+		addressLine: ins.addressLine,
+		district: ins.district,
+		state: ins.state,
+		country: ins.country,
+		zipCode: ins.zipCode,
 	}));
 }

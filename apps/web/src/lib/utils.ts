@@ -1,10 +1,9 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-export const protocol =
-	process.env.NODE_ENV === "production" ? "https" : "http";
+export const protocol = "https";
 export const rootDomain =
-	process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localtest:3000";
+	process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localtest.me:3000";
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));

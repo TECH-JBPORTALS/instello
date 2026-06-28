@@ -10,7 +10,7 @@ function ItemGroup({ className, ...props }: React.ComponentProps<"ul">) {
 		<ul
 			data-slot="item-group"
 			className={cn(
-				"group/item-group flex w-full flex-col gap-4 has-data-[size=sm]:gap-2.5 has-data-[size=xs]:gap-2",
+				"group/item-group flex w-full rounded-lg border shadow-xs overflow-hidden flex-col has-data-[size=sm]:gap-2.5 has-data-[size=xs]:gap-2",
 				className,
 			)}
 			{...props}
@@ -153,7 +153,10 @@ function ItemActions({ className, ...props }: React.ComponentProps<"div">) {
 	return (
 		<div
 			data-slot="item-actions"
-			className={cn("flex items-center gap-2", className)}
+			className={cn(
+				"flex items-center z-20	 pointer-events-auto gap-2",
+				className,
+			)}
 			{...props}
 		/>
 	);

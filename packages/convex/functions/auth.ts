@@ -1,5 +1,6 @@
 import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
+import { BetterAuthError } from "better-auth";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
 import { admin } from "better-auth/plugins/admin";
 import { organization } from "better-auth/plugins/organization";
@@ -10,6 +11,7 @@ import type { DataModel } from "./_generated/dataModel";
 import { env } from "./_generated/server";
 import authConfig from "./auth.config";
 import authSchema from "./betterAuth/schema";
+import { ERROR_CODES } from "./helpers/errors";
 
 const siteUrl = env.SITE_URL;
 const betterAuthSecret = env.BETTER_AUTH_SECRET;
@@ -79,7 +81,47 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 				},
 				schema: {
 					/** Represents institution */
-					organization: { modelName: "institution" },
+					organization: {
+						modelName: "institution",
+						additionalFields: {
+							code: {
+								type: "string",
+								fieldName: "code",
+								required: true,
+								returned: true,
+							},
+							addressLine: {
+								type: "string",
+								fieldName: "addressLine",
+								required: true,
+								returned: true,
+							},
+							district: {
+								type: "string",
+								fieldName: "district",
+								required: true,
+								returned: true,
+							},
+							state: {
+								type: "string",
+								fieldName: "state",
+								required: true,
+								returned: true,
+							},
+							country: {
+								type: "string",
+								required: true,
+								defaultValue: "India",
+								input: false,
+							},
+							zipCode: {
+								type: "string",
+								fieldName: "zipCode",
+								required: true,
+								returned: true,
+							},
+						},
+					},
 					/** Represents institution members - AKA faculty */
 					member: { modelName: "institutionMember" },
 					/** Represents institution invitations - faculty invitations to join the institution*/
@@ -91,7 +133,21 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 				/** Number of institutions owner can create in his organization */
 				organizationLimit: 10,
 				cancelPendingInvitationsOnReInvite: true,
-				organizationHooks: {},
+				organizationHooks: {
+					async beforeCreateOrganization(data) {
+						const ins = await ctx.runQuery(
+							components.betterAuth.institutions.getByCode,
+							{ code: data.organization.code },
+						);
+
+						if (ins)
+							throw new BetterAuthError(
+								ERROR_CODES.BASE.INSITUTION_CODE_ALREADY_EXISTS.message,
+							);
+
+						return { data };
+					},
+				},
 			}),
 			convex({
 				authConfig,

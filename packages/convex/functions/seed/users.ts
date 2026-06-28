@@ -173,9 +173,25 @@ export const institutions = internalMutation({
 			for (let i = 0; i < COUNT; i++) {
 				const name = `${faker.person.firstName()} ${faker.helpers.arrayElement(["Polytechnic", "PU College", "Degree College", "University", "High School", "Engineering College"])}`;
 				const slug = faker.helpers.slugify(name).toLowerCase();
+				const addressLine = faker.location.streetAddress({
+					useFullAddress: true,
+				});
+				const code = faker.number.int({ max: 999 }).toString();
+				const district = faker.location.city();
+				const state = faker.location.state();
+				const zipCode = faker.location.zipCode();
 
 				await auth.api.createOrganization({
-					body: { name, slug, userId: owner._id },
+					body: {
+						name,
+						slug,
+						userId: owner._id,
+						addressLine,
+						code,
+						district,
+						state,
+						zipCode,
+					},
 				});
 
 				console.info(` ✅ ${name} created`);

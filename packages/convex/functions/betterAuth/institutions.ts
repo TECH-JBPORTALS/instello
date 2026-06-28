@@ -18,6 +18,23 @@ export const getById = query({
 	},
 });
 
+/**
+ * Get a institution by code
+ * @returns null if no institution exists
+ */
+export const getByCode = query({
+	args: { code: vv.string() },
+	returns: vv.nullable(vv.doc("institution")),
+	async handler(ctx, args) {
+		const institution = await ctx.db
+			.query("institution")
+			.withIndex("code", (q) => q.eq("code", args.code))
+			.first();
+
+		return institution;
+	},
+});
+
 export const firstByUser = query({
 	args: { userId: vv.string() },
 	returns: vv.nullable(vv.doc("institution")),
