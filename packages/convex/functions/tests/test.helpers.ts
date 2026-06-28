@@ -1,6 +1,7 @@
 import { fakerEN_IN as faker } from "@faker-js/faker";
 import { components } from "../_generated/api";
 import type { AppMutationCtx } from "../model/common.types";
+import { Id } from "../_generated/dataModel";
 
 export async function seedOwners(ctx: AppMutationCtx) {
 	const user1 = await ctx.runMutation(components.betterAuth.adapter.create, {
@@ -145,4 +146,60 @@ export async function seedPrograms(
 	});
 
 	return ctx.db.query("programs").collect();
+}
+
+export async function seedClasses(
+	ctx: AppMutationCtx,
+	args: {
+		program1Id: Id<"programs">;
+		program2Id: Id<"programs">;
+	},
+) {
+	await ctx.db.insert("classes", {
+		programId: args.program1Id,
+		name: "Class 1",
+		description: "Class 1 description",
+		academicYear: 2026,
+		semester: 1,
+		createdAt: Date.now(),
+		updatedAt: Date.now(),
+		status: "active",
+		isGroupsEnabled: false,
+	});
+
+	await ctx.db.insert("classes", {
+		programId: args.program1Id,
+		name: "Class 2",
+		description: "Class 2 description",
+		academicYear: 2026,
+		semester: 2,
+		createdAt: Date.now(),
+		updatedAt: Date.now(),
+		status: "active",
+		isGroupsEnabled: false,
+	});
+
+	await ctx.db.insert("classes", {
+		programId: args.program2Id,
+		name: "Class 3",
+		description: "Class 3 description",
+		academicYear: 2026,
+		semester: 3,
+		createdAt: Date.now(),
+		updatedAt: Date.now(),
+		status: "active",
+		isGroupsEnabled: false,
+	});
+
+	const program1Classes = await ctx.db
+		.query("classes")
+		.withIndex("by_program", (q) => q.eq("programId", args.program1Id))
+		.collect();
+
+	const program2Classes = await ctx.db
+		.query("classes")
+		.withIndex("by_program", (q) => q.eq("programId", args.program2Id))
+		.collect();
+
+	return { program1Classes, program2Classes };
 }

@@ -64,7 +64,7 @@ const tables = {
 		status: v.union(v.literal("inactive"), v.literal("active")),
 		createdAt: v.number(),
 		updatedAt: v.optional(v.number()),
-	}),
+	}).index("by_program", ["programId"]),
 	classGroups: defineTable({
 		classId: v.string(),
 		name: v.string(),
