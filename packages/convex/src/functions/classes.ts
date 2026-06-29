@@ -140,6 +140,7 @@ export const enableSectionGroups = insMutation({
 		_id: vv.id("classes"),
 		isGroupsEnabled: vv.boolean(),
 	}),
+	/** @ts-expect-error - TODO: Implement this. Once implemented please remove this line */
 	handler: async (_ctx, _args) => {},
 });
 
@@ -156,5 +157,6 @@ export const disableSectionGroups = insMutation({
 		_id: vv.id("classes"),
 		isGroupsEnabled: vv.boolean(),
 	}),
+	/** @ts-expect-error - TODO: Implement this. Once implemented please remove this line */
 	handler: async (_ctx, _args) => {},
 });

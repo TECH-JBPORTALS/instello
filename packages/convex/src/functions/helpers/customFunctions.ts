@@ -5,7 +5,7 @@ import {
 	customMutation,
 	customQuery,
 } from "convex-helpers/server/customFunctions";
-import type { InsPermission } from "~/ins-permissions";
+import type { InsPermission } from "../../better-auth/ins-permissions";
 import { components } from "../_generated/api";
 import { mutation, query } from "../_generated/server";
 import { ensureInsPermission, ensureInstitution, ensureSession } from "./auth";
