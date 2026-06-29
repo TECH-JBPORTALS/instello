@@ -29,9 +29,10 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
 export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 	return {
 		baseURL: {
-			allowedHosts: ["*.localtest.me", "*.vercel.app"],
+			allowedHosts: ["*.localtest.me:3000", "*.vercel.app"],
 			fallback: siteUrl,
 		},
+		trustedOrigins: ["*.localtest.me:3000", "*.vercel.app"],
 		secret: betterAuthSecret,
 		database: authComponent.adapter(ctx),
 		advanced: {

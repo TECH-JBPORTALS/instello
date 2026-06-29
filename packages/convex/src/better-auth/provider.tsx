@@ -30,12 +30,24 @@ export function ConvexBetterAuthClientProvider({
 			authClient={authClient}
 			initialToken={initialToken}
 		>
-			<Authenticated>
-				<ConvexQueryCacheProvider>{children}</ConvexQueryCacheProvider>
-			</Authenticated>
+			<ConvexQueryCacheProvider>{children}</ConvexQueryCacheProvider>
+		</ConvexBetterAuthProvider>
+	);
+}
+
+export function ConvexBetterAuthGuard({
+	children,
+	loadingComponent,
+}: {
+	children: ReactNode;
+	loadingComponent?: ReactNode;
+}) {
+	return (
+		<>
+			<Authenticated>{children}</Authenticated>
 			<AuthLoading>
 				<div className="h-svh flex items-center justify-center w-full flex-col text-muted-foreground font-semibold">
-					Loading your workspace...
+					{loadingComponent ?? "Loading your workspace..."}
 				</div>
 			</AuthLoading>
 			<Unauthenticated>
@@ -43,6 +55,6 @@ export function ConvexBetterAuthClientProvider({
 					Unauthenticated, Please login
 				</div>
 			</Unauthenticated>
-		</ConvexBetterAuthProvider>
+		</>
 	);
 }

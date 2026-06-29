@@ -19,6 +19,21 @@ export const getById = query({
 });
 
 /**
+ * Get an institution by slug
+ * @returns null if no institution exists
+ */
+export const getBySlug = query({
+	args: { slug: vv.string() },
+	returns: vv.nullable(vv.doc("institution")),
+	async handler(ctx, args) {
+		return await ctx.db
+			.query("institution")
+			.withIndex("slug", (q) => q.eq("slug", args.slug))
+			.first();
+	},
+});
+
+/**
  * Get a institution by code
  * @returns null if no institution exists
  */
@@ -32,6 +47,24 @@ export const getByCode = query({
 			.first();
 
 		return institution;
+	},
+});
+
+/** Get user's membership record to given institution */
+export const getMembership = query({
+	args: { userId: vv.string(), organizationId: vv.string() },
+	returns: vv.nullable(vv.object({ role: vv.string() })),
+	handler: async (ctx, args) => {
+		const membership = await ctx.db
+			.query("institutionMember")
+			.withIndex("by_organization_user", (q) =>
+				q.eq("organizationId", args.organizationId).eq("userId", args.userId),
+			)
+			.first();
+
+		if (!membership) return null;
+
+		return { role: membership.role };
 	},
 });
 

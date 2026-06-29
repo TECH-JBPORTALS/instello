@@ -8,3 +8,7 @@ export const rootDomain =
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
+
+export function institutionUrl(slug: string, path = "") {
+	return `${protocol}://${slug}.${rootDomain}${path}`;
+}

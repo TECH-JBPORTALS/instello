@@ -7,6 +7,7 @@ import {
 	AvatarImage,
 } from "@instello/ui/components/avatar";
 import { Button } from "@instello/ui/components/button";
+import { ButtonGroup } from "@instello/ui/components/button-group";
 import {
 	Empty,
 	EmptyDescription,
@@ -24,11 +25,25 @@ import {
 	ItemTitle,
 } from "@instello/ui/components/item";
 import { Skeleton } from "@instello/ui/components/skeleton";
-import { IconBuildings, IconDots } from "@tabler/icons-react";
+import {
+	IconBuildings,
+	IconCheck,
+	IconCopy,
+	IconDots,
+	IconExternalLink,
+} from "@tabler/icons-react";
 import { useQuery } from "convex-helpers/react/cache/hooks";
 import { isEmpty, isUndefined } from "lodash";
 import Link from "next/link";
-import { protocol, rootDomain } from "@/lib/utils";
+import { useState } from "react";
+import { institutionUrl, protocol, rootDomain } from "@/lib/utils";
+import { mainNavSections } from "@/components/sidebars/institution-sidebar/nav-items";
+import {
+	DropdownMenu,
+	DropdownMenuItem,
+	DropdownMenuContent,
+	DropdownMenuTrigger,
+} from "@instello/ui/components/dropdown-menu";
 
 export function InstitutionsList() {
 	const institutions = useQuery(api.institutions.listMyOwned);
@@ -56,11 +71,11 @@ export function InstitutionsList() {
 			{institutions.map((ins) => (
 				<Item
 					key={ins._id}
-					className="border-x-0 border-t-0 hover:bg-accent/30 relative last:border-b-0 rounded-none border-border!"
+					className="border-x-0 border-t-0 hover:bg-accent/30 last:border-b-0 relative rounded-none border-border!"
 				>
 					<Link
-						href={`${protocol}://${ins.slug}.${rootDomain}`}
 						className="absolute inset-0"
+						href={`${protocol}://${ins.slug}.${rootDomain}`}
 					/>
 					<ItemMedia variant={"image"}>
 						<Avatar size="lg" className={"after:rounded-lg"}>
@@ -79,13 +94,72 @@ export function InstitutionsList() {
 						</ItemDescription>
 					</ItemContent>
 					<ItemActions>
-						<Button variant={"outline"} size={"icon-sm"}>
-							<IconDots />
-						</Button>
+						<InstitutionListActions slug={ins.slug} />
 					</ItemActions>
 				</Item>
 			))}
 		</ItemGroup>
+	);
+}
+
+const QUICK_LINK_IDS = new Set([
+	"students",
+	"faculty",
+	"attendance",
+	"timetables",
+]);
+const quickLinks = mainNavSections
+	.flatMap((section) => section.items)
+	.filter((item) => QUICK_LINK_IDS.has(item.id));
+
+function InstitutionListActions({ slug }: { slug: string }) {
+	const [copied, setCopied] = useState(false);
+	const baseUrl = institutionUrl(slug);
+	async function handleCopy() {
+		await navigator.clipboard.writeText(baseUrl);
+		setCopied(true);
+		setTimeout(() => setCopied(false), 2000);
+	}
+
+	return (
+		<ButtonGroup>
+			<Button
+				variant="outline"
+				size="icon-sm"
+				onClick={handleCopy}
+				aria-label={copied ? "Copied" : "Copy institution link"}
+			>
+				{copied ? <IconCheck /> : <IconCopy />}
+			</Button>
+			<Button
+				variant="outline"
+				size="icon-sm"
+				onClick={() => window.open(baseUrl, "_blank")}
+				aria-label="Open institution link in new tab"
+			>
+				<IconExternalLink />
+			</Button>
+			<DropdownMenu>
+				<DropdownMenuTrigger
+					render={<Button variant="outline" size="icon-sm" />}
+				>
+					<IconDots />
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="start" side="bottom">
+					{quickLinks.map((item) => (
+						<DropdownMenuItem
+							key={item.id}
+							render={
+								<Link href={institutionUrl(slug, item.href)} target="_blank" />
+							}
+						>
+							<item.icon className="size-4" />
+							{item.label}
+						</DropdownMenuItem>
+					))}
+				</DropdownMenuContent>
+			</DropdownMenu>
+		</ButtonGroup>
 	);
 }
 
