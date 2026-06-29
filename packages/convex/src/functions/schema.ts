@@ -54,6 +54,25 @@ const tables = {
 			searchField: "name",
 			filterFields: ["institutionId"],
 		}),
+	classes: defineTable({
+		programId: v.string(),
+		name: v.string(),
+		description: v.optional(v.string()),
+		isGroupsEnabled: v.boolean(),
+		academicYear: v.number(),
+		semester: v.number(),
+		status: v.union(v.literal("inactive"), v.literal("active")),
+		createdAt: v.number(),
+		updatedAt: v.optional(v.number()),
+	}).index("by_program", ["programId"]),
+	classGroups: defineTable({
+		classId: v.string(),
+		name: v.string(),
+		description: v.optional(v.string()),
+		numIdx: v.number(),
+		createdAt: v.number(),
+		updatedAt: v.optional(v.number()),
+	}),
 };
 
 const schema = defineSchema(tables);

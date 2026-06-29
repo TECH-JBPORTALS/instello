@@ -1,5 +1,6 @@
 import { fakerEN_IN as faker } from "@faker-js/faker";
 import { components } from "../_generated/api";
+import type { Id } from "../_generated/dataModel";
 import type { AppMutationCtx } from "../model/common.types";
 
 export async function seedOwners(ctx: AppMutationCtx) {
@@ -46,6 +47,12 @@ export async function seedInstitutions(
 	type Institution = {
 		_id: string;
 		name: string;
+		code: string;
+		addressLine: string;
+		district: string;
+		state: string;
+		country: string;
+		zipCode: string;
 		slug: string;
 		userId: string;
 		createdAt: string;
@@ -67,6 +74,12 @@ export async function seedInstitutions(
 						data: {
 							name,
 							slug,
+							addressLine: faker.location.streetAddress(),
+							code: faker.number.int({ max: 999 }).toString(),
+							country: "India",
+							district: faker.location.city(),
+							state: faker.location.state(),
+							zipCode: faker.location.zipCode(),
 							createdAt,
 						},
 					},
@@ -133,4 +146,60 @@ export async function seedPrograms(
 	});
 
 	return ctx.db.query("programs").collect();
+}
+
+export async function seedClasses(
+	ctx: AppMutationCtx,
+	args: {
+		program1Id: Id<"programs">;
+		program2Id: Id<"programs">;
+	},
+) {
+	await ctx.db.insert("classes", {
+		programId: args.program1Id,
+		name: "Class 1",
+		description: "Class 1 description",
+		academicYear: 2026,
+		semester: 1,
+		createdAt: Date.now(),
+		updatedAt: Date.now(),
+		status: "active",
+		isGroupsEnabled: false,
+	});
+
+	await ctx.db.insert("classes", {
+		programId: args.program1Id,
+		name: "Class 2",
+		description: "Class 2 description",
+		academicYear: 2026,
+		semester: 2,
+		createdAt: Date.now(),
+		updatedAt: Date.now(),
+		status: "active",
+		isGroupsEnabled: false,
+	});
+
+	await ctx.db.insert("classes", {
+		programId: args.program2Id,
+		name: "Class 3",
+		description: "Class 3 description",
+		academicYear: 2026,
+		semester: 3,
+		createdAt: Date.now(),
+		updatedAt: Date.now(),
+		status: "active",
+		isGroupsEnabled: false,
+	});
+
+	const program1Classes = await ctx.db
+		.query("classes")
+		.withIndex("by_program", (q) => q.eq("programId", args.program1Id))
+		.collect();
+
+	const program2Classes = await ctx.db
+		.query("classes")
+		.withIndex("by_program", (q) => q.eq("programId", args.program2Id))
+		.collect();
+
+	return { program1Classes, program2Classes };
 }

@@ -11,6 +11,10 @@ export const ERROR_CODES = {
 			code: "INSITUTION_CODE_ALREADY_EXISTS",
 			message: "Institution code already exists",
 		},
+		CLASS_NOT_FOUND: {
+			code: "CLASS_NOT_FOUND",
+			message: "Class not found",
+		},
 	},
 	/** Better auth organization error codes */
 	ORGANIZATION: ORGANIZATION_ERROR_CODES,

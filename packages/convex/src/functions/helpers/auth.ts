@@ -1,6 +1,6 @@
 import type { GenericCtx } from "@convex-dev/better-auth";
 import { ConvexError } from "convex/values";
-import * as insPermissions from "~/ins-permissions";
+import * as insPermissions from "../../better-auth/ins-permissions";
 import type { DataModel } from "../_generated/dataModel";
 import { ERROR_CODES } from "./errors";
 

@@ -1,14 +1,14 @@
+import { ConvexError } from "convex/values";
 import {
 	type CustomCtx,
 	customCtx,
 	customMutation,
 	customQuery,
 } from "convex-helpers/server/customFunctions";
-import type { InsPermission } from "~/ins-permissions";
+import type { InsPermission } from "../../better-auth/ins-permissions";
+import { components } from "../_generated/api";
 import { mutation, query } from "../_generated/server";
 import { ensureInsPermission, ensureInstitution, ensureSession } from "./auth";
-import { components } from "../_generated/api";
-import { ConvexError } from "convex/values";
 import { ERROR_CODES } from "./errors";
 
 // import * as insPermissions from "~/ins-permissions";

@@ -27,6 +27,12 @@ describe("institutions.listMyOwned", () => {
 			.map((ins) => ({
 				_id: ins._id,
 				name: ins.name,
+				code: ins.code,
+				addressLine: ins.addressLine,
+				district: ins.district,
+				state: ins.state,
+				country: ins.country,
+				zipCode: ins.zipCode,
 				slug: ins.slug,
 				createdAt: ins.createdAt,
 			}));
@@ -57,6 +63,12 @@ describe("institutions.listMyOwned", () => {
 			.map((ins) => ({
 				_id: ins._id,
 				name: ins.name,
+				code: ins.code,
+				addressLine: ins.addressLine,
+				district: ins.district,
+				state: ins.state,
+				country: ins.country,
+				zipCode: ins.zipCode,
 				slug: ins.slug,
 				createdAt: ins.createdAt,
 			}));

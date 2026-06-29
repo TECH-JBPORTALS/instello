@@ -1,5 +1,7 @@
 "use client";
 
+import { api } from "@instello/convex/api";
+import { authClient } from "@instello/convex/better-auth/client";
 import {
 	Avatar,
 	AvatarFallback,
@@ -32,11 +34,9 @@ import {
 	IconTrash,
 	IconUpload,
 } from "@tabler/icons-react";
-import { authClient } from "@instello/convex/better-auth/client";
-import { api } from "@instello/convex/api";
-import * as v from "valibot";
 import { useConvex } from "convex/react";
 import { useRef, useState } from "react";
+import * as v from "valibot";
 import { withForm } from "@/hooks/form";
 import {
 	BasicInfoSchema,
@@ -279,8 +279,7 @@ export const BasicInfoForm = withForm({
 											const showErrors =
 												field.state.meta.isTouched ||
 												formGroup.state.meta.submissionAttempts > 0;
-											const isInvalid =
-												showErrors && !field.state.meta.isValid;
+											const isInvalid = showErrors && !field.state.meta.isValid;
 											const code = field.state.value.trim();
 											const isChecking = field.state.meta.isValidating;
 											const showAvailable =
