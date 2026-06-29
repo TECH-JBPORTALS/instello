@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { api } from "../_generated/api";
+import { api, components } from "../_generated/api";
 import { ERROR_CODES } from "../helpers/errors";
 import { seedInstitutions, seedOwners } from "./test.helpers";
 import { createTest } from "./test.setup";
@@ -71,5 +71,65 @@ describe("institutions.listMyOwned", () => {
 
 		expect(myInstitutions).toHaveLength(expectedUser2Institutions.length);
 		expect(myInstitutions).toEqual(expectedUser2Institutions);
+	});
+});
+
+describe("institutions.checkCode", () => {
+	it("rejects unauthenticated user", async () => {
+		const t = createTest();
+
+		await expect(
+			t.query(api.institutions.checkCode, { code: "364" }),
+		).rejects.toThrow(ERROR_CODES.BASE.UNAUTHORIZED.message);
+	});
+
+	it("returns available when code is not taken", async () => {
+		const t = createTest();
+		const { user1 } = await t.run(seedOwners);
+
+		const result = await t
+			.withIdentity({
+				subject: user1._id,
+				activeInstitutionId: "ins-1",
+				sessionId: "ses-1",
+			})
+			.query(api.institutions.checkCode, { code: "unique-code-123" });
+
+		expect(result).toEqual({ available: true });
+	});
+
+	it("returns unavailable when code already exists", async () => {
+		const t = createTest();
+		const { user1 } = await t.run(seedOwners);
+		const code = "364";
+
+		await t.run(async (ctx) => {
+			await ctx.runMutation(components.betterAuth.adapter.create, {
+				input: {
+					model: "institution",
+					data: {
+						name: "Test College",
+						slug: "test-college",
+						code,
+						addressLine: "123 Main Street",
+						district: "Bangalore Urban",
+						state: "Karnataka",
+						country: "India",
+						zipCode: "560001",
+						createdAt: Date.now(),
+					},
+				},
+			});
+		});
+
+		const result = await t
+			.withIdentity({
+				subject: user1._id,
+				activeInstitutionId: "ins-1",
+				sessionId: "ses-1",
+			})
+			.query(api.institutions.checkCode, { code });
+
+		expect(result).toEqual({ available: false });
 	});
 });

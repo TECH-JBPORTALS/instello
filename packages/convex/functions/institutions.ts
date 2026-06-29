@@ -1,3 +1,4 @@
+import { components } from "./_generated/api";
 import { userQuery } from "./helpers/customFunctions";
 import * as Institution from "./model/institution";
 import { vv } from "./schema";
@@ -27,5 +28,24 @@ export const listMyOwned = userQuery({
 			role: "owner",
 			userId: ctx.session.userId,
 		});
+	},
+});
+
+/**
+ * **Check if an institution code is available**
+ */
+export const checkCode = userQuery({
+	args: { code: vv.string() },
+	returns: vv.object({ available: vv.boolean() }),
+	handler: async (ctx, args) => {
+		const code = args.code.trim();
+		if (!code) return { available: false };
+
+		const existing = await ctx.runQuery(
+			components.betterAuth.institutions.getByCode,
+			{ code },
+		);
+
+		return { available: existing === null };
 	},
 });
