@@ -57,5 +57,5 @@ export const ensureInsPermission = async (
 
 	const hasAccess = insPermissions.hasPermission(statements, required);
 
-	if (!hasAccess) throw new ConvexError(ERROR_CODES.BASE.ACCESS_DENIED);
+	if (!hasAccess) throw new ConvexError(ERROR_CODES.BASE.ACCESS_DENIED.message);
 };

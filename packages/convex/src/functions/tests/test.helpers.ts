@@ -2,6 +2,7 @@ import { fakerEN_IN as faker } from "@faker-js/faker";
 import { components } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import type { AppMutationCtx } from "../model/common.types";
+import { createTest } from "./test.setup";
 
 export async function seedOwners(ctx: AppMutationCtx) {
 	const user1 = await ctx.runMutation(components.betterAuth.adapter.create, {
@@ -202,4 +203,119 @@ export async function seedClasses(
 		.collect();
 
 	return { program1Classes, program2Classes };
+}
+
+export const FACULTY_EMAIL = "jane.doe@example.com";
+export const FACULTY_PHONE = "+919876543210";
+
+export const createFacultyInput = () => ({
+	firstName: "Jane",
+	lastName: "Doe",
+	dateOfBirth: "1990-05-15",
+	email: FACULTY_EMAIL,
+	profilePicUrl: "https://example.com/pic.jpg",
+	addressLine: "123 Main St",
+	district: "Bangalore",
+	state: "Karnataka",
+	country: "India",
+	zipCode: "560001",
+	phoneNumber: FACULTY_PHONE,
+});
+
+export type CreateFacultyInput = ReturnType<typeof createFacultyInput>;
+
+export async function seedFaculty(
+	ctx: AppMutationCtx,
+	args: {
+		institutionId: string;
+		createdBy: string;
+		overrides?: Partial<CreateFacultyInput> & {
+			status?: "active" | "inactive";
+			phoneVerified?: boolean;
+		};
+	},
+) {
+	const input = { ...createFacultyInput(), ...args.overrides };
+	const now = Date.now();
+
+	return await ctx.db.insert("faculty", {
+		firstName: input.firstName,
+		lastName: input.lastName,
+		dateOfBirth: input.dateOfBirth,
+		email: input.email,
+		profilePicUrl: input.profilePicUrl,
+		addressLine: input.addressLine,
+		district: input.district,
+		state: input.state,
+		country: input.country,
+		zipCode: input.zipCode,
+		institutionId: args.institutionId,
+		createdBy: args.createdBy,
+		phone: {
+			number: input.phoneNumber,
+			verified: args.overrides?.phoneVerified ?? false,
+		},
+		status: args.overrides?.status ?? "active",
+		createdAt: now,
+		updatedAt: now,
+	});
+}
+
+export async function seedFacultyMember(
+	ctx: AppMutationCtx,
+	args: { institutionId: string },
+) {
+	const createdAt = Date.now();
+
+	const user = await ctx.runMutation(components.betterAuth.adapter.create, {
+		input: {
+			model: "user",
+			data: {
+				name: "Faculty Member",
+				email: "faculty.member+test@resend.dev",
+				createdAt,
+				emailVerified: true,
+				updatedAt: createdAt,
+				role: "user",
+			},
+		},
+	});
+
+	await ctx.runMutation(components.betterAuth.adapter.create, {
+		input: {
+			model: "institutionMember",
+			data: {
+				organizationId: args.institutionId,
+				userId: user._id,
+				role: "faculty",
+				createdAt,
+			},
+		},
+	});
+
+	return user;
+}
+
+export function ownerIdentity(userId: string, institutionId: string) {
+	return {
+		subject: userId,
+		activeInstitutionId: institutionId,
+		sessionId: "ses-owner",
+	};
+}
+
+export async function setupTwoInstitutions() {
+	const t = createTest();
+	const { user1, user2 } = await t.run(seedOwners);
+	const institutions = await t.run((ctx) =>
+		seedInstitutions(ctx, { user1, user2 }),
+	);
+
+	return {
+		t,
+		user1,
+		user2,
+		ins1: institutions[0],
+		ins2: institutions[2],
+	};
 }

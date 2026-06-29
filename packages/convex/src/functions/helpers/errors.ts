@@ -16,6 +16,16 @@ export const ERROR_CODES = {
 			message: "Class not found",
 		},
 	},
+	FACULTY: {
+		NOT_FOUND: {
+			code: "FACULTY_NOT_FOUND",
+			message: "Faculty not found",
+		},
+		EMAIL_ALREADY_EXISTS: {
+			code: "FACULTY_EMAIL_ALREADY_EXISTS",
+			message: "Faculty email already exists in this institution",
+		},
+	},
 	/** Better auth organization error codes */
 	ORGANIZATION: ORGANIZATION_ERROR_CODES,
 } as const;

@@ -10,6 +10,7 @@
 
 import type * as auth from "../auth.js";
 import type * as classes from "../classes.js";
+import type * as faculty from "../faculty.js";
 import type * as helpers_auth from "../helpers/auth.js";
 import type * as helpers_customFunctions from "../helpers/customFunctions.js";
 import type * as helpers_errors from "../helpers/errors.js";
@@ -18,6 +19,7 @@ import type * as http from "../http.js";
 import type * as institutionMembers from "../institutionMembers.js";
 import type * as institutions from "../institutions.js";
 import type * as model_class from "../model/class.js";
+import type * as model_faculty from "../model/faculty.js";
 import type * as model_institution from "../model/institution.js";
 import type * as model_ownerOrganization from "../model/ownerOrganization.js";
 import type * as model_program from "../model/program.js";
@@ -35,6 +37,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   classes: typeof classes;
+  faculty: typeof faculty;
   "helpers/auth": typeof helpers_auth;
   "helpers/customFunctions": typeof helpers_customFunctions;
   "helpers/errors": typeof helpers_errors;
@@ -43,6 +46,7 @@ declare const fullApi: ApiFromModules<{
   institutionMembers: typeof institutionMembers;
   institutions: typeof institutions;
   "model/class": typeof model_class;
+  "model/faculty": typeof model_faculty;
   "model/institution": typeof model_institution;
   "model/ownerOrganization": typeof model_ownerOrganization;
   "model/program": typeof model_program;

@@ -73,6 +73,31 @@ const tables = {
 		createdAt: v.number(),
 		updatedAt: v.optional(v.number()),
 	}),
+	faculty: defineTable({
+		institutionId: v.string(),
+		firstName: v.string(),
+		lastName: v.string(),
+		dateOfBirth: v.string(),
+		email: v.string(),
+		profilePicUrl: v.optional(v.string()),
+		addressLine: v.string(),
+		district: v.string(),
+		state: v.string(),
+		country: v.string(),
+		zipCode: v.string(),
+		phone: v.object({
+			number: v.string(),
+			verified: v.boolean(),
+		}),
+		status: v.union(v.literal("inactive"), v.literal("active")),
+		userId: v.optional(v.string()),
+		createdBy: v.string(),
+		createdAt: v.number(),
+		updatedAt: v.number(),
+	})
+		.index("by_institution", ["institutionId"])
+		.index("by_institution_and_email", ["institutionId", "email"])
+		.index("by_institution_and_status", ["institutionId", "status"]),
 };
 
 const schema = defineSchema(tables);
