@@ -7,6 +7,9 @@
 			"types": "./src/functions/_generated/api.d.ts",
 			"default": "./src/functions/_generated/api.js"
 		},
+		"./dataModel": {
+			"types": "./src/functions/_generated/dataModel.d.ts"
+		},
 		"./better-auth/client": "./src/better-auth/client.ts",
 		"./better-auth/server": "./src/better-auth/server.ts",
 		"./better-auth/provider": "./src/better-auth/provider.tsx",
@@ -21,7 +24,7 @@
 		"fix:unsafe": "biome check --write --unsafe",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"auth:generate": "bunx auth generate --config functions/betterAuth/auth.config.ts --output functions/betterAuth/authSchema.ts",
+		"auth:generate": "bunx auth generate --config src/functions/betterAuth/auth.ts --output src/functions/betterAuth/authSchema.ts",
 		"clean": "rm -rf .turbo dist node_modules"
 	},
 	"author": "",

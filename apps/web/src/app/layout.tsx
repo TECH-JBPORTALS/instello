@@ -3,7 +3,7 @@ import { getToken } from "@instello/convex/better-auth/server";
 import { cn } from "@instello/ui/lib/utils";
 import type { Metadata } from "next";
 import { Source_Sans_3 } from "next/font/google";
-import { Providers } from "@/components/providers";
+import { AppProviders } from "@/components/app-providers";
 
 const sourceSans3 = Source_Sans_3({
 	subsets: ["latin"],
@@ -28,7 +28,7 @@ export default async function RootLayout({
 	return (
 		<html lang="en" className={cn("font-sans", sourceSans3.variable)}>
 			<body className={cn(sourceSans3.variable)}>
-				<Providers initialToken={token}>{children}</Providers>
+				<AppProviders initialToken={token}>{children}</AppProviders>
 			</body>
 		</html>
 	);

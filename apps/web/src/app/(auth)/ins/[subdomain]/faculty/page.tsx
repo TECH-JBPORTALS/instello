@@ -1,5 +1,5 @@
-import { PlaceholderPage } from "@/components/common/placeholder-page";
+import { FacultyPage } from "@/features/faculty/page";
 
 export default function Page() {
-	return <PlaceholderPage title="Faculty" />;
+	return <FacultyPage />;
 }

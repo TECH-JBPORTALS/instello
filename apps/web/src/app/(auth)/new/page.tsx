@@ -1,4 +1,4 @@
-import { NewInstitutionPage } from "@/components/features/new-institution/page";
+import { NewInstitutionPage } from "@/features/new-institution/page";
 
 export default function Page() {
 	return <NewInstitutionPage />;

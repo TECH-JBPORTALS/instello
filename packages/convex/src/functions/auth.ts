@@ -132,9 +132,6 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 					member: { modelName: "institutionMember" },
 					/** Represents institution invitations - faculty invitations to join the institution*/
 					invitation: { modelName: "institutionInvitation" },
-					session: {
-						fields: { activeOrganizationId: "activeInstitutionId" },
-					},
 				},
 				/** Number of institutions owner can create in his organization */
 				organizationLimit: 10,
@@ -164,12 +161,13 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 					 * WARNING: Be careful when your modifying this part, think twice.
 					 * extended `UserIdentity` interface are placed in globals.d.ts
 					 */
-					definePayload: ({ user, session }) => ({
-						name: user.name,
-						email: user.email,
-						sesionId: session.id,
-						activeInstitutionId: session.activeInstitutionId,
-					}),
+					definePayload: ({ user, session }) => {
+						return {
+							name: user.name,
+							email: user.email,
+							activeInstitutionId: session.activeOrganizationId,
+						};
+					},
 				},
 			}),
 		],

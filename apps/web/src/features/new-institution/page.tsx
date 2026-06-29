@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Container from "@/components/common/container";
-import { NewInstitutionForm } from "@/components/features/new-institution/new-institution-form";
+import { NewInstitutionForm } from "@/features/new-institution/new-institution-form";
 
 export function NewInstitutionPage() {
 	return (

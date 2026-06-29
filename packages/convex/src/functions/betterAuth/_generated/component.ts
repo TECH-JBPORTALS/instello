@@ -47,7 +47,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
               }
             | {
                 data: {
-                  activeInstitutionId?: null | string;
+                  activeOrganizationId?: null | string;
                   createdAt: number;
                   expiresAt: number;
                   impersonatedBy?: null | string;
@@ -195,7 +195,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "userAgent"
                     | "userId"
                     | "impersonatedBy"
-                    | "activeInstitutionId"
+                    | "activeOrganizationId"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -500,7 +500,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "userAgent"
                     | "userId"
                     | "impersonatedBy"
-                    | "activeInstitutionId"
+                    | "activeOrganizationId"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -897,7 +897,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | {
                 model: "session";
                 update: {
-                  activeInstitutionId?: null | string;
+                  activeOrganizationId?: null | string;
                   createdAt?: number;
                   expiresAt?: number;
                   impersonatedBy?: null | string;
@@ -918,7 +918,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "userAgent"
                     | "userId"
                     | "impersonatedBy"
-                    | "activeInstitutionId"
+                    | "activeOrganizationId"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -1281,7 +1281,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | {
                 model: "session";
                 update: {
-                  activeInstitutionId?: null | string;
+                  activeOrganizationId?: null | string;
                   createdAt?: number;
                   expiresAt?: number;
                   impersonatedBy?: null | string;
@@ -1302,7 +1302,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "userAgent"
                     | "userId"
                     | "impersonatedBy"
-                    | "activeInstitutionId"
+                    | "activeOrganizationId"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
