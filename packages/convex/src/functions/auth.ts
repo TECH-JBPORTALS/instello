@@ -29,16 +29,21 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
 export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 	return {
 		baseURL: {
-			allowedHosts: ["*.localtest.me:3000", "*.vercel.app"],
+			allowedHosts: ["*.localtest.me:3000", "*.instello.in", "*.vercel.app"],
 			fallback: siteUrl,
 		},
-		trustedOrigins: ["*.localtest.me:3000", "*.vercel.app"],
+		trustedOrigins: ["*.localtest.me:3000", "*.instello.in", "*.vercel.app"],
 		secret: betterAuthSecret,
 		database: authComponent.adapter(ctx),
 		advanced: {
 			crossSubDomainCookies: {
 				enabled: true,
-				domain: ".localtest.me",
+				domain:
+					env.NODE_ENV === "development"
+						? ".localtest.me"
+						: env.NODE_ENV === "production"
+							? ".instello.in"
+							: ".vercel.app",
 			},
 		},
 		emailAndPassword: {

@@ -94,13 +94,17 @@ The following variables are validated automatically by `convex.config.ts`.
 | `SUPER_ADMIN_EMAIL` | Yes | Super administrator email |
 | `SEED_MODE` | Optional | Enable development seeds |
 | `SEED_PASSWORD` | Optional | Password for seeded users |
+| `NODE_ENV` | Yes | Evnironment option (development/preview/production) |
 
 Example:
 
+Run in your git bash if your on windows
+
 ```bash
 bun x convex env set SITE_URL https://app.localtest.me:3000
-bun x convex env set BETTER_AUTH_SECRET "<secret>"
+bun x convex env set BETTER_AUTH_SECRET $(openssl rand -base64 32)
 bun x convex env set SUPER_ADMIN_EMAIL "admin@example.com"
+bun x convex env set NODE_ENV "development"
 ```
 
 ---

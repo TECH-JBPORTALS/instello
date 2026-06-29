@@ -7,6 +7,11 @@ const app = defineApp({
 		SITE_URL: v.string(),
 		SUPER_ADMIN_EMAIL: v.string(),
 		BETTER_AUTH_SECRET: v.string(),
+		NODE_ENV: v.union(
+			v.literal("development"),
+			v.literal("production"),
+			v.literal("preview"),
+		),
 
 		// Dev only vars
 		SEED_MODE: v.optional(v.union(v.literal("true"), v.literal("false"))),

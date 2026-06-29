@@ -26,6 +26,7 @@ import type { DataModel } from "./dataModel.js";
  */
 type Env = {
   readonly BETTER_AUTH_SECRET: string;
+  readonly NODE_ENV: "development" | "production" | "preview";
   readonly SEED_MODE: "true" | "false" | undefined;
   readonly SEED_PASSWORD: string | undefined;
   readonly SITE_URL: string;
