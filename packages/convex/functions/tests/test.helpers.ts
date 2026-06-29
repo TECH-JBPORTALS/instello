@@ -1,7 +1,7 @@
 import { fakerEN_IN as faker } from "@faker-js/faker";
 import { components } from "../_generated/api";
+import type { Id } from "../_generated/dataModel";
 import type { AppMutationCtx } from "../model/common.types";
-import { Id } from "../_generated/dataModel";
 
 export async function seedOwners(ctx: AppMutationCtx) {
 	const user1 = await ctx.runMutation(components.betterAuth.adapter.create, {

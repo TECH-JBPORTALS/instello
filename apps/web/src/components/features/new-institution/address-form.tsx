@@ -70,8 +70,7 @@ export const AddressForm = withForm({
 											const showErrors =
 												field.state.meta.isTouched ||
 												formGroup.state.meta.submissionAttempts > 0;
-											const isInvalid =
-												showErrors && !field.state.meta.isValid;
+											const isInvalid = showErrors && !field.state.meta.isValid;
 											return (
 												<Field data-invalid={isInvalid}>
 													<FieldLabel htmlFor={field.name}>
@@ -82,9 +81,7 @@ export const AddressForm = withForm({
 														name={field.name}
 														value={field.state.value}
 														onBlur={field.handleBlur}
-														onChange={(e) =>
-															field.handleChange(e.target.value)
-														}
+														onChange={(e) => field.handleChange(e.target.value)}
 														aria-invalid={isInvalid}
 														placeholder="Building, street, landmark"
 														autoComplete="street-address"
@@ -104,8 +101,7 @@ export const AddressForm = withForm({
 											const showErrors =
 												field.state.meta.isTouched ||
 												formGroup.state.meta.submissionAttempts > 0;
-											const isInvalid =
-												showErrors && !field.state.meta.isValid;
+											const isInvalid = showErrors && !field.state.meta.isValid;
 											return (
 												<Field data-invalid={isInvalid}>
 													<FieldLabel htmlFor={field.name}>District</FieldLabel>
@@ -114,9 +110,7 @@ export const AddressForm = withForm({
 														name={field.name}
 														value={field.state.value}
 														onBlur={field.handleBlur}
-														onChange={(e) =>
-															field.handleChange(e.target.value)
-														}
+														onChange={(e) => field.handleChange(e.target.value)}
 														aria-invalid={isInvalid}
 														placeholder="Bangalore Urban"
 														autoComplete="address-level2"

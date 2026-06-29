@@ -2,17 +2,17 @@
 
 import { authClient } from "@instello/convex/better-auth/client";
 import {
-	BrowserMockup,
-	BrowserMockupContent,
-	BrowserMockupHeader,
-} from "@instello/ui/components/browser-mockup";
-import {
 	Alert,
 	AlertDescription,
 	AlertTitle,
 } from "@instello/ui/components/alert";
-import { revalidateLogic } from "@tanstack/react-form-nextjs";
+import {
+	BrowserMockup,
+	BrowserMockupContent,
+	BrowserMockupHeader,
+} from "@instello/ui/components/browser-mockup";
 import { IconAlertCircle } from "@tabler/icons-react";
+import { revalidateLogic } from "@tanstack/react-form-nextjs";
 import { useState } from "react";
 import * as v from "valibot";
 import { useAppForm } from "@/hooks/form";
@@ -74,9 +74,7 @@ export function NewInstitutionForm() {
 					<Alert variant="destructive" className="mb-4">
 						<IconAlertCircle />
 						<AlertTitle>{globalError}</AlertTitle>
-						<AlertDescription>
-							Review the form and try again.
-						</AlertDescription>
+						<AlertDescription>Review the form and try again.</AlertDescription>
 					</Alert>
 				)}
 				{step === 0 && (

@@ -1,8 +1,8 @@
 import { ConvexError } from "convex/values";
 import { insMutation, insQuery } from "./helpers/customFunctions";
+import { ERROR_CODES } from "./helpers/errors";
 import * as Class from "./model/class";
 import { vv } from "./schema";
-import { ERROR_CODES } from "./helpers/errors";
 
 /** Creates class in the current program
  * @returns class id
@@ -140,7 +140,7 @@ export const enableSectionGroups = insMutation({
 		_id: vv.id("classes"),
 		isGroupsEnabled: vv.boolean(),
 	}),
-	handler: async (ctx, args) => {},
+	handler: async (_ctx, _args) => {},
 });
 
 /** Disable Section Groups for a class by id
@@ -156,5 +156,5 @@ export const disableSectionGroups = insMutation({
 		_id: vv.id("classes"),
 		isGroupsEnabled: vv.boolean(),
 	}),
-	handler: async (ctx, args) => {},
+	handler: async (_ctx, _args) => {},
 });
