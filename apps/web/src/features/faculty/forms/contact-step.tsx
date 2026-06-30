@@ -15,7 +15,7 @@ import { addFacultyFormOpt, ContactSchema } from "./shared-form";
 export const ContactStep = withForm({
 	...addFacultyFormOpt,
 	props: {
-		step: 2,
+		step: 3,
 		setStep: (_step: number) => {},
 	},
 	render: function Render({ form, step, setStep }) {

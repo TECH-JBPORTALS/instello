@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { getFacultyDisplayName, getFacultyInitials } from "./forms/shared-form";
 import { AddressSection } from "./sections/address-section";
 import { DangerZoneSection } from "./sections/danger-zone-section";
+import { EmploymentSection } from "./sections/employment-section";
 import { PersonalInfoSection } from "./sections/personal-info-section";
 import { PhoneSection } from "./sections/phone-section";
 
@@ -67,6 +68,9 @@ export function FacultyDetailPage() {
 						<div className="space-y-1">
 							<h1 className="text-2xl font-semibold">{displayName}</h1>
 							<p className="text-sm text-muted-foreground">{faculty.email}</p>
+							<p className="text-sm text-muted-foreground">
+								{faculty.designation} · {faculty.staffId}
+							</p>
 							<span
 								className={cn(
 									"inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium capitalize",
@@ -84,6 +88,10 @@ export function FacultyDetailPage() {
 				<div className="mx-auto flex max-w-2xl flex-col gap-6">
 					<PersonalInfoSection
 						key={`personal-${faculty.updatedAt}`}
+						faculty={faculty}
+					/>
+					<EmploymentSection
+						key={`employment-${faculty.updatedAt}`}
 						faculty={faculty}
 					/>
 					<AddressSection

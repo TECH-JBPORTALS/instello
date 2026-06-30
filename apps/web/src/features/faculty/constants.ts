@@ -4,6 +4,7 @@ export type FacultyStatusTab = (typeof FACULTY_STATUS_TABS)[number];
 
 export const ADD_FACULTY_STEPS = [
 	"Personal info",
+	"Employment",
 	"Address",
 	"Contact",
 ] as const;

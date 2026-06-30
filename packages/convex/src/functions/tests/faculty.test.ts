@@ -5,6 +5,7 @@ import {
 	createFacultyInput,
 	FACULTY_EMAIL,
 	FACULTY_PHONE,
+	FACULTY_STAFF_ID,
 	ownerIdentity,
 	seedFaculty,
 	seedFacultyMember,
@@ -33,9 +34,11 @@ describe("faculty.create", () => {
 		const faculty = await t.run((ctx) => ctx.db.get("faculty", facultyId));
 
 		expect(faculty).toMatchObject({
+			staffId: FACULTY_STAFF_ID,
 			firstName: "Jane",
 			lastName: "Doe",
 			email: FACULTY_EMAIL,
+			designation: "Professor",
 			status: "active",
 			phone: { number: FACULTY_PHONE, verified: false },
 			institutionId: ins1._id,
@@ -102,7 +105,7 @@ describe("faculty.list", () => {
 			seedFaculty(ctx, {
 				institutionId: ins2._id,
 				createdBy: user2._id,
-				overrides: { email: "other@example.com" },
+				overrides: { email: "other@example.com", staffId: "STAFF-002" },
 			}),
 		);
 
@@ -129,14 +132,22 @@ describe("faculty.list", () => {
 			seedFaculty(ctx, {
 				institutionId: ins1._id,
 				createdBy: user1._id,
-				overrides: { email: "active@example.com", status: "active" },
+				overrides: {
+					email: "active@example.com",
+					staffId: "STAFF-A",
+					status: "active",
+				},
 			}),
 		);
 		await t.run((ctx) =>
 			seedFaculty(ctx, {
 				institutionId: ins1._id,
 				createdBy: user1._id,
-				overrides: { email: "inactive@example.com", status: "inactive" },
+				overrides: {
+					email: "inactive@example.com",
+					staffId: "STAFF-I",
+					status: "inactive",
+				},
 			}),
 		);
 
@@ -162,7 +173,10 @@ describe("faculty.list", () => {
 				seedFaculty(ctx, {
 					institutionId: ins1._id,
 					createdBy: user1._id,
-					overrides: { email: `faculty${i}@example.com` },
+					overrides: {
+						email: `faculty${i}@example.com`,
+						staffId: `STAFF-${i}`,
+					},
 				}),
 			);
 		}
@@ -268,7 +282,7 @@ describe("faculty.updatePersonalInfo", () => {
 			seedFaculty(ctx, {
 				institutionId: ins1._id,
 				createdBy: user1._id,
-				overrides: { email: "unique@example.com" },
+				overrides: { email: "unique@example.com", staffId: "STAFF-U" },
 			}),
 		);
 
@@ -276,7 +290,7 @@ describe("faculty.updatePersonalInfo", () => {
 			seedFaculty(ctx, {
 				institutionId: ins1._id,
 				createdBy: user1._id,
-				overrides: { email: "taken@example.com" },
+				overrides: { email: "taken@example.com", staffId: "STAFF-T" },
 			}),
 		);
 
@@ -430,5 +444,174 @@ describe("faculty.activate", () => {
 			withSlug(ins1, { id: facultyId }),
 		);
 		expect(faculty.status).toBe("active");
+	});
+});
+
+describe("faculty.createBulk", () => {
+	it("requires authentication", async () => {
+		const { t, ins1 } = await setupTwoInstitutions();
+
+		await expect(
+			t.mutation(
+				api.faculty.createBulk,
+				withSlug(ins1, {
+					items: [createFacultyInput()],
+					startRowIndex: 0,
+				}),
+			),
+		).rejects.toThrow(ERROR_CODES.BASE.UNAUTHORIZED.message);
+	});
+
+	it("creates multiple faculty members", async () => {
+		const { t, user1, ins1 } = await setupTwoInstitutions();
+		const authed = t.withIdentity(ownerIdentity(user1._id, ins1._id));
+
+		const result = await authed.mutation(
+			api.faculty.createBulk,
+			withSlug(ins1, {
+				items: [
+					createFacultyInput(),
+					{
+						...createFacultyInput(),
+						email: "second@example.com",
+						staffId: "STAFF-002",
+					},
+				],
+				startRowIndex: 0,
+			}),
+		);
+
+		expect(result.createdCount).toBe(2);
+		expect(result.createdIds).toHaveLength(2);
+		expect(result.error).toBeUndefined();
+	});
+
+	it("stops on duplicate email and returns row index", async () => {
+		const { t, user1, ins1 } = await setupTwoInstitutions();
+		const authed = t.withIdentity(ownerIdentity(user1._id, ins1._id));
+
+		await authed.mutation(
+			api.faculty.create,
+			withSlug(ins1, createFacultyInput()),
+		);
+
+		const result = await authed.mutation(
+			api.faculty.createBulk,
+			withSlug(ins1, {
+				items: [
+					{
+						...createFacultyInput(),
+						email: "new@example.com",
+						staffId: "STAFF-NEW",
+					},
+					createFacultyInput(),
+				],
+				startRowIndex: 5,
+			}),
+		);
+
+		expect(result.createdCount).toBe(1);
+		expect(result.error).toMatchObject({
+			rowIndex: 6,
+			message: ERROR_CODES.FACULTY.EMAIL_ALREADY_EXISTS.message,
+		});
+	});
+
+	it("stops on duplicate staff ID in database and returns row index", async () => {
+		const { t, user1, ins1 } = await setupTwoInstitutions();
+		const authed = t.withIdentity(ownerIdentity(user1._id, ins1._id));
+
+		await authed.mutation(
+			api.faculty.create,
+			withSlug(ins1, createFacultyInput()),
+		);
+
+		const result = await authed.mutation(
+			api.faculty.createBulk,
+			withSlug(ins1, {
+				items: [
+					{
+						...createFacultyInput(),
+						email: "other@example.com",
+					},
+				],
+				startRowIndex: 3,
+			}),
+		);
+
+		expect(result.createdCount).toBe(0);
+		expect(result.error).toMatchObject({
+			rowIndex: 3,
+			message: ERROR_CODES.FACULTY.STAFF_ID_ALREADY_EXISTS.message,
+		});
+	});
+
+	it("rejects duplicate staff ID within the same batch", async () => {
+		const { t, user1, ins1 } = await setupTwoInstitutions();
+		const authed = t.withIdentity(ownerIdentity(user1._id, ins1._id));
+
+		const result = await authed.mutation(
+			api.faculty.createBulk,
+			withSlug(ins1, {
+				items: [
+					createFacultyInput(),
+					{
+						...createFacultyInput(),
+						email: "other@example.com",
+						staffId: FACULTY_STAFF_ID,
+					},
+				],
+				startRowIndex: 0,
+			}),
+		);
+
+		expect(result.createdCount).toBe(0);
+		expect(result.error).toMatchObject({
+			rowIndex: 1,
+			message: "Duplicate staff ID in import file",
+		});
+	});
+
+	it("requires faculty:create permission", async () => {
+		const { t, ins1 } = await setupTwoInstitutions();
+
+		const facultyUser = await t.run((ctx) =>
+			seedFacultyMember(ctx, { institutionId: ins1._id }),
+		);
+
+		await expect(
+			t.withIdentity(ownerIdentity(facultyUser._id, ins1._id)).mutation(
+				api.faculty.createBulk,
+				withSlug(ins1, {
+					items: [createFacultyInput()],
+					startRowIndex: 0,
+				}),
+			),
+		).rejects.toThrow(ERROR_CODES.BASE.ACCESS_DENIED.message);
+	});
+});
+
+describe("faculty.updateEmployment", () => {
+	it("updates employment information", async () => {
+		const { t, user1, ins1 } = await setupTwoInstitutions();
+
+		const facultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+			}),
+		);
+
+		await t.withIdentity(ownerIdentity(user1._id, ins1._id)).mutation(
+			api.faculty.updateEmployment,
+			withSlug(ins1, {
+				id: facultyId,
+				body: { designation: "Associate Professor" },
+			}),
+		);
+
+		const updated = await t.run((ctx) => ctx.db.get("faculty", facultyId));
+
+		expect(updated?.designation).toBe("Associate Professor");
 	});
 });

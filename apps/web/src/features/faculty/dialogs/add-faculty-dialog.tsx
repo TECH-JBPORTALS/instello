@@ -22,10 +22,12 @@ import { useAppForm } from "@/hooks/form";
 import { AddFacultyStepIndicator } from "../forms/add-faculty-step-indicator";
 import { AddressStep } from "../forms/address-step";
 import { ContactStep } from "../forms/contact-step";
+import { EmploymentStep } from "../forms/employment-step";
 import { PersonalInfoStep } from "../forms/personal-info-step";
 import {
 	addFacultyFormOpt,
 	ContactSchema,
+	EmploymentSchema,
 	FacultyAddressSchema,
 	PersonalInfoSchema,
 } from "../forms/shared-form";
@@ -49,6 +51,7 @@ export function AddFacultyDialog({
 		validators: {
 			onDynamic: v.object({
 				personalInfo: PersonalInfoSchema,
+				employment: EmploymentSchema,
 				address: FacultyAddressSchema,
 				contact: ContactSchema,
 			}),
@@ -58,11 +61,18 @@ export function AddFacultyDialog({
 
 			try {
 				await createFaculty({
+					staffId: value.employment.staffId,
 					firstName: value.personalInfo.firstName,
 					lastName: value.personalInfo.lastName,
 					dateOfBirth: value.personalInfo.dateOfBirth,
 					email: value.personalInfo.email,
 					profilePicUrl: value.personalInfo.profilePicUrl || undefined,
+					designation: value.employment.designation,
+					joinedDate: value.employment.joinedDate
+						? new Date(value.employment.joinedDate).getTime()
+						: undefined,
+					qualification: value.employment.qualification,
+					specialization: value.employment.specialization,
 					addressLine: value.address.addressLine,
 					district: value.address.district,
 					state: value.address.state,
@@ -111,9 +121,12 @@ export function AddFacultyDialog({
 					<PersonalInfoStep form={form} setStep={setStep} step={step} />
 				)}
 				{step === 1 && (
-					<AddressStep form={form} setStep={setStep} step={step} />
+					<EmploymentStep form={form} setStep={setStep} step={step} />
 				)}
 				{step === 2 && (
+					<AddressStep form={form} setStep={setStep} step={step} />
+				)}
+				{step === 3 && (
 					<ContactStep form={form} setStep={setStep} step={step} />
 				)}
 			</DialogContent>

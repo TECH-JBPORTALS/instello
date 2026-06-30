@@ -207,13 +207,18 @@ export async function seedClasses(
 
 export const FACULTY_EMAIL = "jane.doe@example.com";
 export const FACULTY_PHONE = "+919876543210";
+export const FACULTY_STAFF_ID = "STAFF-001";
 
 export const createFacultyInput = () => ({
+	staffId: FACULTY_STAFF_ID,
 	firstName: "Jane",
 	lastName: "Doe",
 	dateOfBirth: "1990-05-15",
 	email: FACULTY_EMAIL,
 	profilePicUrl: "https://example.com/pic.jpg",
+	designation: "Professor",
+	qualification: "Ph.D.",
+	specialization: "Computer Science",
 	addressLine: "123 Main St",
 	district: "Bangalore",
 	state: "Karnataka",
@@ -239,11 +244,15 @@ export async function seedFaculty(
 	const now = Date.now();
 
 	return await ctx.db.insert("faculty", {
+		staffId: input.staffId,
 		firstName: input.firstName,
 		lastName: input.lastName,
 		dateOfBirth: input.dateOfBirth,
 		email: input.email,
 		profilePicUrl: input.profilePicUrl,
+		designation: input.designation,
+		qualification: input.qualification,
+		specialization: input.specialization,
 		addressLine: input.addressLine,
 		district: input.district,
 		state: input.state,

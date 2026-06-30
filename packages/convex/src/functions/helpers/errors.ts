@@ -33,6 +33,10 @@ export const ERROR_CODES = {
 			code: "FACULTY_EMAIL_ALREADY_EXISTS",
 			message: "Faculty email already exists in this institution",
 		},
+		STAFF_ID_ALREADY_EXISTS: {
+			code: "FACULTY_STAFF_ID_ALREADY_EXISTS",
+			message: "Faculty staff ID already exists in this institution",
+		},
 	},
 	/** Better auth organization error codes */
 	ORGANIZATION: ORGANIZATION_ERROR_CODES,

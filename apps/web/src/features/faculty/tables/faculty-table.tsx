@@ -78,7 +78,10 @@ export function FacultyTable({ status, searchQuery }: FacultyTableProps) {
 				faculty.lastName,
 			).toLowerCase();
 			return (
-				fullName.includes(query) || faculty.email.toLowerCase().includes(query)
+				fullName.includes(query) ||
+				faculty.email.toLowerCase().includes(query) ||
+				faculty.staffId.toLowerCase().includes(query) ||
+				faculty.designation.toLowerCase().includes(query)
 			);
 		});
 	}, [results, searchQuery]);
@@ -152,6 +155,8 @@ type FacultyListItemProps = {
 		firstName: string;
 		lastName: string;
 		email: string;
+		staffId: string;
+		designation: string;
 		profilePicUrl?: string;
 	};
 	showDeactivate: boolean;
@@ -193,7 +198,9 @@ function FacultyListItem({ faculty, showDeactivate }: FacultyListItemProps) {
 				</ItemMedia>
 				<ItemContent>
 					<ItemTitle>{displayName}</ItemTitle>
-					<ItemDescription>{faculty.email}</ItemDescription>
+					<ItemDescription>
+						{faculty.staffId} · {faculty.designation} · {faculty.email}
+					</ItemDescription>
 				</ItemContent>
 				{showDeactivate && (
 					<ItemActions>

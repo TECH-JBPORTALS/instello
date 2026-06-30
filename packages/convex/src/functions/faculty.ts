@@ -21,6 +21,26 @@ export const create = insMutation({
 	},
 });
 
+/** Creates multiple faculty records in the current institution
+ * @returns partial success with per-row error on failure
+ */
+export const createBulk = insMutation({
+	permissions: ["faculty:create"],
+	args: {
+		items: vv.array(Faculty.CreateInputObjectSchema),
+		startRowIndex: vv.number(),
+	},
+	returns: Faculty.CreateBulkResultSchema,
+	handler: async (ctx, args) => {
+		return await Faculty.createBulk(ctx, {
+			items: args.items,
+			startRowIndex: args.startRowIndex,
+			institutionId: ctx.institution._id,
+			createdBy: ctx.session.userId,
+		});
+	},
+});
+
 /** Lists faculty in the current institution
  * @returns paginated faculty records
  */
@@ -77,6 +97,29 @@ export const updatePersonalInfo = insMutation({
 		}
 
 		await Faculty.patchPersonalInfo(ctx, faculty, args.body);
+		return null;
+	},
+});
+
+/** Update faculty employment details
+ * @param id - faculty id
+ * @param body - employment fields to update
+ */
+export const updateEmployment = insMutation({
+	permissions: ["faculty:update"],
+	args: {
+		id: vv.id("faculty"),
+		body: Faculty.PatchEmploymentSchema,
+	},
+	returns: vv.null(),
+	handler: async (ctx, args) => {
+		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
+
+		if (!faculty) {
+			throw new ConvexError(ERROR_CODES.FACULTY.NOT_FOUND.message);
+		}
+
+		await Faculty.patchEmployment(ctx, faculty, args.body);
 		return null;
 	},
 });

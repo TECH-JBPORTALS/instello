@@ -83,11 +83,16 @@ const tables = {
 	/** Faculty are the teachers who teach the students in the classes also may be non teaching staff like owner, principal, librarian, etc. */
 	faculty: defineTable({
 		institutionId: v.string(),
+		staffId: v.string(),
 		firstName: v.string(),
 		lastName: v.string(),
 		dateOfBirth: v.string(),
 		email: v.string(),
 		profilePicUrl: v.optional(v.string()),
+		designation: v.string(),
+		joinedDate: v.optional(v.number()),
+		qualification: v.string(),
+		specialization: v.string(),
 		addressLine: v.string(),
 		district: v.string(),
 		state: v.string(),
@@ -105,6 +110,7 @@ const tables = {
 	})
 		.index("by_institution", ["institutionId"])
 		.index("by_institution_and_email", ["institutionId", "email"])
+		.index("by_institution_and_staff_id", ["institutionId", "staffId"])
 		.index("by_institution_and_status", ["institutionId", "status"]),
 };
 

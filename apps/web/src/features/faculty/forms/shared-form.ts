@@ -9,6 +9,22 @@ export const PersonalInfoSchema = v.object({
 	profilePicUrl: v.pipe(v.string()),
 });
 
+export const EmploymentSchema = v.object({
+	staffId: v.pipe(v.string(), v.nonEmpty("Staff ID is required")),
+	designation: v.pipe(v.string(), v.nonEmpty("Designation is required")),
+	qualification: v.pipe(v.string(), v.nonEmpty("Qualification is required")),
+	specialization: v.pipe(v.string(), v.nonEmpty("Specialization is required")),
+	joinedDate: v.pipe(v.string()),
+});
+
+export const PatchEmploymentSchema = v.object({
+	staffId: v.pipe(v.string(), v.nonEmpty("Staff ID is required")),
+	designation: v.pipe(v.string(), v.nonEmpty("Designation is required")),
+	qualification: v.pipe(v.string(), v.nonEmpty("Qualification is required")),
+	specialization: v.pipe(v.string(), v.nonEmpty("Specialization is required")),
+	joinedDate: v.pipe(v.string()),
+});
+
 export const FacultyAddressSchema = v.object({
 	addressLine: v.pipe(v.string(), v.nonEmpty("Address is required")),
 	district: v.pipe(v.string(), v.nonEmpty("District is required")),
@@ -48,6 +64,13 @@ export const addFacultyFormOpt = formOptions({
 			dateOfBirth: "",
 			email: "",
 			profilePicUrl: "",
+		},
+		employment: {
+			staffId: "",
+			designation: "",
+			qualification: "",
+			specialization: "",
+			joinedDate: "",
 		},
 		address: {
 			addressLine: "",

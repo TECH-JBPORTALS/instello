@@ -9,11 +9,16 @@ import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 export const CreateSchema = vv
 	.doc("faculty")
 	.pick(
+		"staffId",
 		"firstName",
 		"lastName",
 		"dateOfBirth",
 		"email",
 		"profilePicUrl",
+		"designation",
+		"joinedDate",
+		"qualification",
+		"specialization",
 		"addressLine",
 		"district",
 		"state",
@@ -24,11 +29,16 @@ export const CreateSchema = vv
 	);
 
 export const CreateInputSchema = {
+	staffId: vv.string(),
 	firstName: vv.string(),
 	lastName: vv.string(),
 	dateOfBirth: vv.string(),
 	email: vv.string(),
 	profilePicUrl: vv.optional(vv.string()),
+	designation: vv.string(),
+	joinedDate: vv.optional(vv.number()),
+	qualification: vv.string(),
+	specialization: vv.string(),
 	addressLine: vv.string(),
 	district: vv.string(),
 	state: vv.string(),
@@ -37,12 +47,33 @@ export const CreateInputSchema = {
 	phoneNumber: vv.string(),
 };
 
+export const CreateInputObjectSchema = vv.object(CreateInputSchema);
+
+export const CreateBulkResultSchema = vv.object({
+	createdCount: vv.number(),
+	createdIds: vv.array(vv.id("faculty")),
+	error: vv.optional(
+		vv.object({
+			rowIndex: vv.number(),
+			message: vv.string(),
+		}),
+	),
+});
+
 export const PatchPersonalInfoSchema = vv.object({
 	firstName: vv.optional(vv.string()),
 	lastName: vv.optional(vv.string()),
 	dateOfBirth: vv.optional(vv.string()),
 	email: vv.optional(vv.string()),
 	profilePicUrl: vv.optional(vv.string()),
+});
+
+export const PatchEmploymentSchema = vv.object({
+	staffId: vv.optional(vv.string()),
+	designation: vv.optional(vv.string()),
+	joinedDate: vv.optional(vv.number()),
+	qualification: vv.optional(vv.string()),
+	specialization: vv.optional(vv.string()),
 });
 
 export const PatchAddressSchema = vv.object({
@@ -59,11 +90,16 @@ export const PatchPhoneSchema = vv.object({
 
 export const FacultyDtoSchema = vv.object({
 	_id: vv.id("faculty"),
+	staffId: vv.string(),
 	firstName: vv.string(),
 	lastName: vv.string(),
 	dateOfBirth: vv.string(),
 	email: vv.string(),
 	profilePicUrl: vv.optional(vv.string()),
+	designation: vv.string(),
+	joinedDate: vv.optional(vv.number()),
+	qualification: vv.string(),
+	specialization: vv.string(),
 	addressLine: vv.string(),
 	district: vv.string(),
 	state: vv.string(),
@@ -88,14 +124,25 @@ export type FacultyDto = Infer<typeof FacultyDtoSchema>;
 
 export type PaginatedFacultyList = Infer<typeof PaginatedFacultyListSchema>;
 
+export type CreateInput = Infer<typeof CreateInputObjectSchema>;
+
+export type CreateBulkResult = Infer<typeof CreateBulkResultSchema>;
+
+const MAX_BULK_BATCH_SIZE = 50;
+
 export function toDto(faculty: Doc<"faculty">): FacultyDto {
 	return {
 		_id: faculty._id,
+		staffId: faculty.staffId,
 		firstName: faculty.firstName,
 		lastName: faculty.lastName,
 		dateOfBirth: faculty.dateOfBirth,
 		email: faculty.email,
 		profilePicUrl: faculty.profilePicUrl,
+		designation: faculty.designation,
+		joinedDate: faculty.joinedDate,
+		qualification: faculty.qualification,
+		specialization: faculty.specialization,
 		addressLine: faculty.addressLine,
 		district: faculty.district,
 		state: faculty.state,
@@ -126,6 +173,56 @@ export async function findByEmail(
 }
 
 /**
+ * **Find faculty by staff ID within an institution**
+ * @returns null if no matching faculty exists
+ */
+export async function findByStaffId(
+	ctx: AppQueryCtx | AppMutationCtx,
+	institutionId: string,
+	staffId: string,
+) {
+	return await ctx.db
+		.query("faculty")
+		.withIndex("by_institution_and_staff_id", (q) =>
+			q.eq("institutionId", institutionId).eq("staffId", staffId),
+		)
+		.unique();
+}
+
+function validateBatchUniqueness(
+	items: CreateInput[],
+	startRowIndex: number,
+): { rowIndex: number; message: string } | null {
+	const emails = new Set<string>();
+	const staffIds = new Set<string>();
+
+	for (let i = 0; i < items.length; i++) {
+		const item = items[i];
+		if (!item) continue;
+
+		const rowIndex = startRowIndex + i;
+
+		if (emails.has(item.email)) {
+			return {
+				rowIndex,
+				message: "Duplicate email in import file",
+			};
+		}
+		emails.add(item.email);
+
+		if (staffIds.has(item.staffId)) {
+			return {
+				rowIndex,
+				message: "Duplicate staff ID in import file",
+			};
+		}
+		staffIds.add(item.staffId);
+	}
+
+	return null;
+}
+
+/**
  * **Create faculty**
  * @returns faculty id
  */
@@ -133,20 +230,35 @@ export async function create(
 	ctx: AppMutationCtx,
 	args: Infer<typeof CreateSchema> & { phoneNumber: string },
 ) {
-	const existing = await findByEmail(ctx, args.institutionId, args.email);
+	const existingEmail = await findByEmail(ctx, args.institutionId, args.email);
 
-	if (existing) {
+	if (existingEmail) {
 		throw new ConvexError(ERROR_CODES.FACULTY.EMAIL_ALREADY_EXISTS.message);
+	}
+
+	const existingStaffId = await findByStaffId(
+		ctx,
+		args.institutionId,
+		args.staffId,
+	);
+
+	if (existingStaffId) {
+		throw new ConvexError(ERROR_CODES.FACULTY.STAFF_ID_ALREADY_EXISTS.message);
 	}
 
 	const now = Date.now();
 
 	return await ctx.db.insert("faculty", {
+		staffId: args.staffId,
 		firstName: args.firstName,
 		lastName: args.lastName,
 		dateOfBirth: args.dateOfBirth,
 		email: args.email,
 		profilePicUrl: args.profilePicUrl,
+		designation: args.designation,
+		joinedDate: args.joinedDate,
+		qualification: args.qualification,
+		specialization: args.specialization,
 		addressLine: args.addressLine,
 		district: args.district,
 		state: args.state,
@@ -159,6 +271,76 @@ export async function create(
 		createdAt: now,
 		updatedAt: now,
 	});
+}
+
+/**
+ * **Create multiple faculty records sequentially**
+ * Stops on first failure and returns partial success.
+ */
+export async function createBulk(
+	ctx: AppMutationCtx,
+	args: {
+		items: CreateInput[];
+		institutionId: string;
+		createdBy: string;
+		startRowIndex: number;
+	},
+): Promise<CreateBulkResult> {
+	if (args.items.length > MAX_BULK_BATCH_SIZE) {
+		return {
+			createdCount: 0,
+			createdIds: [],
+			error: {
+				rowIndex: args.startRowIndex,
+				message: `Batch size exceeds maximum of ${MAX_BULK_BATCH_SIZE}`,
+			},
+		};
+	}
+
+	const batchError = validateBatchUniqueness(args.items, args.startRowIndex);
+	if (batchError) {
+		return {
+			createdCount: 0,
+			createdIds: [],
+			error: batchError,
+		};
+	}
+
+	const createdIds: Id<"faculty">[] = [];
+
+	for (let i = 0; i < args.items.length; i++) {
+		const item = args.items[i];
+		if (!item) continue;
+
+		const rowIndex = args.startRowIndex + i;
+
+		try {
+			const id = await create(ctx, {
+				...item,
+				institutionId: args.institutionId,
+				createdBy: args.createdBy,
+			});
+			createdIds.push(id);
+		} catch (error) {
+			const message =
+				error instanceof ConvexError
+					? String(error.message)
+					: error instanceof Error
+						? error.message
+						: "Failed to create faculty";
+
+			return {
+				createdCount: createdIds.length,
+				createdIds,
+				error: { rowIndex, message },
+			};
+		}
+	}
+
+	return {
+		createdCount: createdIds.length,
+		createdIds,
+	};
 }
 
 /**
@@ -226,6 +408,34 @@ export async function patchPersonalInfo(
 
 		if (existing && existing._id !== faculty._id) {
 			throw new ConvexError(ERROR_CODES.FACULTY.EMAIL_ALREADY_EXISTS.message);
+		}
+	}
+
+	await ctx.db.patch("faculty", faculty._id, {
+		...body,
+		updatedAt: Date.now(),
+	});
+}
+
+/**
+ * **Update faculty employment details**
+ */
+export async function patchEmployment(
+	ctx: AppMutationCtx,
+	faculty: Doc<"faculty">,
+	body: Infer<typeof PatchEmploymentSchema>,
+) {
+	if (body.staffId && body.staffId !== faculty.staffId) {
+		const existing = await findByStaffId(
+			ctx,
+			faculty.institutionId,
+			body.staffId,
+		);
+
+		if (existing && existing._id !== faculty._id) {
+			throw new ConvexError(
+				ERROR_CODES.FACULTY.STAFF_ID_ALREADY_EXISTS.message,
+			);
 		}
 	}
 

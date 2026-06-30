@@ -8,30 +8,21 @@ import {
 	FieldLabel,
 } from "@instello/ui/components/field";
 import { Input } from "@instello/ui/components/input";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@instello/ui/components/select";
-import { Textarea } from "@instello/ui/components/textarea";
-import { INDIAN_STATES } from "@/features/new-institution/shared-form";
 import { withForm } from "@/hooks/form";
-import { addFacultyFormOpt, FacultyAddressSchema } from "./shared-form";
+import { addFacultyFormOpt, EmploymentSchema } from "./shared-form";
 
-export const AddressStep = withForm({
+export const EmploymentStep = withForm({
 	...addFacultyFormOpt,
 	props: {
-		step: 2,
+		step: 1,
 		setStep: (_step: number) => {},
 	},
 	render: function Render({ form, step, setStep }) {
 		return (
 			<form.FormGroup
-				name="address"
+				name="employment"
 				validators={{
-					onDynamic: FacultyAddressSchema,
+					onDynamic: EmploymentSchema,
 				}}
 				onGroupSubmit={() => {
 					setStep(step + 1);
@@ -47,7 +38,7 @@ export const AddressStep = withForm({
 					>
 						<FieldGroup>
 							<form.AppField
-								name="address.addressLine"
+								name="employment.staffId"
 								children={(field) => {
 									const showErrors =
 										field.state.meta.isTouched ||
@@ -55,19 +46,15 @@ export const AddressStep = withForm({
 									const isInvalid = showErrors && !field.state.meta.isValid;
 									return (
 										<Field data-invalid={isInvalid}>
-											<FieldLabel htmlFor={field.name}>
-												Street address
-											</FieldLabel>
-											<Textarea
+											<FieldLabel htmlFor={field.name}>Staff ID</FieldLabel>
+											<Input
 												id={field.name}
 												name={field.name}
 												value={field.state.value}
 												onBlur={field.handleBlur}
 												onChange={(e) => field.handleChange(e.target.value)}
 												aria-invalid={isInvalid}
-												placeholder="Building, street, landmark"
-												autoComplete="street-address"
-												rows={3}
+												placeholder="STAFF-001"
 											/>
 											{isInvalid && (
 												<FieldError errors={field.state.meta.errors} />
@@ -78,7 +65,7 @@ export const AddressStep = withForm({
 							/>
 
 							<form.AppField
-								name="address.district"
+								name="employment.designation"
 								children={(field) => {
 									const showErrors =
 										field.state.meta.isTouched ||
@@ -86,7 +73,7 @@ export const AddressStep = withForm({
 									const isInvalid = showErrors && !field.state.meta.isValid;
 									return (
 										<Field data-invalid={isInvalid}>
-											<FieldLabel htmlFor={field.name}>District</FieldLabel>
+											<FieldLabel htmlFor={field.name}>Designation</FieldLabel>
 											<Input
 												id={field.name}
 												name={field.name}
@@ -94,7 +81,7 @@ export const AddressStep = withForm({
 												onBlur={field.handleBlur}
 												onChange={(e) => field.handleChange(e.target.value)}
 												aria-invalid={isInvalid}
-												autoComplete="address-level2"
+												placeholder="Professor"
 											/>
 											{isInvalid && (
 												<FieldError errors={field.state.meta.errors} />
@@ -106,7 +93,7 @@ export const AddressStep = withForm({
 
 							<div className="grid gap-5 sm:grid-cols-2">
 								<form.AppField
-									name="address.state"
+									name="employment.qualification"
 									children={(field) => {
 										const showErrors =
 											field.state.meta.isTouched ||
@@ -114,30 +101,18 @@ export const AddressStep = withForm({
 										const isInvalid = showErrors && !field.state.meta.isValid;
 										return (
 											<Field data-invalid={isInvalid}>
-												<FieldLabel htmlFor={field.name}>State</FieldLabel>
-												<Select
+												<FieldLabel htmlFor={field.name}>
+													Qualification
+												</FieldLabel>
+												<Input
+													id={field.name}
 													name={field.name}
-													value={field.state.value || null}
-													onValueChange={(value) => {
-														field.handleChange(value ?? "");
-														field.handleBlur();
-													}}
-												>
-													<SelectTrigger
-														id={field.name}
-														className="w-full"
-														aria-invalid={isInvalid}
-													>
-														<SelectValue placeholder="Select state" />
-													</SelectTrigger>
-													<SelectContent>
-														{INDIAN_STATES.map((state) => (
-															<SelectItem key={state} value={state}>
-																{state}
-															</SelectItem>
-														))}
-													</SelectContent>
-												</Select>
+													value={field.state.value}
+													onBlur={field.handleBlur}
+													onChange={(e) => field.handleChange(e.target.value)}
+													aria-invalid={isInvalid}
+													placeholder="Ph.D."
+												/>
 												{isInvalid && (
 													<FieldError errors={field.state.meta.errors} />
 												)}
@@ -147,7 +122,7 @@ export const AddressStep = withForm({
 								/>
 
 								<form.AppField
-									name="address.zipCode"
+									name="employment.specialization"
 									children={(field) => {
 										const showErrors =
 											field.state.meta.isTouched ||
@@ -155,7 +130,9 @@ export const AddressStep = withForm({
 										const isInvalid = showErrors && !field.state.meta.isValid;
 										return (
 											<Field data-invalid={isInvalid}>
-												<FieldLabel htmlFor={field.name}>PIN code</FieldLabel>
+												<FieldLabel htmlFor={field.name}>
+													Specialization
+												</FieldLabel>
 												<Input
 													id={field.name}
 													name={field.name}
@@ -163,9 +140,7 @@ export const AddressStep = withForm({
 													onBlur={field.handleBlur}
 													onChange={(e) => field.handleChange(e.target.value)}
 													aria-invalid={isInvalid}
-													inputMode="numeric"
-													maxLength={6}
-													autoComplete="postal-code"
+													placeholder="Computer Science"
 												/>
 												{isInvalid && (
 													<FieldError errors={field.state.meta.errors} />
@@ -177,7 +152,7 @@ export const AddressStep = withForm({
 							</div>
 
 							<form.AppField
-								name="address.country"
+								name="employment.joinedDate"
 								children={(field) => {
 									const showErrors =
 										field.state.meta.isTouched ||
@@ -185,15 +160,17 @@ export const AddressStep = withForm({
 									const isInvalid = showErrors && !field.state.meta.isValid;
 									return (
 										<Field data-invalid={isInvalid}>
-											<FieldLabel htmlFor={field.name}>Country</FieldLabel>
+											<FieldLabel htmlFor={field.name}>
+												Joined date (optional)
+											</FieldLabel>
 											<Input
 												id={field.name}
 												name={field.name}
+												type="date"
 												value={field.state.value}
 												onBlur={field.handleBlur}
 												onChange={(e) => field.handleChange(e.target.value)}
 												aria-invalid={isInvalid}
-												autoComplete="country-name"
 											/>
 											{isInvalid && (
 												<FieldError errors={field.state.meta.errors} />
