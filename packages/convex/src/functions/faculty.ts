@@ -1,6 +1,6 @@
 import { paginationOptsValidator } from "convex/server";
+import { ERROR_CODES, throwAppError } from "./helpers/constants";
 import { insMutation, insQuery } from "./helpers/customFunctions";
-import { ERROR_CODES, throwAppError } from "./helpers/errors";
 import * as Faculty from "./model/faculty";
 import { vv } from "./schema";
 

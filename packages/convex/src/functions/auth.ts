@@ -11,7 +11,7 @@ import type { DataModel } from "./_generated/dataModel";
 import { env } from "./_generated/server";
 import authConfig from "./auth.config";
 import authSchema from "./betterAuth/schema";
-import { ERROR_CODES } from "./helpers/errors";
+import { ERROR_CODES, RESERVED_SUBDOMAINS } from "./helpers/constants";
 
 const siteUrl = env.SITE_URL;
 const betterAuthSecret = env.BETTER_AUTH_SECRET;
@@ -138,6 +138,11 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 				cancelPendingInvitationsOnReInvite: true,
 				organizationHooks: {
 					async beforeCreateOrganization(data) {
+						if (RESERVED_SUBDOMAINS.has(data.organization.code))
+							throw new BetterAuthError(
+								ERROR_CODES.BASE.INSITUTION_SLUG_RESERVED.message,
+							);
+
 						const ins = await ctx.runQuery(
 							components.betterAuth.institutions.getByCode,
 							{ code: data.organization.code },

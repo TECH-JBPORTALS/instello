@@ -1,6 +1,6 @@
 import { components } from "./_generated/api";
+import { ERROR_CODES, throwAppError } from "./helpers/constants";
 import { userQuery } from "./helpers/customFunctions";
-import { ERROR_CODES, throwAppError } from "./helpers/errors";
 import * as Institution from "./model/institution";
 import { vv } from "./schema";
 

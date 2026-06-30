@@ -20,7 +20,7 @@ import { components } from "../_generated/api";
 import { env, internalMutation } from "../_generated/server";
 import { authComponent, createAuth } from "../auth";
 import type { Doc as BetterAuthDoc } from "../betterAuth/_generated/dataModel";
-import { ERROR_CODES, throwAppError } from "../helpers/errors";
+import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import * as OwnerOrganization from "../model/ownerOrganization";
 
 const ownersList: Owner[] = [

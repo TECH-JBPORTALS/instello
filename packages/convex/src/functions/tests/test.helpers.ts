@@ -2,7 +2,7 @@ import { fakerEN_IN as faker } from "@faker-js/faker";
 import { expect } from "vitest";
 import { components } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
-import type { AppErrorCode } from "../helpers/errors";
+import type { AppErrorCode } from "../helpers/constants";
 import type { AppMutationCtx } from "../model/common.types";
 import { createTest } from "./test.setup";
 

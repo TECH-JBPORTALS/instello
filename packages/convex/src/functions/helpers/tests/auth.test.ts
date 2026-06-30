@@ -8,7 +8,7 @@ import {
 } from "../../tests/test.helpers";
 import { createTest } from "../../tests/test.setup";
 import { ensureInstitution, ensureSession } from "../auth";
-import { ERROR_CODES } from "../errors";
+import { ERROR_CODES } from "../constants";
 
 describe("ensureSession", () => {
 	let t: ReturnType<typeof createTest>;

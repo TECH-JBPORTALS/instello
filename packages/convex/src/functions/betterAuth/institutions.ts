@@ -1,4 +1,4 @@
-import { ERROR_CODES, throwAppError } from "../helpers/errors";
+import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { vv } from "./schema";

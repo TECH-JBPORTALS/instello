@@ -7,6 +7,14 @@ export type AppErrorCode = {
 	readonly message: string;
 };
 
+export const RESERVED_SUBDOMAINS = new Set([
+	"app",
+	"www",
+	"api",
+	"docs",
+	"blog",
+]);
+
 export const ERROR_CODES = {
 	BASE: {
 		/* Better auth base error codes merged with our customized error codes */
@@ -16,6 +24,10 @@ export const ERROR_CODES = {
 		INSITUTION_CODE_ALREADY_EXISTS: {
 			code: "INSITUTION_CODE_ALREADY_EXISTS",
 			message: "Institution code already exists",
+		},
+		INSITUTION_SLUG_RESERVED: {
+			code: "INSITUTION_SLUG_RESERVED",
+			message: "Institution slug reserved. Please use different one.",
 		},
 	},
 	PROGRAM: {

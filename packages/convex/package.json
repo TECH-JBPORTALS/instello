@@ -15,8 +15,12 @@
 		"./better-auth/provider": "./src/better-auth/provider.tsx",
 		"./better-auth/schema": "./src/better-auth/schema.ts",
 		"./errors": {
-			"types": "./src/functions/helpers/errors.ts",
-			"default": "./src/functions/helpers/errors.ts"
+			"types": "./src/functions/helpers/constants.ts",
+			"default": "./src/functions/helpers/constants.ts"
+		},
+		"./constants": {
+			"types": "./src/functions/helpers/constants.ts",
+			"default": "./src/functions/helpers/constants.ts"
 		}
 	},
 	"scripts": {

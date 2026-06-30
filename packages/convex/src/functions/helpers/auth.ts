@@ -2,7 +2,7 @@ import type { GenericCtx } from "@convex-dev/better-auth";
 import * as insPermissions from "../../better-auth/ins-permissions";
 import { components } from "../_generated/api";
 import type { DataModel } from "../_generated/dataModel";
-import { ERROR_CODES, throwAppError } from "./errors";
+import { ERROR_CODES, throwAppError } from "./constants";
 
 /**
  * Helper function to validate the sessionId exists convex identitiy and

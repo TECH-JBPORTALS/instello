@@ -1,7 +1,7 @@
 import type { PaginationOptions } from "convex/server";
 import type { Infer } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
-import { ERROR_CODES, throwAppError } from "../helpers/errors";
+import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import { vv } from "../schema";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 

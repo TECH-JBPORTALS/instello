@@ -1,3 +1,4 @@
+import { RESERVED_SUBDOMAINS } from "@instello/convex/constants";
 import { type NextRequest, NextResponse } from "next/server";
 import { rootDomain } from "@/lib/utils";
 
@@ -30,8 +31,6 @@ function extractSubdomain(request: NextRequest): string | null {
 
 	return null;
 }
-
-const RESERVED_SUBDOMAINS = new Set(["app", "www", "api", "docs"]);
 
 export async function proxy(request: NextRequest) {
 	const { pathname } = request.nextUrl;

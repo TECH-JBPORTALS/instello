@@ -6,7 +6,7 @@ import * as OwnerOrganizations from "./model/ownerOrganization";
 import { vv } from "./schema";
 
 export const resolveLandingPath = userQuery({
-	args: { slug: vv.string() },
+	args: {},
 	returns: {
 		redirectUrl: vv.string(),
 	},

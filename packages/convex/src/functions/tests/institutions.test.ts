@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { api, components } from "../_generated/api";
-import { ERROR_CODES } from "../helpers/errors";
+import { ERROR_CODES } from "../helpers/constants";
 import { expectAppError, seedInstitutions, seedOwners } from "./test.helpers";
 import { createTest } from "./test.setup";
 

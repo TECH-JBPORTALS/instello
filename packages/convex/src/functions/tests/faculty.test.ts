@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { api } from "../_generated/api";
-import { ERROR_CODES } from "../helpers/errors";
+import { ERROR_CODES } from "../helpers/constants";
 import {
 	createFacultyInput,
 	expectAppError,
