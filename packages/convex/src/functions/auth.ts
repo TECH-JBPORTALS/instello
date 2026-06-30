@@ -1,7 +1,10 @@
 import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
-import { BetterAuthError } from "better-auth";
-import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
+import {
+	BetterAuthError,
+	type BetterAuthOptions,
+	betterAuth,
+} from "better-auth";
 import { admin } from "better-auth/plugins/admin";
 import { organization } from "better-auth/plugins/organization";
 import * as InsPermissions from "../better-auth/ins-permissions";
