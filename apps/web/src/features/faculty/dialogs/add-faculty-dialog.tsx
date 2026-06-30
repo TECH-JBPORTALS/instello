@@ -15,9 +15,9 @@ import {
 } from "@instello/ui/components/dialog";
 import { IconAlertCircle } from "@tabler/icons-react";
 import { revalidateLogic } from "@tanstack/react-form-nextjs";
-import { useMutation } from "convex/react";
 import { useEffect, useState } from "react";
 import * as v from "valibot";
+import { useInsMutation } from "@/hooks/convex-react";
 import { useAppForm } from "@/hooks/form";
 import { AddFacultyStepIndicator } from "../forms/add-faculty-step-indicator";
 import { AddressStep } from "../forms/address-step";
@@ -41,7 +41,7 @@ export function AddFacultyDialog({
 }: AddFacultyDialogProps) {
 	const [step, setStep] = useState(0);
 	const [globalError, setGlobalError] = useState<string | null>(null);
-	const createFaculty = useMutation(api.faculty.create);
+	const createFaculty = useInsMutation(api.faculty.create);
 
 	const form = useAppForm({
 		...addFacultyFormOpt,

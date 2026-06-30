@@ -25,8 +25,8 @@ import {
 import { Input } from "@instello/ui/components/input";
 import { IconTrash, IconUpload } from "@tabler/icons-react";
 import { revalidateLogic } from "@tanstack/react-form-nextjs";
-import { useMutation } from "convex/react";
 import { useRef, useState } from "react";
+import { useInsMutation } from "@/hooks/convex-react";
 import { useAppForm } from "@/hooks/form";
 import {
 	getFacultyInitials,
@@ -150,7 +150,7 @@ export function PersonalInfoSection({
 	faculty,
 	disabled,
 }: PersonalInfoSectionProps) {
-	const updatePersonalInfo = useMutation(api.faculty.updatePersonalInfo);
+	const updatePersonalInfo = useInsMutation(api.faculty.updatePersonalInfo);
 	const [error, setError] = useState<string | null>(null);
 
 	const form = useAppForm({

@@ -1,6 +1,6 @@
 "use client";
 
-import { authClient } from "@instello/convex/better-auth/client";
+import { api } from "@instello/convex/api";
 import {
 	InputGroup,
 	InputGroupAddon,
@@ -16,14 +16,14 @@ import {
 	PageHeaderStart,
 	PageHeaderTitle,
 } from "@/components/common/page-header";
+import { useInsQuery, useInstitutionSlug } from "@/hooks/convex-react";
 import { AddFacultyButton } from "./add-faculty-button";
 import type { FacultyStatusTab } from "./constants";
-import { useCanManageFaculty } from "./hooks/use-can-manage-faculty";
 import { FacultyStatusTabs, FacultyTable } from "./tables/faculty-table";
 
 export function FacultyPage() {
-	const { data: activeOrg } = authClient.useActiveOrganization();
-	const canManage = useCanManageFaculty();
+	const slug = useInstitutionSlug();
+	const institution = useInsQuery(api.institutions.getBySlug, { slug });
 	const [statusTab, setStatusTab] = useState<FacultyStatusTab>("active");
 	const [searchQuery, setSearchQuery] = useState("");
 
@@ -35,7 +35,8 @@ export function FacultyPage() {
 						Faculty members
 					</PageHeaderTitle>
 					<PageHeaderDescription>
-						All faculty members under {activeOrg?.name ?? "your institution"}
+						All faculty members under{" "}
+						<i className="text-foreground">{institution?.name}</i>
 					</PageHeaderDescription>
 				</PageHeaderStart>
 
@@ -50,7 +51,7 @@ export function FacultyPage() {
 							onChange={(e) => setSearchQuery(e.target.value)}
 						/>
 					</InputGroup>
-					<AddFacultyButton disabled={!canManage} />
+					<AddFacultyButton />
 				</PageHeaderEnd>
 			</PageHeader>
 

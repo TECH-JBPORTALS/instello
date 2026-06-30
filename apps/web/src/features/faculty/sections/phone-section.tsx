@@ -20,8 +20,8 @@ import {
 } from "@instello/ui/components/field";
 import { Input } from "@instello/ui/components/input";
 import { revalidateLogic } from "@tanstack/react-form-nextjs";
-import { useMutation } from "convex/react";
 import { useState } from "react";
+import { useInsMutation } from "@/hooks/convex-react";
 import { useAppForm } from "@/hooks/form";
 import { cn } from "@/lib/utils";
 import { PatchPhoneSchema } from "../forms/shared-form";
@@ -38,7 +38,7 @@ type PhoneSectionProps = {
 };
 
 export function PhoneSection({ faculty, disabled }: PhoneSectionProps) {
-	const updatePhoneNumber = useMutation(api.faculty.updatePhoneNumber);
+	const updatePhoneNumber = useInsMutation(api.faculty.updatePhoneNumber);
 	const [error, setError] = useState<string | null>(null);
 
 	const form = useAppForm({

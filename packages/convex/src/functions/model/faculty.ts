@@ -198,10 +198,19 @@ export async function list(
 
 /**
  * **Get faculty by id**
- * @returns null if faculty does not exist
+ * @returns null if faculty does not exist or does not belong to institutionId
  */
-export async function getById(ctx: AppQueryCtx, id: Id<"faculty">) {
-	return await ctx.db.get("faculty", id);
+export async function getById(
+	ctx: AppQueryCtx,
+	id: Id<"faculty">,
+	institutionId?: string,
+) {
+	const faculty = await ctx.db.get("faculty", id);
+
+	if (!faculty) return null;
+	if (institutionId && faculty.institutionId !== institutionId) return null;
+
+	return faculty;
 }
 
 /**

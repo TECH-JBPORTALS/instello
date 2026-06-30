@@ -16,7 +16,6 @@ import type * as helpers_customFunctions from "../helpers/customFunctions.js";
 import type * as helpers_errors from "../helpers/errors.js";
 import type * as helpers_utils from "../helpers/utils.js";
 import type * as http from "../http.js";
-import type * as institutionMembers from "../institutionMembers.js";
 import type * as institutions from "../institutions.js";
 import type * as model_class from "../model/class.js";
 import type * as model_faculty from "../model/faculty.js";
@@ -43,7 +42,6 @@ declare const fullApi: ApiFromModules<{
   "helpers/errors": typeof helpers_errors;
   "helpers/utils": typeof helpers_utils;
   http: typeof http;
-  institutionMembers: typeof institutionMembers;
   institutions: typeof institutions;
   "model/class": typeof model_class;
   "model/faculty": typeof model_faculty;

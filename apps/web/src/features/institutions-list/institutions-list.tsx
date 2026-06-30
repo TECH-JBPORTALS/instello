@@ -9,6 +9,12 @@ import {
 import { Button } from "@instello/ui/components/button";
 import { ButtonGroup } from "@instello/ui/components/button-group";
 import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@instello/ui/components/dropdown-menu";
+import {
 	Empty,
 	EmptyDescription,
 	EmptyHeader,
@@ -36,14 +42,8 @@ import { useQuery } from "convex-helpers/react/cache/hooks";
 import { isEmpty, isUndefined } from "lodash";
 import Link from "next/link";
 import { useState } from "react";
-import { institutionUrl, protocol, rootDomain } from "@/lib/utils";
 import { mainNavSections } from "@/components/sidebars/institution-sidebar/nav-items";
-import {
-	DropdownMenu,
-	DropdownMenuItem,
-	DropdownMenuContent,
-	DropdownMenuTrigger,
-} from "@instello/ui/components/dropdown-menu";
+import { institutionUrl, protocol, rootDomain } from "@/lib/utils";
 
 export function InstitutionsList() {
 	const institutions = useQuery(api.institutions.listMyOwned);

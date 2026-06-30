@@ -15,7 +15,7 @@ export const create = insMutation({
 	handler: async (ctx, args) => {
 		return await Faculty.create(ctx, {
 			...args,
-			institutionId: ctx.session.activeInstitutionId,
+			institutionId: ctx.institution._id,
 			createdBy: ctx.session.userId,
 		});
 	},
@@ -33,7 +33,7 @@ export const list = insQuery({
 	returns: Faculty.PaginatedFacultyListSchema,
 	handler: async (ctx, args) => {
 		return await Faculty.list(ctx, {
-			institutionId: ctx.session.activeInstitutionId,
+			institutionId: ctx.institution._id,
 			status: args.status,
 			paginationOpts: args.paginationOpts,
 		});
@@ -48,9 +48,9 @@ export const getById = insQuery({
 	args: { id: vv.id("faculty") },
 	returns: Faculty.FacultyDtoSchema,
 	handler: async (ctx, args) => {
-		const faculty = await Faculty.getById(ctx, args.id);
+		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
 
-		if (!faculty || faculty.institutionId !== ctx.session.activeInstitutionId) {
+		if (!faculty) {
 			throw new ConvexError(ERROR_CODES.FACULTY.NOT_FOUND.message);
 		}
 
@@ -68,14 +68,16 @@ export const updatePersonalInfo = insMutation({
 		id: vv.id("faculty"),
 		body: Faculty.PatchPersonalInfoSchema,
 	},
+	returns: vv.null(),
 	handler: async (ctx, args) => {
-		const faculty = await Faculty.getById(ctx, args.id);
+		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
 
-		if (!faculty || faculty.institutionId !== ctx.session.activeInstitutionId) {
+		if (!faculty) {
 			throw new ConvexError(ERROR_CODES.FACULTY.NOT_FOUND.message);
 		}
 
 		await Faculty.patchPersonalInfo(ctx, faculty, args.body);
+		return null;
 	},
 });
 
@@ -89,14 +91,16 @@ export const updateAddress = insMutation({
 		id: vv.id("faculty"),
 		body: Faculty.PatchAddressSchema,
 	},
+	returns: vv.null(),
 	handler: async (ctx, args) => {
-		const faculty = await Faculty.getById(ctx, args.id);
+		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
 
-		if (!faculty || faculty.institutionId !== ctx.session.activeInstitutionId) {
+		if (!faculty) {
 			throw new ConvexError(ERROR_CODES.FACULTY.NOT_FOUND.message);
 		}
 
 		await Faculty.patchAddress(ctx, faculty, args.body);
+		return null;
 	},
 });
 
@@ -110,14 +114,16 @@ export const updatePhoneNumber = insMutation({
 		id: vv.id("faculty"),
 		body: Faculty.PatchPhoneSchema,
 	},
+	returns: vv.null(),
 	handler: async (ctx, args) => {
-		const faculty = await Faculty.getById(ctx, args.id);
+		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
 
-		if (!faculty || faculty.institutionId !== ctx.session.activeInstitutionId) {
+		if (!faculty) {
 			throw new ConvexError(ERROR_CODES.FACULTY.NOT_FOUND.message);
 		}
 
 		await Faculty.patchPhone(ctx, faculty, args.body);
+		return null;
 	},
 });
 
@@ -127,14 +133,16 @@ export const updatePhoneNumber = insMutation({
 export const activate = insMutation({
 	permissions: ["faculty:activate"],
 	args: { id: vv.id("faculty") },
+	returns: vv.null(),
 	handler: async (ctx, args) => {
-		const faculty = await Faculty.getById(ctx, args.id);
+		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
 
-		if (!faculty || faculty.institutionId !== ctx.session.activeInstitutionId) {
+		if (!faculty) {
 			throw new ConvexError(ERROR_CODES.FACULTY.NOT_FOUND.message);
 		}
 
 		await Faculty.setStatus(ctx, faculty, "active");
+		return null;
 	},
 });
 
@@ -144,13 +152,15 @@ export const activate = insMutation({
 export const deactivate = insMutation({
 	permissions: ["faculty:activate"],
 	args: { id: vv.id("faculty") },
+	returns: vv.null(),
 	handler: async (ctx, args) => {
-		const faculty = await Faculty.getById(ctx, args.id);
+		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
 
-		if (!faculty || faculty.institutionId !== ctx.session.activeInstitutionId) {
+		if (!faculty) {
 			throw new ConvexError(ERROR_CODES.FACULTY.NOT_FOUND.message);
 		}
 
 		await Faculty.setStatus(ctx, faculty, "inactive");
+		return null;
 	},
 });

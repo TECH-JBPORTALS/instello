@@ -41,16 +41,15 @@ import {
 import { Skeleton } from "@instello/ui/components/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@instello/ui/components/tabs";
 import { IconDots, IconUser, IconUserOff } from "@tabler/icons-react";
-import { useMutation, usePaginatedQuery } from "convex/react";
 import { isEmpty } from "lodash";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { useInsMutation, useInsPaginatedQuery } from "@/hooks/convex-react";
 import { FACULTY_LIST_PAGE_SIZE } from "../constants";
 import {
 	getFacultyDisplayName,
 	getFacultyInitials,
 } from "../forms/shared-form";
-import { useCanManageFaculty } from "../hooks/use-can-manage-faculty";
 
 type FacultyTableProps = {
 	status: "active" | "inactive";
@@ -58,12 +57,11 @@ type FacultyTableProps = {
 };
 
 export function FacultyTable({ status, searchQuery }: FacultyTableProps) {
-	const canManage = useCanManageFaculty();
 	const {
 		results,
 		status: paginationStatus,
 		loadMore,
-	} = usePaginatedQuery(
+	} = useInsPaginatedQuery(
 		api.faculty.list,
 		{ status },
 		{ initialNumItems: FACULTY_LIST_PAGE_SIZE },
@@ -122,7 +120,6 @@ export function FacultyTable({ status, searchQuery }: FacultyTableProps) {
 					<FacultyListItem
 						key={faculty._id}
 						faculty={faculty}
-						canManage={canManage}
 						showDeactivate={status === "active"}
 					/>
 				))}
@@ -157,18 +154,13 @@ type FacultyListItemProps = {
 		email: string;
 		profilePicUrl?: string;
 	};
-	canManage: boolean;
 	showDeactivate: boolean;
 };
 
-function FacultyListItem({
-	faculty,
-	canManage,
-	showDeactivate,
-}: FacultyListItemProps) {
+function FacultyListItem({ faculty, showDeactivate }: FacultyListItemProps) {
 	const [confirmOpen, setConfirmOpen] = useState(false);
 	const [isDeactivating, setIsDeactivating] = useState(false);
-	const deactivateFaculty = useMutation(api.faculty.deactivate);
+	const deactivateFaculty = useInsMutation(api.faculty.deactivate);
 
 	const displayName = getFacultyDisplayName(
 		faculty.firstName,
@@ -203,7 +195,7 @@ function FacultyListItem({
 					<ItemTitle>{displayName}</ItemTitle>
 					<ItemDescription>{faculty.email}</ItemDescription>
 				</ItemContent>
-				{canManage && showDeactivate && (
+				{showDeactivate && (
 					<ItemActions>
 						<DropdownMenu>
 							<DropdownMenuTrigger

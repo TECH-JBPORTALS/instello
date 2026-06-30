@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from "@instello/convex/api";
-import { Id } from "@instello/convex/dataModel";
+import type { Id } from "@instello/convex/dataModel";
 import { Button } from "@instello/ui/components/button";
 import {
 	Card,
@@ -18,8 +18,8 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@instello/ui/components/dialog";
-import { useMutation } from "convex/react";
 import { useState } from "react";
+import { useInsMutation } from "@/hooks/convex-react";
 
 type DangerZoneSectionProps = {
 	faculty: {
@@ -38,8 +38,8 @@ export function DangerZoneSection({
 	const [confirmOpen, setConfirmOpen] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const activateFaculty = useMutation(api.faculty.activate);
-	const deactivateFaculty = useMutation(api.faculty.deactivate);
+	const activateFaculty = useInsMutation(api.faculty.activate);
+	const deactivateFaculty = useInsMutation(api.faculty.deactivate);
 
 	const displayName = `${faculty.firstName} ${faculty.lastName}`.trim();
 	const isActive = faculty.status === "active";

@@ -11,7 +11,15 @@ export const ERROR_CODES = {
 			code: "INSITUTION_CODE_ALREADY_EXISTS",
 			message: "Institution code already exists",
 		},
-		CLASS_NOT_FOUND: {
+	},
+	PROGRAM: {
+		NOT_FOUND: {
+			code: "PROGRAM_NOT_FOUND",
+			message: "Program not found",
+		},
+	},
+	CLASS: {
+		NOT_FOUND: {
 			code: "CLASS_NOT_FOUND",
 			message: "Class not found",
 		},

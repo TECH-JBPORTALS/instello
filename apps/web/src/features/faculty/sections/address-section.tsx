@@ -27,9 +27,9 @@ import {
 } from "@instello/ui/components/select";
 import { Textarea } from "@instello/ui/components/textarea";
 import { revalidateLogic } from "@tanstack/react-form-nextjs";
-import { useMutation } from "convex/react";
 import { useState } from "react";
 import { INDIAN_STATES } from "@/features/new-institution/shared-form";
+import { useInsMutation } from "@/hooks/convex-react";
 import { useAppForm } from "@/hooks/form";
 import { PatchAddressSchema } from "../forms/shared-form";
 
@@ -46,7 +46,7 @@ type AddressSectionProps = {
 };
 
 export function AddressSection({ faculty, disabled }: AddressSectionProps) {
-	const updateAddress = useMutation(api.faculty.updateAddress);
+	const updateAddress = useInsMutation(api.faculty.updateAddress);
 	const [error, setError] = useState<string | null>(null);
 
 	const form = useAppForm({

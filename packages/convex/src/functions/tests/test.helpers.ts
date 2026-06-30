@@ -304,6 +304,27 @@ export function ownerIdentity(userId: string, institutionId: string) {
 	};
 }
 
+export function withSlug<T extends Record<string, unknown>>(
+	institution: { slug: string },
+	args: T,
+): T & { slug: string } {
+	return { slug: institution.slug, ...args };
+}
+
+/** First institution per owner from {@link seedInstitutions} (user1's primary). */
+export function primaryIns<T extends { _id: string; slug: string }>(
+	institutions: T[],
+): T {
+	return institutions[0];
+}
+
+/** Second owner's primary institution from {@link seedInstitutions}. */
+export function secondaryIns<T extends { _id: string; slug: string }>(
+	institutions: T[],
+): T {
+	return institutions[2];
+}
+
 export async function setupTwoInstitutions() {
 	const t = createTest();
 	const { user1, user2 } = await t.run(seedOwners);

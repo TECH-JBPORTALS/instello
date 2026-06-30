@@ -10,13 +10,12 @@ import {
 import { Button } from "@instello/ui/components/button";
 import { Skeleton } from "@instello/ui/components/skeleton";
 import { IconArrowLeft } from "@tabler/icons-react";
-import { useQuery } from "convex-helpers/react/cache/hooks";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Container from "@/components/common/container";
+import { useInsQuery } from "@/hooks/convex-react";
 import { cn } from "@/lib/utils";
 import { getFacultyDisplayName, getFacultyInitials } from "./forms/shared-form";
-import { useCanManageFaculty } from "./hooks/use-can-manage-faculty";
 import { AddressSection } from "./sections/address-section";
 import { DangerZoneSection } from "./sections/danger-zone-section";
 import { PersonalInfoSection } from "./sections/personal-info-section";
@@ -24,8 +23,7 @@ import { PhoneSection } from "./sections/phone-section";
 
 export function FacultyDetailPage() {
 	const { facultyId } = useParams<{ facultyId: string }>();
-	const canManage = useCanManageFaculty();
-	const faculty = useQuery(
+	const faculty = useInsQuery(
 		api.faculty.getById,
 		facultyId ? { id: facultyId as Id<"faculty"> } : "skip",
 	);
@@ -87,19 +85,13 @@ export function FacultyDetailPage() {
 					<PersonalInfoSection
 						key={`personal-${faculty.updatedAt}`}
 						faculty={faculty}
-						disabled={!canManage}
 					/>
 					<AddressSection
 						key={`address-${faculty.updatedAt}`}
 						faculty={faculty}
-						disabled={!canManage}
 					/>
-					<PhoneSection
-						key={`phone-${faculty.updatedAt}`}
-						faculty={faculty}
-						disabled={!canManage}
-					/>
-					<DangerZoneSection faculty={faculty} disabled={!canManage} />
+					<PhoneSection key={`phone-${faculty.updatedAt}`} faculty={faculty} />
+					<DangerZoneSection faculty={faculty} />
 				</div>
 			</div>
 		</Container>

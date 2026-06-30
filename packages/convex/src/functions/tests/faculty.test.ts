@@ -9,14 +9,15 @@ import {
 	seedFaculty,
 	seedFacultyMember,
 	setupTwoInstitutions,
+	withSlug,
 } from "./test.helpers";
 
 describe("faculty.create", () => {
 	it("requires authentication", async () => {
-		const { t } = await setupTwoInstitutions();
+		const { t, ins1 } = await setupTwoInstitutions();
 
 		await expect(
-			t.mutation(api.faculty.create, createFacultyInput()),
+			t.mutation(api.faculty.create, withSlug(ins1, createFacultyInput())),
 		).rejects.toThrow(ERROR_CODES.BASE.UNAUTHORIZED.message);
 	});
 
@@ -25,7 +26,7 @@ describe("faculty.create", () => {
 
 		const facultyId = await t
 			.withIdentity(ownerIdentity(user1._id, ins1._id))
-			.mutation(api.faculty.create, createFacultyInput());
+			.mutation(api.faculty.create, withSlug(ins1, createFacultyInput()));
 
 		expect(facultyId).toBeDefined();
 
@@ -46,10 +47,13 @@ describe("faculty.create", () => {
 		const { t, user1, ins1 } = await setupTwoInstitutions();
 		const authed = t.withIdentity(ownerIdentity(user1._id, ins1._id));
 
-		await authed.mutation(api.faculty.create, createFacultyInput());
+		await authed.mutation(
+			api.faculty.create,
+			withSlug(ins1, createFacultyInput()),
+		);
 
 		await expect(
-			authed.mutation(api.faculty.create, createFacultyInput()),
+			authed.mutation(api.faculty.create, withSlug(ins1, createFacultyInput())),
 		).rejects.toThrow(ERROR_CODES.FACULTY.EMAIL_ALREADY_EXISTS.message);
 	});
 
@@ -58,11 +62,11 @@ describe("faculty.create", () => {
 
 		const id1 = await t
 			.withIdentity(ownerIdentity(user1._id, ins1._id))
-			.mutation(api.faculty.create, createFacultyInput());
+			.mutation(api.faculty.create, withSlug(ins1, createFacultyInput()));
 
 		const id2 = await t
 			.withIdentity(ownerIdentity(user2._id, ins2._id))
-			.mutation(api.faculty.create, createFacultyInput());
+			.mutation(api.faculty.create, withSlug(ins2, createFacultyInput()));
 
 		expect(id1).toBeDefined();
 		expect(id2).toBeDefined();
@@ -79,7 +83,7 @@ describe("faculty.create", () => {
 		await expect(
 			t
 				.withIdentity(ownerIdentity(facultyUser._id, ins1._id))
-				.mutation(api.faculty.create, createFacultyInput()),
+				.mutation(api.faculty.create, withSlug(ins1, createFacultyInput())),
 		).rejects.toThrow(ERROR_CODES.BASE.ACCESS_DENIED.message);
 	});
 });
@@ -104,9 +108,12 @@ describe("faculty.list", () => {
 
 		const result = await t
 			.withIdentity(ownerIdentity(user1._id, ins1._id))
-			.query(api.faculty.list, {
-				paginationOpts: { numItems: 10, cursor: null },
-			});
+			.query(
+				api.faculty.list,
+				withSlug(ins1, {
+					paginationOpts: { numItems: 10, cursor: null },
+				}),
+			);
 
 		expect(result.page).toHaveLength(1);
 		expect(result.page[0]).toMatchObject({
@@ -135,10 +142,13 @@ describe("faculty.list", () => {
 
 		const activeResult = await t
 			.withIdentity(ownerIdentity(user1._id, ins1._id))
-			.query(api.faculty.list, {
-				paginationOpts: { numItems: 10, cursor: null },
-				status: "active",
-			});
+			.query(
+				api.faculty.list,
+				withSlug(ins1, {
+					paginationOpts: { numItems: 10, cursor: null },
+					status: "active",
+				}),
+			);
 
 		expect(activeResult.page).toHaveLength(1);
 		expect(activeResult.page[0]?.email).toBe("active@example.com");
@@ -159,18 +169,24 @@ describe("faculty.list", () => {
 
 		const firstPage = await t
 			.withIdentity(ownerIdentity(user1._id, ins1._id))
-			.query(api.faculty.list, {
-				paginationOpts: { numItems: 2, cursor: null },
-			});
+			.query(
+				api.faculty.list,
+				withSlug(ins1, {
+					paginationOpts: { numItems: 2, cursor: null },
+				}),
+			);
 
 		expect(firstPage.page).toHaveLength(2);
 		expect(firstPage.isDone).toBe(false);
 
 		const secondPage = await t
 			.withIdentity(ownerIdentity(user1._id, ins1._id))
-			.query(api.faculty.list, {
-				paginationOpts: { numItems: 2, cursor: firstPage.continueCursor },
-			});
+			.query(
+				api.faculty.list,
+				withSlug(ins1, {
+					paginationOpts: { numItems: 2, cursor: firstPage.continueCursor },
+				}),
+			);
 
 		expect(secondPage.page).toHaveLength(1);
 		expect(secondPage.isDone).toBe(true);
@@ -190,7 +206,7 @@ describe("faculty.getById", () => {
 
 		const faculty = await t
 			.withIdentity(ownerIdentity(user1._id, ins1._id))
-			.query(api.faculty.getById, { id: facultyId });
+			.query(api.faculty.getById, withSlug(ins1, { id: facultyId }));
 
 		expect(faculty).toMatchObject({
 			_id: facultyId,
@@ -212,7 +228,7 @@ describe("faculty.getById", () => {
 		await expect(
 			t
 				.withIdentity(ownerIdentity(user1._id, ins1._id))
-				.query(api.faculty.getById, { id: facultyId }),
+				.query(api.faculty.getById, withSlug(ins1, { id: facultyId })),
 		).rejects.toThrow(ERROR_CODES.FACULTY.NOT_FOUND.message);
 	});
 });
@@ -228,12 +244,13 @@ describe("faculty.updatePersonalInfo", () => {
 			}),
 		);
 
-		await t
-			.withIdentity(ownerIdentity(user1._id, ins1._id))
-			.mutation(api.faculty.updatePersonalInfo, {
+		await t.withIdentity(ownerIdentity(user1._id, ins1._id)).mutation(
+			api.faculty.updatePersonalInfo,
+			withSlug(ins1, {
 				id: facultyId,
 				body: { firstName: "Janet", lastName: "Smith" },
-			});
+			}),
+		);
 
 		const updated = await t.run((ctx) => ctx.db.get("faculty", facultyId));
 
@@ -264,12 +281,13 @@ describe("faculty.updatePersonalInfo", () => {
 		);
 
 		await expect(
-			t
-				.withIdentity(ownerIdentity(user1._id, ins1._id))
-				.mutation(api.faculty.updatePersonalInfo, {
+			t.withIdentity(ownerIdentity(user1._id, ins1._id)).mutation(
+				api.faculty.updatePersonalInfo,
+				withSlug(ins1, {
 					id: facultyId,
 					body: { email: "taken@example.com" },
 				}),
+			),
 		).rejects.toThrow(ERROR_CODES.FACULTY.EMAIL_ALREADY_EXISTS.message);
 	});
 
@@ -288,12 +306,13 @@ describe("faculty.updatePersonalInfo", () => {
 		);
 
 		await expect(
-			t
-				.withIdentity(ownerIdentity(facultyUser._id, ins1._id))
-				.mutation(api.faculty.updatePersonalInfo, {
+			t.withIdentity(ownerIdentity(facultyUser._id, ins1._id)).mutation(
+				api.faculty.updatePersonalInfo,
+				withSlug(ins1, {
 					id: facultyId,
 					body: { firstName: "Hacker" },
 				}),
+			),
 		).rejects.toThrow(ERROR_CODES.BASE.ACCESS_DENIED.message);
 	});
 });
@@ -309,16 +328,17 @@ describe("faculty.updateAddress", () => {
 			}),
 		);
 
-		await t
-			.withIdentity(ownerIdentity(user1._id, ins1._id))
-			.mutation(api.faculty.updateAddress, {
+		await t.withIdentity(ownerIdentity(user1._id, ins1._id)).mutation(
+			api.faculty.updateAddress,
+			withSlug(ins1, {
 				id: facultyId,
 				body: {
 					addressLine: "456 New Rd",
 					district: "Mysuru",
 					zipCode: "570001",
 				},
-			});
+			}),
+		);
 
 		const updated = await t.run((ctx) => ctx.db.get("faculty", facultyId));
 
@@ -343,12 +363,13 @@ describe("faculty.updatePhoneNumber", () => {
 			}),
 		);
 
-		await t
-			.withIdentity(ownerIdentity(user1._id, ins1._id))
-			.mutation(api.faculty.updatePhoneNumber, {
+		await t.withIdentity(ownerIdentity(user1._id, ins1._id)).mutation(
+			api.faculty.updatePhoneNumber,
+			withSlug(ins1, {
 				id: facultyId,
 				body: { number: "+919999999999" },
-			});
+			}),
+		);
 
 		const updated = await t.run((ctx) => ctx.db.get("faculty", facultyId));
 
@@ -372,9 +393,15 @@ describe("faculty.deactivate", () => {
 
 		const authed = t.withIdentity(ownerIdentity(user1._id, ins1._id));
 
-		await authed.mutation(api.faculty.deactivate, { id: facultyId });
+		await authed.mutation(
+			api.faculty.deactivate,
+			withSlug(ins1, { id: facultyId }),
+		);
 
-		const faculty = await authed.query(api.faculty.getById, { id: facultyId });
+		const faculty = await authed.query(
+			api.faculty.getById,
+			withSlug(ins1, { id: facultyId }),
+		);
 		expect(faculty.status).toBe("inactive");
 	});
 });
@@ -393,9 +420,15 @@ describe("faculty.activate", () => {
 
 		const authed = t.withIdentity(ownerIdentity(user1._id, ins1._id));
 
-		await authed.mutation(api.faculty.activate, { id: facultyId });
+		await authed.mutation(
+			api.faculty.activate,
+			withSlug(ins1, { id: facultyId }),
+		);
 
-		const faculty = await authed.query(api.faculty.getById, { id: facultyId });
+		const faculty = await authed.query(
+			api.faculty.getById,
+			withSlug(ins1, { id: facultyId }),
+		);
 		expect(faculty.status).toBe("active");
 	});
 });

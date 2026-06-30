@@ -4,8 +4,8 @@ import { typedV } from "convex-helpers/validators";
 
 const tables = {
 	/** This model is only for owner who owns an organization.
-	 * Better auth `ownerOrganizations` has been remapped to `institutions`.
-	 * For more info checkout [./auth.ts](./auth.ts) */
+	 * Better auth `organization` has been remapped to `institution`.
+	 * For more info checkout [auth.ts](./auth.ts) */
 	ownerOrganizations: defineTable({
 		ownerId: v.string(),
 		name: v.string(),
@@ -40,6 +40,8 @@ const tables = {
 		createdAt: v.number(),
 		updatedAt: v.number(),
 	}),
+
+	/** It's normally known as Branches in the realworld which students enrolled in the institution */
 	programs: defineTable({
 		createdBy: v.string(),
 		name: v.string(),
@@ -54,6 +56,8 @@ const tables = {
 			searchField: "name",
 			filterFields: ["institutionId"],
 		}),
+
+	/** Classes are batches of students in a program which they go through in a semester cycle to complete their academics */
 	classes: defineTable({
 		programId: v.string(),
 		name: v.string(),
@@ -65,6 +69,8 @@ const tables = {
 		createdAt: v.number(),
 		updatedAt: v.optional(v.number()),
 	}).index("by_program", ["programId"]),
+
+	/** Users can enable groups inside classes to divide students into smaller groups known as sections and batches */
 	classGroups: defineTable({
 		classId: v.string(),
 		name: v.string(),
@@ -73,6 +79,8 @@ const tables = {
 		createdAt: v.number(),
 		updatedAt: v.optional(v.number()),
 	}),
+
+	/** Faculty are the teachers who teach the students in the classes also may be non teaching staff like owner, principal, librarian, etc. */
 	faculty: defineTable({
 		institutionId: v.string(),
 		firstName: v.string(),

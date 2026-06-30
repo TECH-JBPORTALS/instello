@@ -1,19 +1,19 @@
-import { ConvexError } from "convex/values";
 import {
 	type CustomCtx,
 	customCtx,
 	customMutation,
 	customQuery,
 } from "convex-helpers/server/customFunctions";
-import type { InsPermission } from "../../better-auth/ins-permissions";
-import { components } from "../_generated/api";
+import type { InsPermission, InsRole } from "../../better-auth/ins-permissions";
 import { mutation, query } from "../_generated/server";
+import { vv } from "../schema";
 import { ensureInsPermission, ensureInstitution, ensureSession } from "./auth";
-import { ERROR_CODES } from "./errors";
 
-// import * as insPermissions from "~/ins-permissions";
-
-/** Public query will just proceed with handler without any authorization checks */
+/**
+ * Wrapper for public Convex queries that do not require authentication.
+ *
+ * Sets `ctx.session` to `null` so handlers can run without an authenticated caller.
+ */
 export const pubQuery = customQuery(
 	query,
 	customCtx(async () => {
@@ -21,7 +21,11 @@ export const pubQuery = customQuery(
 	}),
 );
 
-/** Public mutation will just proceed with handler without any authorization checks */
+/**
+ * Wrapper for public Convex mutations that do not require authentication.
+ *
+ * Sets `ctx.session` to `null` so handlers can run without an authenticated caller.
+ */
 export const pubMutation = customMutation(
 	mutation,
 	customCtx(async () => {
@@ -30,21 +34,23 @@ export const pubMutation = customMutation(
 );
 
 /**
- * user-scoped query which validates session before proceeding with the query handler
- * @returns context containing extra resolved `session` object
+ * Wrapper for authenticated Convex queries.
+ *
+ * Validates the caller's session via {@link ensureSession} before running the handler.
+ *
+ * @returns Extended context with `ctx.session` for the authenticated user.
+ *
  * @example
- * ```js
- * const get = userQuery({
- * 		args:{id: v.string()},
- * 		handler: (ctx,args)=> {
- *   		return ctx.db
- * 					.query("someTable")
- * 					.withIndex(
- * 						"with_userId_and_id",
- * 						(q)=>q.eq("userId",ctx.session.userId).eq("id",args.id)
- * 					)
- * 		}
- * })
+ * ```ts
+ * export const listMyOwned = userQuery({
+ *   args: {},
+ *   handler: async (ctx) => {
+ *     return Institution.listByUserRole(ctx, {
+ *       role: "owner",
+ *       userId: ctx.session.userId,
+ *     });
+ *   },
+ * });
  * ```
  */
 export const userQuery = customQuery(
@@ -56,22 +62,27 @@ export const userQuery = customQuery(
 	}),
 );
 
+/** Context type for handlers registered with {@link userQuery}. */
 export type UserQueryCtx = CustomCtx<typeof userQuery>;
 
 /**
- * user-scoped mutation which validates session before proceeding with the mutation handler
- * @returns context containing extra resolved `session` object
+ * Wrapper for authenticated Convex mutations.
+ *
+ * Validates the caller's session via {@link ensureSession} before running the handler.
+ *
+ * @returns Extended context with `ctx.session` for the authenticated user.
+ *
  * @example
- * ```js
- * const create = userQuery({
- * 		args:{
- * 				title: v.string(),
- * 				description: string()
- * 			},
- * 		handler: (ctx,args)=> {
- *   		return ctx.db.insert("someTable",{...args,userId: ctx.session.userId})
- * 		}
- * })
+ * ```ts
+ * export const create = userMutation({
+ *   args: { name: vv.string() },
+ *   handler: async (ctx, args) => {
+ *     return ctx.db.insert("items", {
+ *       name: args.name,
+ *       userId: ctx.session.userId,
+ *     });
+ *   },
+ * });
  * ```
  */
 export const userMutation = customMutation(
@@ -83,104 +94,132 @@ export const userMutation = customMutation(
 	}),
 );
 
+/** Context type for handlers registered with {@link userMutation}. */
 export type UserMutationCtx = CustomCtx<typeof userMutation>;
 
 /**
- * institution-scoped query which validates session before proceeding with the query handler
- * @returns context containing extra resolved `session` object with appended `activeInstitutionId`
+ * Wrapper for institution-scoped Convex queries.
+ *
+ * Resolves the institution from the required `slug` argument, confirms the caller
+ * is a member via {@link ensureInstitution}, and optionally enforces role permissions
+ * via {@link ensureInsPermission} before running the handler.
+ *
+ * The `slug` argument is consumed by this wrapper and is not passed to the handler.
+ *
+ * @param options.permissions - Institution permissions required for the caller's role.
+ *
+ * @returns Extended context with `ctx.session`, `ctx.institution`, and `ctx.membership`.
+ *
  * @example
- * ```js
- * const create = insQuery({
- * 		args:{
- * 			title: v.string(),
- * 			description: string()
- * 		},
- * 		handler: (ctx,args)=> {
- *   		return ctx.db
- * 					.query("someTable")
- * 					.withIndex(
- * 						"by_institutionId",
- * 						(q)=>q.eq("institutionId",ctx.session.activeInstitutionId)
- * 					)
- * 		}
- * })
+ * ```ts
+ * export const list = insQuery({
+ *   permissions: ["faculty:view"],
+ *   args: { paginationOpts: paginationOptsValidator },
+ *   handler: async (ctx, args) => {
+ *     return Faculty.list(ctx, {
+ *       institutionId: ctx.institution._id,
+ *       paginationOpts: args.paginationOpts,
+ *     });
+ *   },
+ * });
  * ```
  */
-export const insQuery = customQuery(
-	query,
-	customCtx(async (ctx, { permissions }: { permissions?: InsPermission[] }) => {
+export const insQuery = customQuery(query, {
+	args: {
+		slug: vv.string(),
+	},
+	input: async (
+		ctx,
+		args,
+		{ permissions }: { permissions?: InsPermission[] },
+	) => {
+		const { slug } = args;
 		const session = await ensureSession(ctx);
 
-		const activeInstitutionId = await ensureInstitution(ctx);
+		const { institution, membership } = await ensureInstitution(
+			ctx,
+			slug,
+			session.userId,
+		);
 
 		if (permissions) {
-			await ensureInsPermission("owner", permissions);
+			await ensureInsPermission(membership.role as InsRole, permissions);
 		}
 
 		return {
-			session: { ...session, activeInstitutionId },
+			ctx: {
+				session,
+				institution,
+				membership,
+			},
+			args: {},
 		};
-	}),
-);
+	},
+});
 
+/** Context type for handlers registered with {@link insQuery}. */
 export type InsQueryCtx = CustomCtx<typeof insQuery>;
 
 /**
- * institution-scoped mutation which validates session before proceeding with the mutation handler
- * @returns context containing extra resolved `session` object with appended `activeInstitutionId`
+ * Wrapper for institution-scoped Convex mutations.
+ *
+ * Resolves the institution from the required `slug` argument, confirms the caller
+ * is a member via {@link ensureInstitution}, and optionally enforces role permissions
+ * via {@link ensureInsPermission} before running the handler.
+ *
+ * The `slug` argument is consumed by this wrapper and is not passed to the handler.
+ *
+ * @param options.permissions - Institution permissions required for the caller's role.
+ *
+ * @returns Extended context with `ctx.session`, `ctx.institution`, and `ctx.membership`.
+ *
  * @example
- * ```js
- * const create = insMutation({
- * 		args:{
- * 				title: v.string(),
- * 				description: string()
- * 			},
- * 		handler: async (ctx,args)=> {
- *   		return ctx.db.insert("someTable",{
- * 				...args,
- * 				userId: ctx.session.userId,
- * 				institutionId: ctx.session.activeInstitutionId
- * 			})
- * 		}
- * })
+ * ```ts
+ * export const create = insMutation({
+ *   permissions: ["faculty:create"],
+ *   args: Faculty.CreateInputSchema,
+ *   handler: async (ctx, args) => {
+ *     return Faculty.create(ctx, {
+ *       ...args,
+ *       institutionId: ctx.institution._id,
+ *       createdBy: ctx.session.userId,
+ *     });
+ *   },
+ * });
  * ```
  */
-export const insMutation = customMutation(
-	mutation,
-	customCtx(async (ctx, { permissions }: { permissions?: InsPermission[] }) => {
+export const insMutation = customMutation(mutation, {
+	args: {
+		slug: vv.string(),
+	},
+	input: async (
+		ctx,
+		args,
+		{ permissions }: { permissions?: InsPermission[] },
+	) => {
+		const { slug } = args;
 		const session = await ensureSession(ctx);
 
-		const activeInstitutionId = await ensureInstitution(ctx);
+		const { institution, membership } = await ensureInstitution(
+			ctx,
+			slug,
+			session.userId,
+		);
 
 		if (permissions) {
-			const insMembership = await ctx.runQuery(
-				components.betterAuth.adapter.findOne,
-				{
-					model: "institutionMember",
-					select: ["role"],
-					where: [
-						{ field: "userId", operator: "eq", value: session.userId },
-						{
-							field: "organizationId",
-							operator: "eq",
-							value: activeInstitutionId,
-						},
-					],
-				},
-			);
-
-			if (!insMembership)
-				throw new ConvexError(
-					ERROR_CODES.ORGANIZATION.USER_IS_NOT_A_MEMBER_OF_THE_ORGANIZATION,
-				);
-
-			await ensureInsPermission(insMembership.role, permissions);
+			await ensureInsPermission(membership.role as InsRole, permissions);
 		}
 
 		return {
-			session: { ...session, activeInstitutionId },
+			ctx: {
+				session,
+				institution,
+				membership,
+			},
+			args: {},
 		};
-	}),
-);
+	},
+});
 
+/** Context type for handlers registered with {@link insMutation}. */
 export type InsMutationCtx = CustomCtx<typeof insMutation>;

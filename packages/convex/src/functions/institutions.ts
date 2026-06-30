@@ -1,5 +1,7 @@
+import { ConvexError } from "convex/values";
 import { components } from "./_generated/api";
 import { userQuery } from "./helpers/customFunctions";
+import { ERROR_CODES } from "./helpers/errors";
 import * as Institution from "./model/institution";
 import { vv } from "./schema";
 
@@ -47,5 +49,50 @@ export const checkCode = userQuery({
 		);
 
 		return { available: existing === null };
+	},
+});
+
+/**
+ * **Get institution by slug**
+ */
+export const getBySlug = userQuery({
+	args: { slug: vv.string() },
+	returns: vv.object({
+		_id: vv.string(),
+		name: vv.string(),
+		slug: vv.string(),
+		logo: vv.optional(vv.union(vv.string(), vv.null())),
+		code: vv.string(),
+		addressLine: vv.string(),
+		district: vv.string(),
+		state: vv.string(),
+		country: vv.string(),
+		zipCode: vv.string(),
+		createdAt: vv.number(),
+	}),
+	handler: async (ctx, args) => {
+		const slug = args.slug.trim();
+
+		const institution = await ctx.runQuery(
+			components.betterAuth.institutions.getBySlug,
+			{ slug },
+		);
+
+		if (!institution)
+			throw new ConvexError(ERROR_CODES.ORGANIZATION.ORGANIZATION_NOT_FOUND);
+
+		return {
+			_id: institution._id,
+			name: institution.name,
+			slug: institution.slug,
+			logo: institution.logo,
+			code: institution.code,
+			addressLine: institution.addressLine,
+			district: institution.district,
+			state: institution.state,
+			country: institution.country,
+			zipCode: institution.zipCode,
+			createdAt: institution.createdAt,
+		};
 	},
 });

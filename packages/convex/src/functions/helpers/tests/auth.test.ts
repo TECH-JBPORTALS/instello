@@ -1,6 +1,13 @@
 import { convexTest, type TestConvex } from "convex-test";
 import { beforeEach, describe, expect, it } from "vitest";
 import schema from "../../schema";
+import {
+	primaryIns,
+	secondaryIns,
+	seedInstitutions,
+	seedOwners,
+} from "../../tests/test.helpers";
+import { createTest } from "../../tests/test.setup";
 import { ensureInstitution, ensureSession } from "../auth";
 import { ERROR_CODES } from "../errors";
 import { modules } from "./test.setup";
@@ -40,35 +47,50 @@ describe("ensureSession", () => {
 });
 
 describe("ensureInstitution", () => {
-	let t: TestConvex<typeof schema>;
+	let t: ReturnType<typeof createTest>;
 
 	beforeEach(() => {
-		t = convexTest(schema, modules);
+		t = createTest();
 	});
 
-	it("rejects when user is not logged in", async () => {
-		const promise = t.query((ctx) => ensureInstitution(ctx));
+	it("rejects when institution slug does not exist", async () => {
+		const promise = t.query((ctx) =>
+			ensureInstitution(ctx, "unknown-slug", "user-1"),
+		);
 
 		await expect(promise).rejects.toThrow(
 			ERROR_CODES.BASE.UNAUTHORIZED.message,
 		);
 	});
 
-	it("rejects when active institution is not set in the session", async () => {
-		const promise = t
-			.withIdentity({ subject: "user-1" })
-			.query((ctx) => ensureInstitution(ctx));
+	it("rejects when user is not a member of the institution", async () => {
+		const { user1, user2 } = await t.run(seedOwners);
+		const institutions = await t.run((ctx) =>
+			seedInstitutions(ctx, { user1, user2 }),
+		);
+		const ins2 = secondaryIns(institutions);
+
+		const promise = t.query((ctx) =>
+			ensureInstitution(ctx, ins2.slug, user1._id),
+		);
 
 		await expect(promise).rejects.toThrow(
-			ERROR_CODES.ORGANIZATION.NO_ACTIVE_ORGANIZATION.message,
+			ERROR_CODES.ORGANIZATION.USER_IS_NOT_A_MEMBER_OF_THE_ORGANIZATION.message,
 		);
 	});
 
-	it("returns the `activeInstitutionId` if it's set in the session", async () => {
-		const promise = t
-			.withIdentity({ subject: "user-1", activeInstitutionId: "ins-1" })
-			.query((ctx) => ensureInstitution(ctx));
+	it("returns institution and membership for a valid slug and member", async () => {
+		const { user1, user2 } = await t.run(seedOwners);
+		const institutions = await t.run((ctx) =>
+			seedInstitutions(ctx, { user1, user2 }),
+		);
+		const ins1 = primaryIns(institutions);
 
-		await expect(promise).resolves.toBe("ins-1");
+		const result = await t.query((ctx) =>
+			ensureInstitution(ctx, ins1.slug, user1._id),
+		);
+
+		expect(result.institution._id).toBe(ins1._id);
+		expect(result.membership.role).toBe("owner");
 	});
 });
