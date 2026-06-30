@@ -1,8 +1,8 @@
 import type { GenericCtx } from "@convex-dev/better-auth";
-import { ConvexError } from "convex/values";
 import * as insPermissions from "../../better-auth/ins-permissions";
+import { components } from "../_generated/api";
 import type { DataModel } from "../_generated/dataModel";
-import { ERROR_CODES } from "./errors";
+import { ERROR_CODES, throwAppError } from "./constants";
 
 /**
  * Helper function to validate the sessionId exists convex identitiy and
@@ -12,33 +12,51 @@ import { ERROR_CODES } from "./errors";
 export const ensureSession = async (ctx: GenericCtx<DataModel>) => {
 	const identity = await ctx.auth.getUserIdentity();
 
-	if (!identity?.sessionId)
-		throw new ConvexError(ERROR_CODES.BASE.UNAUTHORIZED.message);
+	if (!identity?.sessionId) throwAppError(ERROR_CODES.BASE.UNAUTHORIZED);
+
+	const user = await ctx.runQuery(components.betterAuth.users.getById, {
+		userId: identity.subject,
+	});
 
 	return {
 		userId: identity.subject,
-		name: identity.name,
-		email: identity.email,
 		id: identity.sessionId,
 		activeInstitutionId: identity.activeInstitutionId,
+		user,
 	};
 };
 
 /**
- * Helper function to validate the `activeInstitutionId` exists in the convex identity and
- * @returns `activeInstitutionId`
+ * Helper function to validate the `institution` and membership of current user to the institution exists
+ * @returns `institution` and `membership`
  */
-export const ensureInstitution = async (ctx: GenericCtx<DataModel>) => {
-	const identity = await ctx.auth.getUserIdentity();
+export const ensureInstitution = async (
+	ctx: GenericCtx<DataModel>,
+	slug: string,
+	userId: string,
+) => {
+	const institution = await ctx.runQuery(
+		components.betterAuth.institutions.getBySlug,
+		{ slug },
+	);
 
-	if (!identity) throw new ConvexError(ERROR_CODES.BASE.UNAUTHORIZED.message);
+	if (!institution)
+		throwAppError(ERROR_CODES.ORGANIZATION.ORGANIZATION_NOT_FOUND);
 
-	if (!identity.activeInstitutionId)
-		throw new ConvexError(
-			ERROR_CODES.ORGANIZATION.NO_ACTIVE_ORGANIZATION.message,
+	const membership = await ctx.runQuery(
+		components.betterAuth.institutions.getMembership,
+		{
+			organizationId: institution._id,
+			userId: userId,
+		},
+	);
+
+	if (!membership)
+		throwAppError(
+			ERROR_CODES.ORGANIZATION.USER_IS_NOT_A_MEMBER_OF_THE_ORGANIZATION,
 		);
 
-	return identity.activeInstitutionId;
+	return { institution, membership };
 };
 
 /**
@@ -57,5 +75,5 @@ export const ensureInsPermission = async (
 
 	const hasAccess = insPermissions.hasPermission(statements, required);
 
-	if (!hasAccess) throw new ConvexError(ERROR_CODES.BASE.ACCESS_DENIED);
+	if (!hasAccess) throwAppError(ERROR_CODES.BASE.ACCESS_DENIED);
 };

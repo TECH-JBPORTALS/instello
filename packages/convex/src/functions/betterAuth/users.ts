@@ -1,5 +1,5 @@
-import { ConvexError, v } from "convex/values";
-import { ERROR_CODES } from "../helpers/errors";
+import { v } from "convex/values";
+import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import type { Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { vv } from "./schema";
@@ -22,7 +22,7 @@ export const getById = query({
 			.withIndex("by_id", (q) => q.eq("_id", args.userId as Id<"user">))
 			.first();
 
-		if (!user) throw new ConvexError(ERROR_CODES.BASE.USER_NOT_FOUND.message);
+		if (!user) throwAppError(ERROR_CODES.BASE.USER_NOT_FOUND);
 
 		return {
 			_id: user._id,

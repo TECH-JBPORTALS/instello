@@ -22,10 +22,9 @@ import {
 } from "@instello/ui/components/sidebar";
 import { Skeleton } from "@instello/ui/components/skeleton";
 import { IconChevronDown, IconLogout, IconSettings } from "@tabler/icons-react";
-import { useQuery } from "convex/react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import { formatInstitutionRole } from "@/components/sidebars/institution-sidebar/nav-items";
+import { useInsQuery } from "@/hooks/convex-react";
 import { protocol, rootDomain } from "@/lib/utils";
 
 function getInitials(name: string) {
@@ -38,10 +37,7 @@ function getInitials(name: string) {
 }
 
 export function InstitutionSidebarFooter() {
-	const { subdomain } = useParams<{ subdomain: string }>();
-	const context = useQuery(api.institutionMembers.getMyInstitutionContext, {
-		slug: subdomain,
-	});
+	const user = useInsQuery(api.users.getCurrentUserInInstitution);
 
 	async function handleLogout() {
 		await authClient.signOut();
@@ -61,7 +57,7 @@ export function InstitutionSidebarFooter() {
 								/>
 							}
 						>
-							{context === undefined ? (
+							{user === undefined ? (
 								<>
 									<Skeleton className="size-8 rounded-full" />
 									<div className="grid flex-1 gap-1 text-left">
@@ -72,17 +68,15 @@ export function InstitutionSidebarFooter() {
 							) : (
 								<>
 									<Avatar size="sm">
-										{context.image ? (
-											<AvatarImage src={context.image} alt={context.name} />
+										{user.image ? (
+											<AvatarImage src={user.image} alt={user.name} />
 										) : null}
-										<AvatarFallback>{getInitials(context.name)}</AvatarFallback>
+										<AvatarFallback>{getInitials(user.name)}</AvatarFallback>
 									</Avatar>
 									<div className="grid flex-1 text-left text-sm leading-tight">
-										<span className="truncate font-semibold">
-											{context.name}
-										</span>
+										<span className="truncate font-semibold">{user.name}</span>
 										<span className="truncate text-xs text-muted-foreground">
-											{formatInstitutionRole(context.role)}
+											{formatInstitutionRole(user.role)}
 										</span>
 									</div>
 								</>

@@ -2,6 +2,7 @@
 
 import { api } from "@instello/convex/api";
 import { authClient } from "@instello/convex/better-auth/client";
+import { ERROR_CODES, RESERVED_SUBDOMAINS } from "@instello/convex/errors";
 import {
 	Avatar,
 	AvatarFallback,
@@ -339,11 +340,16 @@ export const BasicInfoForm = withForm({
 												const parsed = v.safeParse(SlugSchema, slug);
 												if (!parsed.success) return undefined;
 
+												if (RESERVED_SUBDOMAINS.has(slug))
+													return ERROR_CODES.BASE.INSITUTION_SLUG_RESERVED
+														.message;
+
 												const { error } =
 													await authClient.organization.checkSlug({ slug });
 
 												if (error) {
-													return "This domain is already taken";
+													return ERROR_CODES.ORGANIZATION
+														.ORGANIZATION_SLUG_ALREADY_TAKEN.message;
 												}
 
 												return undefined;

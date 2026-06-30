@@ -10,6 +10,8 @@
 		"check": "biome check",
 		"fix": "biome check --write",
 		"fix:unsafe": "biome check --write --unsafe",
+		"test": "vitest run",
+		"test:watch": "vitest",
 		"clean": "rm -rf .turbo dist .next node_modules"
 	},
 	"dependencies": {
@@ -19,23 +21,31 @@
 		"@tanstack/react-form-nextjs": "^1.33.0",
 		"convex": "catalog:",
 		"convex-helpers": "catalog:",
+		"framer-motion": "^12.42.0",
 		"lodash": "^4.18.1",
 		"next": "^16.2.4",
+		"papaparse": "^5.5.4",
 		"react": "catalog:",
 		"react-dom": "catalog:",
 		"tailwind-merge": "^3.6.0",
-		"valibot": "^1.4.1"
+		"valibot": "^1.4.1",
+		"xlsx": "^0.18.5"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "catalog:",
 		"@tailwindcss/forms": "0.5.11",
 		"@tailwindcss/postcss": "4.2.4",
+		"@testing-library/react": "^16.3.0",
 		"@types/lodash": "^4.17.24",
 		"@types/node": "^25.6.0",
+		"@types/papaparse": "^5.5.2",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
+		"jsdom": "^26.1.0",
 		"postcss": "8.5.10",
 		"tailwindcss": "catalog:",
-		"typescript": "catalog:"
+		"typescript": "catalog:",
+		"vite": "catalog:",
+		"vitest": "catalog:"
 	}
 }

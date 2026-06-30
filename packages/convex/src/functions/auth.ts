@@ -11,7 +11,7 @@ import type { DataModel } from "./_generated/dataModel";
 import { env } from "./_generated/server";
 import authConfig from "./auth.config";
 import authSchema from "./betterAuth/schema";
-import { ERROR_CODES } from "./helpers/errors";
+import { ERROR_CODES, RESERVED_SUBDOMAINS } from "./helpers/constants";
 
 const siteUrl = env.SITE_URL;
 const betterAuthSecret = env.BETTER_AUTH_SECRET;
@@ -132,15 +132,17 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 					member: { modelName: "institutionMember" },
 					/** Represents institution invitations - faculty invitations to join the institution*/
 					invitation: { modelName: "institutionInvitation" },
-					session: {
-						fields: { activeOrganizationId: "activeInstitutionId" },
-					},
 				},
 				/** Number of institutions owner can create in his organization */
 				organizationLimit: 10,
 				cancelPendingInvitationsOnReInvite: true,
 				organizationHooks: {
 					async beforeCreateOrganization(data) {
+						if (RESERVED_SUBDOMAINS.has(data.organization.code))
+							throw new BetterAuthError(
+								ERROR_CODES.BASE.INSITUTION_SLUG_RESERVED.message,
+							);
+
 						const ins = await ctx.runQuery(
 							components.betterAuth.institutions.getByCode,
 							{ code: data.organization.code },
@@ -164,12 +166,13 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 					 * WARNING: Be careful when your modifying this part, think twice.
 					 * extended `UserIdentity` interface are placed in globals.d.ts
 					 */
-					definePayload: ({ user, session }) => ({
-						name: user.name,
-						email: user.email,
-						sesionId: session.id,
-						activeInstitutionId: session.activeInstitutionId,
-					}),
+					definePayload: ({ user, session }) => {
+						return {
+							name: user.name,
+							email: user.email,
+							activeInstitutionId: session.activeOrganizationId,
+						};
+					},
 				},
 			}),
 		],

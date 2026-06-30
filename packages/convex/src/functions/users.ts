@@ -1,5 +1,6 @@
+import type { InsRole } from "../better-auth/ins-permissions";
 import { components } from "./_generated/api";
-import { userQuery } from "./helpers/customFunctions";
+import { insQuery, userQuery } from "./helpers/customFunctions";
 import { formInstitutionUrl } from "./helpers/utils";
 import * as OwnerOrganizations from "./model/ownerOrganization";
 import { vv } from "./schema";
@@ -43,6 +44,30 @@ export const resolveLandingPath = userQuery({
 
 		return {
 			redirectUrl: "/not-part-of-any-institution",
+		};
+	},
+});
+
+export const getCurrentUserInInstitution = insQuery({
+	args: {},
+	returns: vv.object({
+		_id: vv.string(),
+		email: vv.string(),
+		image: vv.nullable(vv.string()),
+		name: vv.string(),
+		role: vv.union(
+			vv.literal("owner"),
+			vv.literal("faculty"),
+			vv.literal("principal"),
+		),
+	}),
+	handler: (ctx) => {
+		return {
+			_id: ctx.session.user._id,
+			email: ctx.session.user.email,
+			image: ctx.session.user.name,
+			name: ctx.session.user.name,
+			role: ctx.membership.role as InsRole,
 		};
 	},
 });

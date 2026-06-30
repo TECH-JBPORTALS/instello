@@ -2,83 +2,160 @@
 
 These guidelines apply to all code changes inside `apps/web`.
 
-## General Rules
+---
 
-- Match the existing architecture and coding style before introducing new patterns.
-- Keep changes focused on the requested task. Avoid unrelated refactors.
-- Prefer modifying existing files over creating new ones.
-- If a new file is required, place it beside the feature that owns it.
-- Inspect nearby files before writing code and follow their conventions.
+# General Principles
+
+- Follow the existing architecture before introducing a new one.
+- Keep changes focused on the requested task.
+- Prefer modifying existing code over creating new abstractions.
+- Search for similar implementations before writing new code.
+- Match the surrounding code style and naming conventions.
+- Keep the codebase consistent and predictable.
+
+Do not introduce new architectural patterns unless explicitly requested.
 
 ---
 
 # Project Structure
 
-Keep feature code inside `apps/web/src`.
+The application follows a feature-first architecture.
 
-```
+```text
 src/
-├── app/                    # Next.js App Router
-├── components/
+├── app/                     # Next.js App Router
+├── features/                # Business features
+│   └── <feature>/
+├── components/              # Shared reusable business components
 │   ├── auth/
 │   ├── common/
-│   ├── features/
-│   │   └── <feature>/
-│   │       ├── page.tsx
-│   │       ├── *-form.tsx
-│   │       ├── *-dialog.tsx
-│   │       ├── *-sheet.tsx
-│   │       ├── *-table.tsx
-│   │       ├── shared-*.ts
-│   │       ├── constants.ts
-│   │       └── types.ts
-│   ├── providers.tsx
 │   └── sidebars/
-└── hooks/
+├── hooks/                   # Shared application hooks
+├── lib/                     # Shared utilities
+├── providers/
+└── ...
 ```
-
-### Folder Rules
-
-- `components/features/` contains all UI for a single feature.
-- `components/common/` is only for reusable cross-feature components.
-- `hooks/` contains reusable application hooks.
-- Keep schemas, constants and types beside the feature that owns them.
-- App Router pages should remain thin and delegate UI to `components/features/...`.
 
 ---
 
-# Component Priority
+# Feature Ownership
 
-Always use the following order:
+Every business feature owns its implementation.
 
-1. Existing feature component
-2. Existing component from `@instello/ui`
-3. Compose existing UI primitives
-4. Create a new local component
-5. Ask before installing a new shadcn component
+Examples:
 
-Never skip an earlier option.
+- faculty
+- students
+- institutions
+- attendance
+- timetable
+- programs
+- fees
+
+A feature should contain everything that belongs exclusively to it.
+
+Example:
+
+```text
+faculty/
+├── page.tsx
+├── faculty-table.tsx
+├── add-faculty-dialog.tsx
+├── add-faculty-form.tsx
+├── constants.ts
+├── types.ts
+├── shared-form.ts
+└── ...
+```
+
+When a feature grows, organize it into subfolders:
+
+```text
+faculty/
+├── dialogs/
+├── forms/
+├── hooks/
+├── sections/
+├── tables/
+├── constants.ts
+├── types.ts
+└── ...
+```
+
+Do not create additional nesting unless it improves readability.
+
+---
+
+# Shared Code
+
+Before creating a shared abstraction, verify that it is actually shared.
+
+If code is only used by one feature:
+
+- keep it inside that feature
+
+Only move code into shared folders when it is reused by multiple features.
+
+Shared folders:
+
+- `components/`
+- `hooks/`
+- `lib/`
+
+Avoid creating shared abstractions prematurely.
+
+---
+
+# App Router
+
+Files inside `app/` should remain thin.
+
+Responsibilities:
+
+- routing
+- layouts
+- metadata
+- loading states
+- error boundaries
+- server-side data fetching
+
+Move business UI into feature components.
+
+---
+
+# Components
+
+Before creating a new component:
+
+1. Search the current feature.
+2. Search `components/`.
+3. Search `@instello/ui/components`.
+4. Compose existing components.
+5. Create a new component only if necessary.
+
+Avoid duplicate UI.
 
 ---
 
 # UI Components
 
-Before building custom UI:
+Always import UI primitives from:
 
-1. Check `packages/ui/src/components`.
-2. Import components from `@instello/ui/components/*`.
-3. Reuse existing components instead of recreating styles.
+```ts
+@instello/ui/components/*
+```
 
 Never:
 
-- Copy shadcn component source manually.
-- Import directly from `packages/ui`.
+- import directly from `packages/ui`
+- duplicate shadcn components
+- copy component source code
 
 ---
 
-# Adding shadcn Components
+# Installing New shadcn Components
 
-Always ask for approval before installing a new component.
+Always ask for approval before installing a new shadcn component.
 
 After approval:
 
@@ -89,26 +166,33 @@ bun x shadcn@latest add <component>
 
 Requirements:
 
-- Install only from `apps/web`.
-- Verify the component is exported from `@instello/ui/components/*`.
-- Use the exported component everywhere.
+- Install only from `apps/web`
+- Export it through `@instello/ui`
+- Reuse it everywhere
 
 ---
 
 # Imports
 
-- Use `@/` path aliases whenever possible.
-- Import UI components only from `@instello/ui/components/*`.
-- Never use relative imports into `packages/ui`.
+Prefer:
+
+```ts
+@/...
+```
+
+Use relative imports only within the same feature when they improve readability.
+
+Never import source files from another package.
 
 ---
 
 # Styling
 
-- Reuse existing design tokens.
-- Reuse existing spacing and layout patterns.
+- Reuse design tokens.
+- Reuse spacing.
+- Reuse layout patterns.
+- Prefer composition over duplicated styles.
 - Avoid arbitrary Tailwind values unless necessary.
-- Do not duplicate styles already provided by shared UI components.
 
 ---
 
@@ -116,12 +200,12 @@ Requirements:
 
 Default to Server Components.
 
-Only use `"use client"` when required for:
+Use `"use client"` only when required for:
 
 - React state
 - Effects
-- Event handlers
 - Browser APIs
+- Event handlers
 - TanStack Form
 
 Do not convert Server Components into Client Components unnecessarily.
@@ -130,66 +214,179 @@ Do not convert Server Components into Client Components unnecessarily.
 
 # Data Fetching
 
-- Fetch data in Server Components whenever possible.
-- Pass fetched data to Client Components through props.
+Prefer server-side data fetching.
+
+Rules:
+
+- Fetch data once.
 - Avoid duplicate requests.
-- Keep mutations inside the RPC or action layer.
+- Pass data through props.
+- Keep mutations inside the RPC layer.
 
 ---
 
 # Forms
 
-Use the shared form utilities from `@/hooks/form`.
+Every form should own exactly one form instance.
 
 Rules:
 
-- One `useAppForm` per form or wizard.
-- Multi-step forms should use `FormGroup`.
-- Use `revalidateLogic()` when validators rely on `onDynamic`.
-- Show validation errors only after touch or submit.
-- Use existing UI components for all fields.
-- Keep validation schemas beside the feature.
-- Do not duplicate schemas.
-- Keep field names aligned with backend models.
+- Use shared form utilities.
+- Keep schemas beside the feature.
+- Keep backend and frontend field names aligned.
+- Reuse field components.
+- Avoid duplicated validation schemas.
+
+Multi-step forms should share a single form state.
 
 ---
 
 # Tables
 
-When displaying tabular data:
+Reuse the shared `DataTable` whenever possible.
 
-- Reuse the existing `DataTable` component.
-- Build a custom table only when requirements cannot be met by `DataTable`.
+Create a custom table only when the requirements cannot be satisfied by the shared table.
+
+---
+
+# Hooks
+
+Shared hooks belong in:
+
+```text
+src/hooks
+```
+
+Feature-specific hooks belong inside the feature.
+
+Example:
+
+```text
+faculty/
+└── hooks/
+    └── use-can-manage-faculty.ts
+```
+
+Do not place feature-specific hooks inside the shared hooks folder.
+
+---
+
+# Constants
+
+Feature constants belong beside the feature.
+
+Application-wide constants belong inside shared modules.
+
+Avoid magic strings.
+
+---
+
+# Types
+
+Feature types belong beside the feature.
+
+Only create shared types when they are genuinely shared across multiple features.
 
 ---
 
 # Naming
 
-Use these naming conventions:
+Prefer descriptive names.
 
-```
-page.tsx
-loading.tsx
-error.tsx
-not-found.tsx
+Examples:
 
-*-form.tsx
-*-dialog.tsx
-*-sheet.tsx
-*-table.tsx
+```text
+faculty-table.tsx
+faculty-card.tsx
+faculty-filter.tsx
 
-shared-*.ts
+add-faculty-dialog.tsx
+edit-faculty-dialog.tsx
+
+faculty-form.tsx
+shared-form.ts
+
 constants.ts
 types.ts
 ```
+
+Avoid vague names like:
+
+```text
+index.tsx
+component.tsx
+utils.ts
+helpers.ts
+```
+
+unless they serve a clear purpose.
 
 ---
 
 # Code Quality
 
-- Match the surrounding code style.
-- Keep components small and composable.
-- Minimize the scope of changes.
+- Keep components focused.
+- Prefer composition over large components.
+- One responsibility per component.
+- Remove dead code.
+- Keep files cohesive.
+- Match the surrounding style.
 - Format with Biome.
-- Do not add comments unless the logic is genuinely difficult to understand.
-- Run `bun run check` and `bun run typecheck` when changing types or multiple files.
+
+Avoid unnecessary comments.
+
+---
+
+# Performance
+
+- Avoid unnecessary client components.
+- Avoid unnecessary re-renders.
+- Lazy-load heavy UI when appropriate.
+- Avoid duplicate network requests.
+
+---
+
+# Accessibility
+
+Ensure:
+
+- forms have labels
+- dialogs trap focus
+- buttons have accessible labels
+- interactive elements support keyboard navigation
+
+Reuse accessible UI components whenever possible.
+
+---
+
+# Testing
+
+When adding UI:
+
+- keep components testable
+- avoid tightly coupling components
+- extract reusable logic into hooks when appropriate
+
+---
+
+# AI Agent Rules
+
+Before writing code:
+
+1. Search for an existing implementation.
+2. Reuse existing feature patterns.
+3. Reuse existing components.
+4. Reuse existing hooks.
+5. Reuse existing utilities.
+
+Do not:
+
+- invent new folder structures
+- create unnecessary wrapper components
+- duplicate existing functionality
+- introduce new architectural patterns
+- over-engineer simple features
+
+When uncertain, choose the solution that best matches the existing codebase.
+
+Consistency is preferred over clever abstractions.

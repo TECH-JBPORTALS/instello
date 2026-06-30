@@ -1,23 +1,19 @@
-import { ConvexError } from "convex/values";
+import { ERROR_CODES, throwAppError } from "./helpers/constants";
 import { insMutation, insQuery } from "./helpers/customFunctions";
 import * as Program from "./model/program";
 import { vv } from "./schema";
 
 /** Creates program in the current institution
  * @returns program id
- * @throws convex error
  */
 export const create = insMutation({
 	permissions: ["program:create"],
-	args: {
-		name: vv.string(),
-		alias: vv.string(),
-	},
+	args: Program.CreateInputSchema,
 	returns: vv.id("programs"),
 	handler: async (ctx, args) => {
 		return await Program.create(ctx, {
 			...args,
-			institutionId: ctx.session.activeInstitutionId,
+			institutionId: ctx.institution._id,
 			createdBy: ctx.session.userId,
 		});
 	},
@@ -31,25 +27,11 @@ export const list = insQuery({
 	args: {
 		query: vv.optional(vv.nullable(vv.string())),
 	},
-	returns: vv.array(
-		vv.object({
-			_id: vv.id("programs"),
-			name: vv.string(),
-			alias: vv.string(),
-			createdAt: vv.number(),
-			status: vv.union(vv.literal("active"), vv.literal("inactive")),
-			user: vv.object({
-				_id: vv.string(),
-				name: vv.string(),
-				email: vv.string(),
-				image: vv.nullable(vv.string()),
-			}),
-		}),
-	),
+	returns: vv.array(Program.ProgramListItemSchema),
 	handler: async (ctx, args) => {
 		return await Program.list(ctx, {
-			institutionId: ctx.session.activeInstitutionId,
-			query: args?.query,
+			institutionId: ctx.institution._id,
+			query: args.query,
 		});
 	},
 });
@@ -61,66 +43,60 @@ export const list = insQuery({
 export const getById = insQuery({
 	permissions: ["program:view"],
 	args: { id: vv.id("programs") },
-	returns: vv.object({
-		_id: vv.id("programs"),
-		name: vv.string(),
-		alias: vv.string(),
-		status: vv.union(vv.literal("active"), vv.literal("inactive")),
-		createdAt: vv.number(),
-	}),
+	returns: Program.ProgramDtoSchema,
 	handler: async (ctx, args) => {
-		const program = await Program.getById(ctx, args.id);
+		const program = await Program.getById(ctx, args.id, ctx.institution._id);
 
-		if (!program) throw new ConvexError("Program not found");
+		if (!program) {
+			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
+		}
 
-		return {
-			_id: program._id,
-			name: program.name,
-			alias: program.alias,
-			status: program.status,
-			createdAt: program.createdAt,
-		};
+		return Program.toDto(program);
 	},
 });
 
 /** Update program name
  * @param id - program id to be updated
  * @param body - program name mentioned in the body
- * @returns updated program
- * @throws convex error
  */
 export const updateName = insMutation({
 	permissions: ["program:update"],
 	args: {
 		id: vv.id("programs"),
-		body: vv.object({ name: vv.string() }),
+		body: Program.PatchNameSchema,
 	},
+	returns: vv.null(),
 	handler: async (ctx, args) => {
-		const program = await Program.getById(ctx, args.id);
+		const program = await Program.getById(ctx, args.id, ctx.institution._id);
 
-		if (!program) throw new ConvexError("Program not found");
+		if (!program) {
+			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
+		}
 
 		await Program.patch(ctx, args.id, args.body);
+		return null;
 	},
 });
 
 /** Update program alias
  * @param id - program id to be updated
  * @param body - program alias mentioned in the body
- * @returns updated program
- * @throws convex error
  */
 export const updateAlias = insMutation({
 	permissions: ["program:update"],
 	args: {
 		id: vv.id("programs"),
-		body: vv.object({ alias: vv.string() }),
+		body: Program.PatchAliasSchema,
 	},
+	returns: vv.null(),
 	handler: async (ctx, args) => {
-		const program = await Program.getById(ctx, args.id);
+		const program = await Program.getById(ctx, args.id, ctx.institution._id);
 
-		if (!program) throw new ConvexError("Program not found");
+		if (!program) {
+			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
+		}
 
 		await Program.patch(ctx, args.id, args.body);
+		return null;
 	},
 });

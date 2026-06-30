@@ -105,6 +105,8 @@ bun x convex env set SITE_URL https://app.localtest.me:3000
 bun x convex env set BETTER_AUTH_SECRET $(openssl rand -base64 32)
 bun x convex env set SUPER_ADMIN_EMAIL "admin@example.com"
 bun x convex env set NODE_ENV "development"
+bun x convex env set SEED_MODE true
+bun x convex env set SEED_PASSWORD Test1234.com
 ```
 
 ---
