@@ -1,6 +1,11 @@
 "use client";
 
-import { Alert, AlertTitle } from "@instello/ui/components/alert";
+import { api } from "@instello/convex/api";
+import {
+	Alert,
+	AlertDescription,
+	AlertTitle,
+} from "@instello/ui/components/alert";
 import { Button } from "@instello/ui/components/button";
 import {
 	Dialog,
@@ -16,13 +21,19 @@ import {
 	IconDownload,
 	IconTableImport,
 } from "@tabler/icons-react";
+import { ConvexError } from "convex/values";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef } from "react";
+import * as v from "valibot";
+import { useInsMutation } from "@/hooks/convex-react";
+import {
+	type ImportPhase,
+	type ImportSchema,
+	useCxImporter,
+} from "@/lib/useCxImporter";
 import { ImportProgressHeader } from "../components/import-progress-header";
 import { ImportRowList } from "../components/import-row-list";
-import { downloadFacultyImportTemplate } from "../constants/import-template";
-import { useFacultyImport } from "../hooks/use-faculty-import";
-import type { ImportPhase } from "../types/import";
+import { downloadFacultyImportTemplate } from "../constants";
 
 type ImportFacultyDialogProps = {
 	open: boolean;
@@ -30,6 +41,99 @@ type ImportFacultyDialogProps = {
 };
 
 const LIST_MAX_HEIGHT = "max-h-[min(55vh,28rem)]";
+
+function parseIsoDate(value: string) {
+	const trimmed = value.trim();
+	if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+		return trimmed;
+	}
+
+	const parsed = new Date(trimmed);
+	if (Number.isNaN(parsed.getTime())) {
+		throw new Error("must be a valid date (YYYY-MM-DD)");
+	}
+
+	return parsed.toISOString().slice(0, 10);
+}
+
+function parseOptionalJoinedDate(value: string) {
+	const trimmed = value.trim();
+	if (!trimmed) {
+		return undefined;
+	}
+
+	return new Date(parseIsoDate(trimmed)).getTime();
+}
+
+const trimmedString = v.pipe(
+	v.string(),
+	v.transform((value) => value.trim()),
+);
+
+// Schema for the faculty import dialog
+const facultyImportSchema = {
+	staffId: {
+		possibleNames: ["staff_id", "staffId"],
+		validator: v.pipe(trimmedString, v.nonEmpty("Staff ID is required")),
+	},
+	firstName: {
+		possibleNames: ["first_name", "firstName"],
+		validator: v.pipe(trimmedString, v.nonEmpty("First name is required")),
+	},
+	lastName: {
+		possibleNames: ["last_name", "lastName"],
+		validator: v.pipe(trimmedString, v.nonEmpty("Last name is required")),
+	},
+	dateOfBirth: {
+		possibleNames: ["date_of_birth", "dateOfBirth"],
+		validator: v.pipe(
+			trimmedString,
+			v.nonEmpty("Date of birth is required"),
+			v.transform((value) => parseIsoDate(value)),
+		),
+	},
+	email: {
+		possibleNames: ["email"],
+		validator: v.pipe(
+			trimmedString,
+			v.nonEmpty("Email is required"),
+			v.email("Invalid email address"),
+		),
+	},
+	designation: {
+		possibleNames: ["designation"],
+		validator: v.pipe(trimmedString, v.nonEmpty("Designation is required")),
+	},
+	qualification: {
+		possibleNames: ["qualification"],
+		validator: v.pipe(trimmedString, v.nonEmpty("Qualification is required")),
+	},
+	specialization: {
+		possibleNames: ["specialization"],
+		validator: v.pipe(trimmedString, v.nonEmpty("Specialization is required")),
+	},
+	joinedDate: {
+		possibleNames: ["joined_date", "joinedDate"],
+		required: false,
+		validator: v.pipe(
+			trimmedString,
+			v.check(
+				(value) =>
+					value === "" || !Number.isNaN(Date.parse(parseIsoDate(value))),
+				"must be a valid date (YYYY-MM-DD)",
+			),
+		),
+	},
+	phoneNumber: {
+		possibleNames: ["phone_number", "phoneNumber"],
+		validator: v.pipe(trimmedString, v.nonEmpty("Phone number is required")),
+	},
+	profilePicUrl: {
+		possibleNames: ["profile_pic_url", "profilePicUrl"],
+		required: false,
+		validator: trimmedString,
+	},
+} satisfies ImportSchema;
 
 function phaseDescription(phase: ImportPhase, fileName: string | null) {
 	switch (phase) {
@@ -57,20 +161,53 @@ export function ImportFacultyDialog({
 	onOpenChange,
 }: ImportFacultyDialogProps) {
 	const inputRef = useRef<HTMLInputElement>(null);
+	const createFaculty = useInsMutation(api.faculty.create);
 
 	const {
 		phase,
 		rows,
 		completedCount,
-		failedRowIndex,
 		fileName,
 		successCount,
+		hasFile,
+		validatedCount,
+		importedCount,
+		activeRowIndex,
+		validationErrors,
 		validateFile,
 		startImport,
 		reset,
-	} = useFacultyImport();
+	} = useCxImporter({
+		schema: facultyImportSchema,
+		resumeIdentityFields: ["staffId", "email"],
+		onImportRow: async (row) => {
+			try {
+				await createFaculty({
+					staffId: row.staffId,
+					firstName: row.firstName,
+					lastName: row.lastName,
+					dateOfBirth: row.dateOfBirth,
+					email: row.email,
+					profilePicUrl: row.profilePicUrl || undefined,
+					designation: row.designation,
+					joinedDate: parseOptionalJoinedDate(row.joinedDate ?? ""),
+					qualification: row.qualification,
+					specialization: row.specialization,
+					phoneNumber: row.phoneNumber,
+				});
 
-	const hasFile = phase !== "idle";
+				return { ok: true };
+			} catch (error) {
+				return {
+					ok: false,
+					message:
+						error instanceof ConvexError
+							? error.data.message
+							: "Failed to create faculty",
+				};
+			}
+		},
+	});
 
 	useEffect(() => {
 		if (!open) {
@@ -90,28 +227,6 @@ export function ImportFacultyDialog({
 
 		await validateFile(file, { autoResume: completedCount > 0 });
 	};
-
-	const validatedCount = rows.filter(
-		(row) =>
-			row.status === "valid" ||
-			row.status === "invalid" ||
-			row.status === "success",
-	).length;
-
-	const isUploading = rows.some((row) => row.status === "uploading");
-	const importedCount =
-		phase === "importing"
-			? completedCount + (isUploading ? 1 : 0)
-			: rows.filter(
-					(row) => row.status === "success" || row.status === "skipped",
-				).length;
-
-	const activeRowIndex =
-		phase === "validating"
-			? rows.findIndex((row) => row.status === "validating")
-			: phase === "importing"
-				? rows.findIndex((row) => row.status === "uploading")
-				: failedRowIndex;
 
 	return (
 		<Dialog open={open} onOpenChange={handleClose}>
@@ -188,6 +303,12 @@ export function ImportFacultyDialog({
 									<Alert variant="destructive">
 										<IconAlertCircle />
 										<AlertTitle>Validation failed</AlertTitle>
+										{/** Show only header validation errors in details */}
+										{validationErrors[0].rowIndex === 0 && (
+											<AlertDescription>
+												{validationErrors[0].message}
+											</AlertDescription>
+										)}
 									</Alert>
 								)}
 

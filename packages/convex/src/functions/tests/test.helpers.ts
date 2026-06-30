@@ -219,11 +219,6 @@ export const createFacultyInput = () => ({
 	designation: "Professor",
 	qualification: "Ph.D.",
 	specialization: "Computer Science",
-	addressLine: "123 Main St",
-	district: "Bangalore",
-	state: "Karnataka",
-	country: "India",
-	zipCode: "560001",
 	phoneNumber: FACULTY_PHONE,
 });
 
@@ -253,11 +248,6 @@ export async function seedFaculty(
 		designation: input.designation,
 		qualification: input.qualification,
 		specialization: input.specialization,
-		addressLine: input.addressLine,
-		district: input.district,
-		state: input.state,
-		country: input.country,
-		zipCode: input.zipCode,
 		institutionId: args.institutionId,
 		createdBy: args.createdBy,
 		phone: {

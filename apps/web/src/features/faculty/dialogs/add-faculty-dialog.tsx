@@ -20,7 +20,6 @@ import * as v from "valibot";
 import { useInsMutation } from "@/hooks/convex-react";
 import { useAppForm } from "@/hooks/form";
 import { AddFacultyStepIndicator } from "../forms/add-faculty-step-indicator";
-import { AddressStep } from "../forms/address-step";
 import { ContactStep } from "../forms/contact-step";
 import { EmploymentStep } from "../forms/employment-step";
 import { PersonalInfoStep } from "../forms/personal-info-step";
@@ -28,7 +27,6 @@ import {
 	addFacultyFormOpt,
 	ContactSchema,
 	EmploymentSchema,
-	FacultyAddressSchema,
 	PersonalInfoSchema,
 } from "../forms/shared-form";
 
@@ -52,7 +50,6 @@ export function AddFacultyDialog({
 			onDynamic: v.object({
 				personalInfo: PersonalInfoSchema,
 				employment: EmploymentSchema,
-				address: FacultyAddressSchema,
 				contact: ContactSchema,
 			}),
 		},
@@ -73,11 +70,6 @@ export function AddFacultyDialog({
 						: undefined,
 					qualification: value.employment.qualification,
 					specialization: value.employment.specialization,
-					addressLine: value.address.addressLine,
-					district: value.address.district,
-					state: value.address.state,
-					country: value.address.country,
-					zipCode: value.address.zipCode,
 					phoneNumber: value.contact.phoneNumber,
 				});
 				onOpenChange(false);
@@ -124,9 +116,6 @@ export function AddFacultyDialog({
 					<EmploymentStep form={form} setStep={setStep} step={step} />
 				)}
 				{step === 2 && (
-					<AddressStep form={form} setStep={setStep} step={step} />
-				)}
-				{step === 3 && (
 					<ContactStep form={form} setStep={setStep} step={step} />
 				)}
 			</DialogContent>

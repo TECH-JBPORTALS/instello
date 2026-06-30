@@ -16,7 +16,6 @@ import Container from "@/components/common/container";
 import { useInsQuery } from "@/hooks/convex-react";
 import { cn } from "@/lib/utils";
 import { getFacultyDisplayName, getFacultyInitials } from "./forms/shared-form";
-import { AddressSection } from "./sections/address-section";
 import { DangerZoneSection } from "./sections/danger-zone-section";
 import { EmploymentSection } from "./sections/employment-section";
 import { PersonalInfoSection } from "./sections/personal-info-section";
@@ -94,10 +93,6 @@ export function FacultyDetailPage() {
 						key={`employment-${faculty.updatedAt}`}
 						faculty={faculty}
 					/>
-					<AddressSection
-						key={`address-${faculty.updatedAt}`}
-						faculty={faculty}
-					/>
 					<PhoneSection key={`phone-${faculty.updatedAt}`} faculty={faculty} />
 					<DangerZoneSection faculty={faculty} />
 				</div>
@@ -121,7 +116,7 @@ function FacultyDetailSkeleton() {
 				</div>
 			</div>
 			<div className="mx-auto flex max-w-2xl flex-col gap-6">
-				{Array.from({ length: 4 }).map((_, index) => (
+				{Array.from({ length: 3 }).map((_, index) => (
 					<Skeleton key={index} className="h-64 w-full rounded-xl" />
 				))}
 			</div>

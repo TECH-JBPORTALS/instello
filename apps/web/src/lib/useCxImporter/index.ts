@@ -1,33 +1,42 @@
 "use client";
 
-import { api } from "@instello/convex/api";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useInsMutation } from "@/hooks/convex-react";
-import { parseFacultyFile } from "../lib/parse-faculty-file";
-import {
-	buildImportRows,
-	formatValidationError,
-	rowsMatchSnapshot,
-	toCreateInput,
-} from "../lib/validate-faculty-import";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { parseImportFile } from "./parse-file";
 import type {
 	ImportPhase,
 	ImportRow,
-	ImportSnapshot,
+	ImportRowSnapshot,
+	ImportSchema,
 	ImportValidationError,
-} from "../types/import";
+	InferImportRow,
+	UseCxImporterOptions,
+	UseCxImporterReturn,
+} from "./types";
+import {
+	buildImportRows,
+	formatValidationError,
+	pickSnapshotFields,
+	rowsMatchSnapshot,
+} from "./validate-import";
 
-const VALIDATION_STAGGER_MS = 40;
+const DEFAULT_VALIDATION_STAGGER_MS = 40;
 
 function sleep(ms: number) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function useFacultyImport() {
-	const createBulk = useInsMutation(api.faculty.createBulk);
+export function useCxImporter<S extends ImportSchema>(
+	options: UseCxImporterOptions<S>,
+): UseCxImporterReturn<S> {
+	const {
+		schema,
+		onImportRow,
+		resumeIdentityFields,
+		validationStaggerMs = DEFAULT_VALIDATION_STAGGER_MS,
+	} = options;
 
 	const [phase, setPhase] = useState<ImportPhase>("idle");
-	const [rows, setRows] = useState<ImportRow[]>([]);
+	const [rows, setRows] = useState<ImportRow<InferImportRow<S>>[]>([]);
 	const [validationErrors, setValidationErrors] = useState<
 		ImportValidationError[]
 	>([]);
@@ -37,19 +46,22 @@ export function useFacultyImport() {
 	const [fileName, setFileName] = useState<string | null>(null);
 	const [successCount, setSuccessCount] = useState(0);
 
-	const snapshotRef = useRef<ImportSnapshot[]>([]);
+	const snapshotRef = useRef<ImportRowSnapshot[]>([]);
 	const importAbortRef = useRef(false);
 	const completedCountRef = useRef(0);
-	const rowsRef = useRef<ImportRow[]>([]);
+	const rowsRef = useRef<ImportRow<InferImportRow<S>>[]>([]);
 	const shouldAutoResumeRef = useRef(false);
+	const onImportRowRef = useRef(onImportRow);
 
 	useEffect(() => {
-		// Remember the completed count to resume from it
+		onImportRowRef.current = onImportRow;
+	}, [onImportRow]);
+
+	useEffect(() => {
 		completedCountRef.current = completedCount;
 	}, [completedCount]);
 
 	useEffect(() => {
-		// Remember the rows to resume from them
 		rowsRef.current = rows;
 	}, [rows]);
 
@@ -77,11 +89,21 @@ export function useFacultyImport() {
 		const resumeFrom = completedCountRef.current;
 		const currentRows = rowsRef.current;
 
-		if (snapshotRef.current.length === 0 && resumeFrom === 0) {
+		if (
+			snapshotRef.current.length === 0 &&
+			resumeFrom === 0 &&
+			resumeIdentityFields &&
+			resumeIdentityFields.length > 0
+		) {
 			snapshotRef.current = currentRows
 				.map((row) => row.data)
-				.filter((data): data is NonNullable<typeof data> => data !== null)
-				.map((data) => ({ staffId: data.staffId, email: data.email }));
+				.filter((data): data is InferImportRow<S> => data !== null)
+				.map((data) =>
+					pickSnapshotFields(
+						data as Record<string, unknown>,
+						resumeIdentityFields,
+					),
+				);
 		}
 
 		let imported = resumeFrom;
@@ -104,19 +126,19 @@ export function useFacultyImport() {
 				}),
 			);
 
-			const result = await createBulk({
-				items: [toCreateInput(row.data)],
-				startRowIndex: i,
+			const result = await onImportRowRef.current(row.data, {
+				index: i,
+				displayRow: row.displayRow,
 			});
 
-			if (result.error) {
+			if (!result.ok) {
 				setRows((prev) =>
 					prev.map((item, index) =>
 						index === i
 							? {
 									...item,
 									status: "error",
-									errorMessage: `Row ${row.displayRow}: ${result.error?.message}`,
+									errorMessage: `Row ${row.displayRow}: ${result.message}`,
 								}
 							: index < imported
 								? { ...item, status: "skipped" }
@@ -127,13 +149,13 @@ export function useFacultyImport() {
 				setCompletedCount(imported);
 				setFailedRowIndex(i);
 				setImportError(
-					`Row ${row.displayRow}: ${result.error.message}. Fix the issue and re-upload the file to continue.`,
+					`Row ${row.displayRow}: ${result.message}. Fix the issue and re-upload the file to continue.`,
 				);
 				setPhase("importError");
 				return;
 			}
 
-			imported += result.createdCount;
+			imported += result.createdCount ?? 1;
 			completedCountRef.current = imported;
 			setCompletedCount(imported);
 
@@ -152,13 +174,13 @@ export function useFacultyImport() {
 
 		setSuccessCount(imported);
 		setPhase("success");
-	}, [createBulk]);
+	}, [resumeIdentityFields]);
 
 	const validateFile = useCallback(
-		async (file: File, options?: { autoResume?: boolean }) => {
+		async (file: File, validateOptions?: { autoResume?: boolean }) => {
 			importAbortRef.current = false;
 			shouldAutoResumeRef.current =
-				options?.autoResume ?? completedCountRef.current > 0;
+				validateOptions?.autoResume ?? completedCountRef.current > 0;
 
 			setFileName(file.name);
 			setPhase("validating");
@@ -167,8 +189,8 @@ export function useFacultyImport() {
 			setFailedRowIndex(null);
 
 			try {
-				const parsed = await parseFacultyFile(file);
-				const { rows: builtRows, errors } = buildImportRows(parsed);
+				const parsed = await parseImportFile(file, schema);
+				const { rows: builtRows, errors } = buildImportRows(parsed, schema);
 
 				if (errors.some((error) => error.column === "headers")) {
 					setValidationErrors(errors);
@@ -184,7 +206,7 @@ export function useFacultyImport() {
 					...row,
 					status:
 						index < resumeFrom ? ("skipped" as const) : ("pending" as const),
-				}));
+				})) as ImportRow<InferImportRow<S>>[];
 
 				setRows(initialRows);
 				rowsRef.current = initialRows;
@@ -204,7 +226,7 @@ export function useFacultyImport() {
 						return next;
 					});
 
-					await sleep(VALIDATION_STAGGER_MS);
+					await sleep(validationStaggerMs);
 
 					setRows((current) => {
 						const next = current.map((row, index) => {
@@ -233,8 +255,14 @@ export function useFacultyImport() {
 				const importedSnapshot = snapshotRef.current.slice(0, resumeFrom);
 				if (
 					resumeFrom > 0 &&
+					resumeIdentityFields &&
+					resumeIdentityFields.length > 0 &&
 					importedSnapshot.length > 0 &&
-					!rowsMatchSnapshot(builtRows, importedSnapshot)
+					!rowsMatchSnapshot(
+						builtRows as ImportRow<Record<string, unknown>>[],
+						importedSnapshot,
+						resumeIdentityFields,
+					)
 				) {
 					setValidationErrors([
 						{
@@ -270,8 +298,47 @@ export function useFacultyImport() {
 				shouldAutoResumeRef.current = false;
 			}
 		},
-		[startImport],
+		[schema, startImport, validationStaggerMs, resumeIdentityFields],
 	);
+
+	const hasFile = phase !== "idle";
+	const isBusy = phase === "validating" || phase === "importing";
+	const canStartImport = phase === "ready";
+
+	const validatedCount = useMemo(
+		() =>
+			rows.filter(
+				(row) =>
+					row.status === "valid" ||
+					row.status === "invalid" ||
+					row.status === "success",
+			).length,
+		[rows],
+	);
+
+	const isUploading = rows.some((row) => row.status === "uploading");
+	const importedCount =
+		phase === "importing"
+			? completedCount + (isUploading ? 1 : 0)
+			: rows.filter(
+					(row) => row.status === "success" || row.status === "skipped",
+				).length;
+
+	const resolvedActiveRowIndex =
+		phase === "validating"
+			? rows.findIndex((row) => row.status === "validating")
+			: phase === "importing"
+				? rows.findIndex((row) => row.status === "uploading")
+				: failedRowIndex;
+
+	const activeRowIndex =
+		resolvedActiveRowIndex !== null && resolvedActiveRowIndex >= 0
+			? resolvedActiveRowIndex
+			: null;
+
+	const invalidRowCount = rows.filter((row) => row.status === "invalid").length;
+	const validRowCount = rows.filter((row) => row.status === "valid").length;
+	const totalRows = rows.length;
 
 	return {
 		phase,
@@ -282,8 +349,28 @@ export function useFacultyImport() {
 		failedRowIndex,
 		fileName,
 		successCount,
+		hasFile,
+		isBusy,
+		canStartImport,
+		validatedCount,
+		importedCount,
+		activeRowIndex,
+		invalidRowCount,
+		validRowCount,
+		totalRows,
 		validateFile,
 		startImport,
 		reset,
 	};
 }
+
+export type {
+	ImportPhase,
+	ImportRow,
+	ImportRowStatus,
+	ImportSchema,
+	ImportValidationError,
+	InferImportRow,
+	UseCxImporterOptions,
+	UseCxImporterReturn,
+} from "./types";

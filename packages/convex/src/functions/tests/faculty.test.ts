@@ -60,6 +60,26 @@ describe("faculty.create", () => {
 		).rejects.toThrow(ERROR_CODES.FACULTY.EMAIL_ALREADY_EXISTS.message);
 	});
 
+	it("rejects duplicate staff ID within the same institution", async () => {
+		const { t, user1, ins1 } = await setupTwoInstitutions();
+		const authed = t.withIdentity(ownerIdentity(user1._id, ins1._id));
+
+		await authed.mutation(
+			api.faculty.create,
+			withSlug(ins1, createFacultyInput()),
+		);
+
+		await expect(
+			authed.mutation(
+				api.faculty.create,
+				withSlug(ins1, {
+					...createFacultyInput(),
+					email: "other@example.com",
+				}),
+			),
+		).rejects.toThrow(ERROR_CODES.FACULTY.STAFF_ID_ALREADY_EXISTS.message);
+	});
+
 	it("allows the same email in different institutions", async () => {
 		const { t, user1, user2, ins1, ins2 } = await setupTwoInstitutions();
 
@@ -331,40 +351,6 @@ describe("faculty.updatePersonalInfo", () => {
 	});
 });
 
-describe("faculty.updateAddress", () => {
-	it("updates address information", async () => {
-		const { t, user1, ins1 } = await setupTwoInstitutions();
-
-		const facultyId = await t.run((ctx) =>
-			seedFaculty(ctx, {
-				institutionId: ins1._id,
-				createdBy: user1._id,
-			}),
-		);
-
-		await t.withIdentity(ownerIdentity(user1._id, ins1._id)).mutation(
-			api.faculty.updateAddress,
-			withSlug(ins1, {
-				id: facultyId,
-				body: {
-					addressLine: "456 New Rd",
-					district: "Mysuru",
-					zipCode: "570001",
-				},
-			}),
-		);
-
-		const updated = await t.run((ctx) => ctx.db.get("faculty", facultyId));
-
-		expect(updated).toMatchObject({
-			addressLine: "456 New Rd",
-			district: "Mysuru",
-			zipCode: "570001",
-			firstName: "Jane",
-		});
-	});
-});
-
 describe("faculty.updatePhoneNumber", () => {
 	it("updates phone number and resets verified to false", async () => {
 		const { t, user1, ins1 } = await setupTwoInstitutions();
@@ -444,150 +430,6 @@ describe("faculty.activate", () => {
 			withSlug(ins1, { id: facultyId }),
 		);
 		expect(faculty.status).toBe("active");
-	});
-});
-
-describe("faculty.createBulk", () => {
-	it("requires authentication", async () => {
-		const { t, ins1 } = await setupTwoInstitutions();
-
-		await expect(
-			t.mutation(
-				api.faculty.createBulk,
-				withSlug(ins1, {
-					items: [createFacultyInput()],
-					startRowIndex: 0,
-				}),
-			),
-		).rejects.toThrow(ERROR_CODES.BASE.UNAUTHORIZED.message);
-	});
-
-	it("creates multiple faculty members", async () => {
-		const { t, user1, ins1 } = await setupTwoInstitutions();
-		const authed = t.withIdentity(ownerIdentity(user1._id, ins1._id));
-
-		const result = await authed.mutation(
-			api.faculty.createBulk,
-			withSlug(ins1, {
-				items: [
-					createFacultyInput(),
-					{
-						...createFacultyInput(),
-						email: "second@example.com",
-						staffId: "STAFF-002",
-					},
-				],
-				startRowIndex: 0,
-			}),
-		);
-
-		expect(result.createdCount).toBe(2);
-		expect(result.createdIds).toHaveLength(2);
-		expect(result.error).toBeUndefined();
-	});
-
-	it("stops on duplicate email and returns row index", async () => {
-		const { t, user1, ins1 } = await setupTwoInstitutions();
-		const authed = t.withIdentity(ownerIdentity(user1._id, ins1._id));
-
-		await authed.mutation(
-			api.faculty.create,
-			withSlug(ins1, createFacultyInput()),
-		);
-
-		const result = await authed.mutation(
-			api.faculty.createBulk,
-			withSlug(ins1, {
-				items: [
-					{
-						...createFacultyInput(),
-						email: "new@example.com",
-						staffId: "STAFF-NEW",
-					},
-					createFacultyInput(),
-				],
-				startRowIndex: 5,
-			}),
-		);
-
-		expect(result.createdCount).toBe(1);
-		expect(result.error).toMatchObject({
-			rowIndex: 6,
-			message: ERROR_CODES.FACULTY.EMAIL_ALREADY_EXISTS.message,
-		});
-	});
-
-	it("stops on duplicate staff ID in database and returns row index", async () => {
-		const { t, user1, ins1 } = await setupTwoInstitutions();
-		const authed = t.withIdentity(ownerIdentity(user1._id, ins1._id));
-
-		await authed.mutation(
-			api.faculty.create,
-			withSlug(ins1, createFacultyInput()),
-		);
-
-		const result = await authed.mutation(
-			api.faculty.createBulk,
-			withSlug(ins1, {
-				items: [
-					{
-						...createFacultyInput(),
-						email: "other@example.com",
-					},
-				],
-				startRowIndex: 3,
-			}),
-		);
-
-		expect(result.createdCount).toBe(0);
-		expect(result.error).toMatchObject({
-			rowIndex: 3,
-			message: ERROR_CODES.FACULTY.STAFF_ID_ALREADY_EXISTS.message,
-		});
-	});
-
-	it("rejects duplicate staff ID within the same batch", async () => {
-		const { t, user1, ins1 } = await setupTwoInstitutions();
-		const authed = t.withIdentity(ownerIdentity(user1._id, ins1._id));
-
-		const result = await authed.mutation(
-			api.faculty.createBulk,
-			withSlug(ins1, {
-				items: [
-					createFacultyInput(),
-					{
-						...createFacultyInput(),
-						email: "other@example.com",
-						staffId: FACULTY_STAFF_ID,
-					},
-				],
-				startRowIndex: 0,
-			}),
-		);
-
-		expect(result.createdCount).toBe(0);
-		expect(result.error).toMatchObject({
-			rowIndex: 1,
-			message: "Duplicate staff ID in import file",
-		});
-	});
-
-	it("requires faculty:create permission", async () => {
-		const { t, ins1 } = await setupTwoInstitutions();
-
-		const facultyUser = await t.run((ctx) =>
-			seedFacultyMember(ctx, { institutionId: ins1._id }),
-		);
-
-		await expect(
-			t.withIdentity(ownerIdentity(facultyUser._id, ins1._id)).mutation(
-				api.faculty.createBulk,
-				withSlug(ins1, {
-					items: [createFacultyInput()],
-					startRowIndex: 0,
-				}),
-			),
-		).rejects.toThrow(ERROR_CODES.BASE.ACCESS_DENIED.message);
 	});
 });
 

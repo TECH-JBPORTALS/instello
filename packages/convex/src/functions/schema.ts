@@ -93,11 +93,6 @@ const tables = {
 		joinedDate: v.optional(v.number()),
 		qualification: v.string(),
 		specialization: v.string(),
-		addressLine: v.string(),
-		district: v.string(),
-		state: v.string(),
-		country: v.string(),
-		zipCode: v.string(),
 		phone: v.object({
 			number: v.string(),
 			verified: v.boolean(),

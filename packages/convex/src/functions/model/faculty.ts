@@ -19,11 +19,6 @@ export const CreateSchema = vv
 		"joinedDate",
 		"qualification",
 		"specialization",
-		"addressLine",
-		"district",
-		"state",
-		"country",
-		"zipCode",
 		"institutionId",
 		"createdBy",
 	);
@@ -39,26 +34,10 @@ export const CreateInputSchema = {
 	joinedDate: vv.optional(vv.number()),
 	qualification: vv.string(),
 	specialization: vv.string(),
-	addressLine: vv.string(),
-	district: vv.string(),
-	state: vv.string(),
-	country: vv.string(),
-	zipCode: vv.string(),
 	phoneNumber: vv.string(),
 };
 
 export const CreateInputObjectSchema = vv.object(CreateInputSchema);
-
-export const CreateBulkResultSchema = vv.object({
-	createdCount: vv.number(),
-	createdIds: vv.array(vv.id("faculty")),
-	error: vv.optional(
-		vv.object({
-			rowIndex: vv.number(),
-			message: vv.string(),
-		}),
-	),
-});
 
 export const PatchPersonalInfoSchema = vv.object({
 	firstName: vv.optional(vv.string()),
@@ -74,14 +53,6 @@ export const PatchEmploymentSchema = vv.object({
 	joinedDate: vv.optional(vv.number()),
 	qualification: vv.optional(vv.string()),
 	specialization: vv.optional(vv.string()),
-});
-
-export const PatchAddressSchema = vv.object({
-	addressLine: vv.optional(vv.string()),
-	district: vv.optional(vv.string()),
-	state: vv.optional(vv.string()),
-	country: vv.optional(vv.string()),
-	zipCode: vv.optional(vv.string()),
 });
 
 export const PatchPhoneSchema = vv.object({
@@ -100,11 +71,6 @@ export const FacultyDtoSchema = vv.object({
 	joinedDate: vv.optional(vv.number()),
 	qualification: vv.string(),
 	specialization: vv.string(),
-	addressLine: vv.string(),
-	district: vv.string(),
-	state: vv.string(),
-	country: vv.string(),
-	zipCode: vv.string(),
 	phone: vv.object({
 		number: vv.string(),
 		verified: vv.boolean(),
@@ -126,10 +92,6 @@ export type PaginatedFacultyList = Infer<typeof PaginatedFacultyListSchema>;
 
 export type CreateInput = Infer<typeof CreateInputObjectSchema>;
 
-export type CreateBulkResult = Infer<typeof CreateBulkResultSchema>;
-
-const MAX_BULK_BATCH_SIZE = 50;
-
 export function toDto(faculty: Doc<"faculty">): FacultyDto {
 	return {
 		_id: faculty._id,
@@ -143,11 +105,6 @@ export function toDto(faculty: Doc<"faculty">): FacultyDto {
 		joinedDate: faculty.joinedDate,
 		qualification: faculty.qualification,
 		specialization: faculty.specialization,
-		addressLine: faculty.addressLine,
-		district: faculty.district,
-		state: faculty.state,
-		country: faculty.country,
-		zipCode: faculty.zipCode,
 		phone: faculty.phone,
 		status: faculty.status,
 		createdAt: faculty.createdAt,
@@ -189,39 +146,6 @@ export async function findByStaffId(
 		.unique();
 }
 
-function validateBatchUniqueness(
-	items: CreateInput[],
-	startRowIndex: number,
-): { rowIndex: number; message: string } | null {
-	const emails = new Set<string>();
-	const staffIds = new Set<string>();
-
-	for (let i = 0; i < items.length; i++) {
-		const item = items[i];
-		if (!item) continue;
-
-		const rowIndex = startRowIndex + i;
-
-		if (emails.has(item.email)) {
-			return {
-				rowIndex,
-				message: "Duplicate email in import file",
-			};
-		}
-		emails.add(item.email);
-
-		if (staffIds.has(item.staffId)) {
-			return {
-				rowIndex,
-				message: "Duplicate staff ID in import file",
-			};
-		}
-		staffIds.add(item.staffId);
-	}
-
-	return null;
-}
-
 /**
  * **Create faculty**
  * @returns faculty id
@@ -233,7 +157,7 @@ export async function create(
 	const existingEmail = await findByEmail(ctx, args.institutionId, args.email);
 
 	if (existingEmail) {
-		throw new ConvexError(ERROR_CODES.FACULTY.EMAIL_ALREADY_EXISTS.message);
+		throw new ConvexError(ERROR_CODES.FACULTY.EMAIL_ALREADY_EXISTS);
 	}
 
 	const existingStaffId = await findByStaffId(
@@ -243,7 +167,7 @@ export async function create(
 	);
 
 	if (existingStaffId) {
-		throw new ConvexError(ERROR_CODES.FACULTY.STAFF_ID_ALREADY_EXISTS.message);
+		throw new ConvexError(ERROR_CODES.FACULTY.STAFF_ID_ALREADY_EXISTS);
 	}
 
 	const now = Date.now();
@@ -259,11 +183,6 @@ export async function create(
 		joinedDate: args.joinedDate,
 		qualification: args.qualification,
 		specialization: args.specialization,
-		addressLine: args.addressLine,
-		district: args.district,
-		state: args.state,
-		country: args.country,
-		zipCode: args.zipCode,
 		institutionId: args.institutionId,
 		createdBy: args.createdBy,
 		phone: { number: args.phoneNumber, verified: false },
@@ -271,76 +190,6 @@ export async function create(
 		createdAt: now,
 		updatedAt: now,
 	});
-}
-
-/**
- * **Create multiple faculty records sequentially**
- * Stops on first failure and returns partial success.
- */
-export async function createBulk(
-	ctx: AppMutationCtx,
-	args: {
-		items: CreateInput[];
-		institutionId: string;
-		createdBy: string;
-		startRowIndex: number;
-	},
-): Promise<CreateBulkResult> {
-	if (args.items.length > MAX_BULK_BATCH_SIZE) {
-		return {
-			createdCount: 0,
-			createdIds: [],
-			error: {
-				rowIndex: args.startRowIndex,
-				message: `Batch size exceeds maximum of ${MAX_BULK_BATCH_SIZE}`,
-			},
-		};
-	}
-
-	const batchError = validateBatchUniqueness(args.items, args.startRowIndex);
-	if (batchError) {
-		return {
-			createdCount: 0,
-			createdIds: [],
-			error: batchError,
-		};
-	}
-
-	const createdIds: Id<"faculty">[] = [];
-
-	for (let i = 0; i < args.items.length; i++) {
-		const item = args.items[i];
-		if (!item) continue;
-
-		const rowIndex = args.startRowIndex + i;
-
-		try {
-			const id = await create(ctx, {
-				...item,
-				institutionId: args.institutionId,
-				createdBy: args.createdBy,
-			});
-			createdIds.push(id);
-		} catch (error) {
-			const message =
-				error instanceof ConvexError
-					? String(error.message)
-					: error instanceof Error
-						? error.message
-						: "Failed to create faculty";
-
-			return {
-				createdCount: createdIds.length,
-				createdIds,
-				error: { rowIndex, message },
-			};
-		}
-	}
-
-	return {
-		createdCount: createdIds.length,
-		createdIds,
-	};
 }
 
 /**
@@ -439,20 +288,6 @@ export async function patchEmployment(
 		}
 	}
 
-	await ctx.db.patch("faculty", faculty._id, {
-		...body,
-		updatedAt: Date.now(),
-	});
-}
-
-/**
- * **Update faculty address**
- */
-export async function patchAddress(
-	ctx: AppMutationCtx,
-	faculty: Doc<"faculty">,
-	body: Infer<typeof PatchAddressSchema>,
-) {
 	await ctx.db.patch("faculty", faculty._id, {
 		...body,
 		updatedAt: Date.now(),

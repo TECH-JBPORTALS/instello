@@ -10,8 +10,9 @@ import {
 	IconX,
 } from "@tabler/icons-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useRef } from "react";
+import type { ImportRowStatus } from "@/lib/useCxImporter";
 import { cn } from "@/lib/utils";
-import type { ImportRow, ImportRowStatus } from "../types/import";
 
 function RowStatusIcon({ status }: { status: ImportRowStatus }) {
 	switch (status) {
@@ -52,8 +53,21 @@ function statusLabel(status: ImportRowStatus) {
 	}
 }
 
+type ImportRowListItem = {
+	index: number;
+	displayRow: number;
+	data: {
+		firstName: string;
+		lastName: string;
+		staffId: string;
+		email: string;
+	} | null;
+	status: ImportRowStatus;
+	errorMessage?: string;
+};
+
 type ImportRowListProps = {
-	rows: ImportRow[];
+	rows: ImportRowListItem[];
 	activeRowIndex?: number | null;
 	maxHeightClassName?: string;
 };
@@ -63,6 +77,22 @@ export function ImportRowList({
 	activeRowIndex,
 	maxHeightClassName = "max-h-64",
 }: ImportRowListProps) {
+	const rowRefs = useRef<Map<number, HTMLLIElement>>(new Map());
+
+	const scrollTargetIndex =
+		activeRowIndex ??
+		rows.findIndex((row) => row.status === "invalid" || row.status === "error");
+
+	useEffect(() => {
+		if (scrollTargetIndex === null || scrollTargetIndex < 0) {
+			return;
+		}
+
+		rowRefs.current
+			.get(scrollTargetIndex)
+			?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+	}, [scrollTargetIndex]);
+
 	if (rows.length === 0) {
 		return null;
 	}
@@ -85,6 +115,14 @@ export function ImportRowList({
 						return (
 							<motion.li
 								key={row.index}
+								ref={(element) => {
+									if (element) {
+										rowRefs.current.set(row.index, element);
+										return;
+									}
+
+									rowRefs.current.delete(row.index);
+								}}
 								layout
 								initial={{ opacity: 0, y: 4 }}
 								animate={{ opacity: 1, y: 0 }}
