@@ -20,6 +20,7 @@ import {
 } from "@instello/ui/components/dialog";
 import { useState } from "react";
 import { useInsMutation } from "@/hooks/convex-react";
+import { getConvexErrorMessage } from "@/lib/convex-error";
 
 type DangerZoneSectionProps = {
 	faculty: {
@@ -55,9 +56,7 @@ export function DangerZoneSection({
 			}
 			setConfirmOpen(false);
 		} catch (submitError) {
-			setError(
-				submitError instanceof Error ? submitError.message : "Action failed",
-			);
+			setError(getConvexErrorMessage(submitError, "Action failed"));
 		} finally {
 			setIsSubmitting(false);
 		}

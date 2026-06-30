@@ -1,6 +1,8 @@
 import { fakerEN_IN as faker } from "@faker-js/faker";
+import { expect } from "vitest";
 import { components } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
+import type { AppErrorCode } from "../helpers/errors";
 import type { AppMutationCtx } from "../model/common.types";
 import { createTest } from "./test.setup";
 
@@ -338,4 +340,16 @@ export async function setupTwoInstitutions() {
 		ins1: institutions[0],
 		ins2: institutions[2],
 	};
+}
+
+export async function expectAppError(
+	promise: Promise<unknown>,
+	expected: AppErrorCode,
+) {
+	await expect(promise).rejects.toMatchObject({
+		data: {
+			code: expected.code,
+			message: expected.message,
+		},
+	});
 }

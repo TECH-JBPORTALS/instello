@@ -1,6 +1,5 @@
-import { ConvexError } from "convex/values";
 import { insMutation, insQuery } from "./helpers/customFunctions";
-import { ERROR_CODES } from "./helpers/errors";
+import { ERROR_CODES, throwAppError } from "./helpers/errors";
 import * as Program from "./model/program";
 import { vv } from "./schema";
 
@@ -49,7 +48,7 @@ export const getById = insQuery({
 		const program = await Program.getById(ctx, args.id, ctx.institution._id);
 
 		if (!program) {
-			throw new ConvexError(ERROR_CODES.PROGRAM.NOT_FOUND.message);
+			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
 		}
 
 		return Program.toDto(program);
@@ -71,7 +70,7 @@ export const updateName = insMutation({
 		const program = await Program.getById(ctx, args.id, ctx.institution._id);
 
 		if (!program) {
-			throw new ConvexError(ERROR_CODES.PROGRAM.NOT_FOUND.message);
+			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
 		}
 
 		await Program.patch(ctx, args.id, args.body);
@@ -94,7 +93,7 @@ export const updateAlias = insMutation({
 		const program = await Program.getById(ctx, args.id, ctx.institution._id);
 
 		if (!program) {
-			throw new ConvexError(ERROR_CODES.PROGRAM.NOT_FOUND.message);
+			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
 		}
 
 		await Program.patch(ctx, args.id, args.body);

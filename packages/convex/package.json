@@ -13,7 +13,11 @@
 		"./better-auth/client": "./src/better-auth/client.ts",
 		"./better-auth/server": "./src/better-auth/server.ts",
 		"./better-auth/provider": "./src/better-auth/provider.tsx",
-		"./better-auth/schema": "./src/better-auth/schema.ts"
+		"./better-auth/schema": "./src/better-auth/schema.ts",
+		"./errors": {
+			"types": "./src/functions/helpers/errors.ts",
+			"default": "./src/functions/helpers/errors.ts"
+		}
 	},
 	"scripts": {
 		"dev": "convex dev",

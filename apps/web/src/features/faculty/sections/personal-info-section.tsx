@@ -28,6 +28,7 @@ import { revalidateLogic } from "@tanstack/react-form-nextjs";
 import { useRef, useState } from "react";
 import { useInsMutation } from "@/hooks/convex-react";
 import { useAppForm } from "@/hooks/form";
+import { getConvexErrorMessage } from "@/lib/convex-error";
 import {
 	getFacultyInitials,
 	PatchPersonalInfoSchema,
@@ -180,9 +181,7 @@ export function PersonalInfoSection({
 				});
 			} catch (submitError) {
 				setError(
-					submitError instanceof Error
-						? submitError.message
-						: "Failed to update personal info",
+					getConvexErrorMessage(submitError, "Failed to update personal info"),
 				);
 			}
 		},

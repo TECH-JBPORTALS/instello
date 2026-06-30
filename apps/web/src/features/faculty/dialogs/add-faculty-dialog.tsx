@@ -19,6 +19,7 @@ import { useEffect, useState } from "react";
 import * as v from "valibot";
 import { useInsMutation } from "@/hooks/convex-react";
 import { useAppForm } from "@/hooks/form";
+import { getConvexErrorMessage } from "@/lib/convex-error";
 import { AddFacultyStepIndicator } from "../forms/add-faculty-step-indicator";
 import { ContactStep } from "../forms/contact-step";
 import { EmploymentStep } from "../forms/employment-step";
@@ -75,7 +76,7 @@ export function AddFacultyDialog({
 				onOpenChange(false);
 			} catch (error) {
 				setGlobalError(
-					error instanceof Error ? error.message : "Failed to create faculty",
+					getConvexErrorMessage(error, "Failed to create faculty"),
 				);
 			}
 		},

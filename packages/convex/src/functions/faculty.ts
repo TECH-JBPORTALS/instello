@@ -1,7 +1,6 @@
 import { paginationOptsValidator } from "convex/server";
-import { ConvexError } from "convex/values";
 import { insMutation, insQuery } from "./helpers/customFunctions";
-import { ERROR_CODES } from "./helpers/errors";
+import { ERROR_CODES, throwAppError } from "./helpers/errors";
 import * as Faculty from "./model/faculty";
 import { vv } from "./schema";
 
@@ -51,7 +50,7 @@ export const getById = insQuery({
 		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
 
 		if (!faculty) {
-			throw new ConvexError(ERROR_CODES.FACULTY.NOT_FOUND.message);
+			throwAppError(ERROR_CODES.FACULTY.NOT_FOUND);
 		}
 
 		return Faculty.toDto(faculty);
@@ -73,7 +72,7 @@ export const updatePersonalInfo = insMutation({
 		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
 
 		if (!faculty) {
-			throw new ConvexError(ERROR_CODES.FACULTY.NOT_FOUND.message);
+			throwAppError(ERROR_CODES.FACULTY.NOT_FOUND);
 		}
 
 		await Faculty.patchPersonalInfo(ctx, faculty, args.body);
@@ -96,7 +95,7 @@ export const updateEmployment = insMutation({
 		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
 
 		if (!faculty) {
-			throw new ConvexError(ERROR_CODES.FACULTY.NOT_FOUND.message);
+			throwAppError(ERROR_CODES.FACULTY.NOT_FOUND);
 		}
 
 		await Faculty.patchEmployment(ctx, faculty, args.body);
@@ -119,7 +118,7 @@ export const updatePhoneNumber = insMutation({
 		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
 
 		if (!faculty) {
-			throw new ConvexError(ERROR_CODES.FACULTY.NOT_FOUND.message);
+			throwAppError(ERROR_CODES.FACULTY.NOT_FOUND);
 		}
 
 		await Faculty.patchPhone(ctx, faculty, args.body);
@@ -138,7 +137,7 @@ export const activate = insMutation({
 		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
 
 		if (!faculty) {
-			throw new ConvexError(ERROR_CODES.FACULTY.NOT_FOUND.message);
+			throwAppError(ERROR_CODES.FACULTY.NOT_FOUND);
 		}
 
 		await Faculty.setStatus(ctx, faculty, "active");
@@ -157,7 +156,7 @@ export const deactivate = insMutation({
 		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
 
 		if (!faculty) {
-			throw new ConvexError(ERROR_CODES.FACULTY.NOT_FOUND.message);
+			throwAppError(ERROR_CODES.FACULTY.NOT_FOUND);
 		}
 
 		await Faculty.setStatus(ctx, faculty, "inactive");

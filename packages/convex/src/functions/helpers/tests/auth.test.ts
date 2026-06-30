@@ -1,7 +1,6 @@
-import { convexTest, type TestConvex } from "convex-test";
 import { beforeEach, describe, expect, it } from "vitest";
-import schema from "../../schema";
 import {
+	expectAppError,
 	primaryIns,
 	secondaryIns,
 	seedInstitutions,
@@ -10,38 +9,38 @@ import {
 import { createTest } from "../../tests/test.setup";
 import { ensureInstitution, ensureSession } from "../auth";
 import { ERROR_CODES } from "../errors";
-import { modules } from "./test.setup";
 
 describe("ensureSession", () => {
-	let t: TestConvex<typeof schema>;
+	let t: ReturnType<typeof createTest>;
 
 	beforeEach(() => {
-		t = convexTest(schema, modules);
+		t = createTest();
 	});
 
-	it("rejects when user is not logged in", async () => {
+	it("required authentication", async () => {
 		const promise = t.query((ctx) => ensureSession(ctx));
 
-		await expect(promise).rejects.toThrow(
-			ERROR_CODES.BASE.UNAUTHORIZED.message,
-		);
+		await expectAppError(promise, ERROR_CODES.BASE.UNAUTHORIZED);
 	});
 
-	it("returns the `session` if user is authenticated", async () => {
-		const promise = t
+	it("returns the `session` for a valid authenticated user", async () => {
+		const { user1 } = await t.run(seedOwners);
+
+		const result = await t
 			.withIdentity({
-				subject: "user-1",
-				name: "Jhon",
-				email: "jhon@gmail.com",
+				subject: user1._id,
 				sessionId: "session-1",
 			})
 			.query((ctx) => ensureSession(ctx));
 
-		await expect(promise).resolves.toStrictEqual({
-			userId: "user-1",
-			name: "Jhon",
-			email: "jhon@gmail.com",
+		expect(result).toMatchObject({
+			userId: user1._id,
 			id: "session-1",
+			user: {
+				_id: user1._id,
+				name: user1.name,
+				email: user1.email,
+			},
 		});
 	});
 });
@@ -53,17 +52,18 @@ describe("ensureInstitution", () => {
 		t = createTest();
 	});
 
-	it("rejects when institution slug does not exist", async () => {
+	it("required institution identity", async () => {
 		const promise = t.query((ctx) =>
-			ensureInstitution(ctx, "unknown-slug", "user-1"),
+			ensureInstitution(ctx, "unknown-slug", "unknown-user-id"),
 		);
 
-		await expect(promise).rejects.toThrow(
-			ERROR_CODES.BASE.UNAUTHORIZED.message,
+		await expectAppError(
+			promise,
+			ERROR_CODES.ORGANIZATION.ORGANIZATION_NOT_FOUND,
 		);
 	});
 
-	it("rejects when user is not a member of the institution", async () => {
+	it("requires user to be part of instiuttion", async () => {
 		const { user1, user2 } = await t.run(seedOwners);
 		const institutions = await t.run((ctx) =>
 			seedInstitutions(ctx, { user1, user2 }),
@@ -74,8 +74,9 @@ describe("ensureInstitution", () => {
 			ensureInstitution(ctx, ins2.slug, user1._id),
 		);
 
-		await expect(promise).rejects.toThrow(
-			ERROR_CODES.ORGANIZATION.USER_IS_NOT_A_MEMBER_OF_THE_ORGANIZATION.message,
+		await expectAppError(
+			promise,
+			ERROR_CODES.ORGANIZATION.USER_IS_NOT_A_MEMBER_OF_THE_ORGANIZATION,
 		);
 	});
 

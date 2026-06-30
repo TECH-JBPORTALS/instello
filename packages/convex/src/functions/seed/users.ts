@@ -15,11 +15,12 @@
  */
 
 import { fakerEN_IN as faker } from "@faker-js/faker";
-import { ConvexError, type Infer } from "convex/values";
+import type { Infer } from "convex/values";
 import { components } from "../_generated/api";
 import { env, internalMutation } from "../_generated/server";
 import { authComponent, createAuth } from "../auth";
 import type { Doc as BetterAuthDoc } from "../betterAuth/_generated/dataModel";
+import { ERROR_CODES, throwAppError } from "../helpers/errors";
 import * as OwnerOrganization from "../model/ownerOrganization";
 
 const ownersList: Owner[] = [
@@ -112,7 +113,7 @@ export const owners = internalMutation({
 	args: {},
 	handler: async (ctx) => {
 		if (!env.SEED_MODE)
-			throw new ConvexError("You can't seed in production environment");
+			throwAppError(ERROR_CODES.SEED.NOT_ALLOWED_IN_PRODUCTION);
 
 		console.info("Seeding owners with their organization 🌱");
 
@@ -150,7 +151,7 @@ export const institutions = internalMutation({
 	args: {},
 	handler: async (ctx) => {
 		if (!env.SEED_MODE)
-			throw new ConvexError("You can't seed in production environment");
+			throwAppError(ERROR_CODES.SEED.NOT_ALLOWED_IN_PRODUCTION);
 
 		console.info(" 🌱 Seeding institutions");
 

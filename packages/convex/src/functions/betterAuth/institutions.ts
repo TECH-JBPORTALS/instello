@@ -1,3 +1,4 @@
+import { ERROR_CODES, throwAppError } from "../helpers/errors";
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { vv } from "./schema";
@@ -13,7 +14,8 @@ export const getById = query({
 			.query("institution")
 			.withIndex("by_id", (q) => q.eq("_id", args.id as Id<"institution">))
 			.first();
-		if (!institution) throw new Error("No institution found for given id");
+		if (!institution)
+			throwAppError(ERROR_CODES.ORGANIZATION.ORGANIZATION_NOT_FOUND);
 		return institution;
 	},
 });

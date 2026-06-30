@@ -1,7 +1,6 @@
-import { ConvexError } from "convex/values";
 import { components } from "./_generated/api";
 import { userQuery } from "./helpers/customFunctions";
-import { ERROR_CODES } from "./helpers/errors";
+import { ERROR_CODES, throwAppError } from "./helpers/errors";
 import * as Institution from "./model/institution";
 import { vv } from "./schema";
 
@@ -79,7 +78,7 @@ export const getBySlug = userQuery({
 		);
 
 		if (!institution)
-			throw new ConvexError(ERROR_CODES.ORGANIZATION.ORGANIZATION_NOT_FOUND);
+			throwAppError(ERROR_CODES.ORGANIZATION.ORGANIZATION_NOT_FOUND);
 
 		return {
 			_id: institution._id,

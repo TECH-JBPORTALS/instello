@@ -1,15 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { api, components } from "../_generated/api";
 import { ERROR_CODES } from "../helpers/errors";
-import { seedInstitutions, seedOwners } from "./test.helpers";
+import { expectAppError, seedInstitutions, seedOwners } from "./test.helpers";
 import { createTest } from "./test.setup";
 
 describe("institutions.listMyOwned", () => {
 	it("rejects unthencticated user", async () => {
 		const t = createTest();
 
-		await expect(t.query(api.institutions.listMyOwned)).rejects.toThrow(
-			ERROR_CODES.BASE.UNAUTHORIZED.message,
+		await expectAppError(
+			t.query(api.institutions.listMyOwned),
+			ERROR_CODES.BASE.UNAUTHORIZED,
 		);
 	});
 
@@ -90,9 +91,10 @@ describe("institutions.checkCode", () => {
 	it("rejects unauthenticated user", async () => {
 		const t = createTest();
 
-		await expect(
+		await expectAppError(
 			t.query(api.institutions.checkCode, { code: "364" }),
-		).rejects.toThrow(ERROR_CODES.BASE.UNAUTHORIZED.message);
+			ERROR_CODES.BASE.UNAUTHORIZED,
+		);
 	});
 
 	it("returns available when code is not taken", async () => {

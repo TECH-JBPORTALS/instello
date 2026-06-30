@@ -1,5 +1,11 @@
 import { BASE_ERROR_CODES } from "better-auth";
 import { ORGANIZATION_ERROR_CODES } from "better-auth/client/plugins";
+import { ConvexError } from "convex/values";
+
+export type AppErrorCode = {
+	readonly code: string;
+	readonly message: string;
+};
 
 export const ERROR_CODES = {
 	BASE: {
@@ -38,6 +44,16 @@ export const ERROR_CODES = {
 			message: "Faculty staff ID already exists in this institution",
 		},
 	},
+	SEED: {
+		NOT_ALLOWED_IN_PRODUCTION: {
+			code: "SEED_NOT_ALLOWED_IN_PRODUCTION",
+			message: "You can't seed in production environment",
+		},
+	},
 	/** Better auth organization error codes */
 	ORGANIZATION: ORGANIZATION_ERROR_CODES,
 } as const;
+
+export function throwAppError(error: AppErrorCode): never {
+	throw new ConvexError({ code: error.code, message: error.message });
+}

@@ -21,11 +21,11 @@ import {
 	IconDownload,
 	IconTableImport,
 } from "@tabler/icons-react";
-import { ConvexError } from "convex/values";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef } from "react";
 import * as v from "valibot";
 import { useInsMutation } from "@/hooks/convex-react";
+import { getConvexErrorMessage } from "@/lib/convex-error";
 import {
 	type ImportPhase,
 	type ImportSchema,
@@ -200,10 +200,7 @@ export function ImportFacultyDialog({
 			} catch (error) {
 				return {
 					ok: false,
-					message:
-						error instanceof ConvexError
-							? error.data.message
-							: "Failed to create faculty",
+					message: getConvexErrorMessage(error, "Failed to create faculty"),
 				};
 			}
 		},

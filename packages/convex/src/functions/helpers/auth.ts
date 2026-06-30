@@ -1,9 +1,8 @@
 import type { GenericCtx } from "@convex-dev/better-auth";
-import { ConvexError } from "convex/values";
 import * as insPermissions from "../../better-auth/ins-permissions";
 import { components } from "../_generated/api";
 import type { DataModel } from "../_generated/dataModel";
-import { ERROR_CODES } from "./errors";
+import { ERROR_CODES, throwAppError } from "./errors";
 
 /**
  * Helper function to validate the sessionId exists convex identitiy and
@@ -13,8 +12,7 @@ import { ERROR_CODES } from "./errors";
 export const ensureSession = async (ctx: GenericCtx<DataModel>) => {
 	const identity = await ctx.auth.getUserIdentity();
 
-	if (!identity?.sessionId)
-		throw new ConvexError(ERROR_CODES.BASE.UNAUTHORIZED.message);
+	if (!identity?.sessionId) throwAppError(ERROR_CODES.BASE.UNAUTHORIZED);
 
 	const user = await ctx.runQuery(components.betterAuth.users.getById, {
 		userId: identity.subject,
@@ -43,7 +41,7 @@ export const ensureInstitution = async (
 	);
 
 	if (!institution)
-		throw new ConvexError(ERROR_CODES.BASE.UNAUTHORIZED.message);
+		throwAppError(ERROR_CODES.ORGANIZATION.ORGANIZATION_NOT_FOUND);
 
 	const membership = await ctx.runQuery(
 		components.betterAuth.institutions.getMembership,
@@ -54,8 +52,8 @@ export const ensureInstitution = async (
 	);
 
 	if (!membership)
-		throw new ConvexError(
-			ERROR_CODES.ORGANIZATION.USER_IS_NOT_A_MEMBER_OF_THE_ORGANIZATION.message,
+		throwAppError(
+			ERROR_CODES.ORGANIZATION.USER_IS_NOT_A_MEMBER_OF_THE_ORGANIZATION,
 		);
 
 	return { institution, membership };
@@ -77,5 +75,5 @@ export const ensureInsPermission = async (
 
 	const hasAccess = insPermissions.hasPermission(statements, required);
 
-	if (!hasAccess) throw new ConvexError(ERROR_CODES.BASE.ACCESS_DENIED.message);
+	if (!hasAccess) throwAppError(ERROR_CODES.BASE.ACCESS_DENIED);
 };

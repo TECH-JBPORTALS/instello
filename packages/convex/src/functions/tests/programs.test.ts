@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { api } from "../_generated/api";
 import { ERROR_CODES } from "../helpers/errors";
 import {
+	expectAppError,
 	primaryIns,
 	secondaryIns,
 	seedInstitutions,
@@ -20,7 +21,7 @@ describe("programs.create", () => {
 		);
 		const firstIns = primaryIns(institutions);
 
-		await expect(
+		await expectAppError(
 			t.mutation(
 				api.programs.create,
 				withSlug(firstIns, {
@@ -28,7 +29,8 @@ describe("programs.create", () => {
 					alias: "CS",
 				}),
 			),
-		).rejects.toThrow(ERROR_CODES.BASE.UNAUTHORIZED.message);
+			ERROR_CODES.BASE.UNAUTHORIZED,
+		);
 	});
 
 	it("creates program for active institution", async () => {
@@ -75,9 +77,10 @@ describe("programs.list", () => {
 		);
 		const ins1 = primaryIns(institutions);
 
-		await expect(
+		await expectAppError(
 			t.query(api.programs.list, withSlug(ins1, {})),
-		).rejects.toThrow(ERROR_CODES.BASE.UNAUTHORIZED.message);
+			ERROR_CODES.BASE.UNAUTHORIZED,
+		);
 	});
 
 	it("lists programs for the active institution ordered by name", async () => {
@@ -180,9 +183,10 @@ describe("programs.getById", () => {
 		);
 		const programId = programs[0]._id;
 
-		await expect(
+		await expectAppError(
 			t.query(api.programs.getById, withSlug(ins1, { id: programId })),
-		).rejects.toThrow(ERROR_CODES.BASE.UNAUTHORIZED.message);
+			ERROR_CODES.BASE.UNAUTHORIZED,
+		);
 	});
 
 	it("gets program by id", async () => {
@@ -234,7 +238,7 @@ describe("programs.getById", () => {
 			return id;
 		});
 
-		await expect(
+		await expectAppError(
 			t
 				.withIdentity({
 					subject: user1._id,
@@ -242,7 +246,8 @@ describe("programs.getById", () => {
 					sessionId: "ses-1",
 				})
 				.query(api.programs.getById, withSlug(ins1, { id: programId })),
-		).rejects.toThrow(ERROR_CODES.PROGRAM.NOT_FOUND.message);
+			ERROR_CODES.PROGRAM.NOT_FOUND,
+		);
 	});
 
 	it("rejects program from another institution", async () => {
@@ -259,7 +264,7 @@ describe("programs.getById", () => {
 		);
 		const programInIns2 = programs[2];
 
-		await expect(
+		await expectAppError(
 			t
 				.withIdentity({
 					subject: user1._id,
@@ -267,7 +272,8 @@ describe("programs.getById", () => {
 					sessionId: "ses-1",
 				})
 				.query(api.programs.getById, withSlug(ins1, { id: programInIns2._id })),
-		).rejects.toThrow(ERROR_CODES.PROGRAM.NOT_FOUND.message);
+			ERROR_CODES.PROGRAM.NOT_FOUND,
+		);
 	});
 });
 
@@ -289,7 +295,7 @@ describe("programs.updateName", () => {
 			}),
 		);
 
-		await expect(
+		await expectAppError(
 			t.mutation(
 				api.programs.updateName,
 				withSlug(ins1, {
@@ -297,7 +303,8 @@ describe("programs.updateName", () => {
 					body: { name: "New program name" },
 				}),
 			),
-		).rejects.toThrow(ERROR_CODES.BASE.UNAUTHORIZED.message);
+			ERROR_CODES.BASE.UNAUTHORIZED,
+		);
 	});
 
 	it("updates program name", async () => {
@@ -360,7 +367,7 @@ describe("programs.updateName", () => {
 			return computerScience._id;
 		});
 
-		await expect(
+		await expectAppError(
 			t
 				.withIdentity({
 					subject: user1._id,
@@ -374,7 +381,8 @@ describe("programs.updateName", () => {
 						body: { name: "Computer Science & Engineering" },
 					}),
 				),
-		).rejects.toThrow(ERROR_CODES.PROGRAM.NOT_FOUND.message);
+			ERROR_CODES.PROGRAM.NOT_FOUND,
+		);
 	});
 });
 
@@ -396,7 +404,7 @@ describe("programs.updateAlias", () => {
 			}),
 		);
 
-		await expect(
+		await expectAppError(
 			t.mutation(
 				api.programs.updateName,
 				withSlug(ins1, {
@@ -404,7 +412,8 @@ describe("programs.updateAlias", () => {
 					body: { name: "New program name" },
 				}),
 			),
-		).rejects.toThrow(ERROR_CODES.BASE.UNAUTHORIZED.message);
+			ERROR_CODES.BASE.UNAUTHORIZED,
+		);
 	});
 
 	it("updates program alias", async () => {
@@ -465,7 +474,7 @@ describe("programs.updateAlias", () => {
 			return computerScience._id;
 		});
 
-		await expect(
+		await expectAppError(
 			t
 				.withIdentity({
 					subject: user1._id,
@@ -479,6 +488,7 @@ describe("programs.updateAlias", () => {
 						body: { alias: "CSE" },
 					}),
 				),
-		).rejects.toThrow(ERROR_CODES.PROGRAM.NOT_FOUND.message);
+			ERROR_CODES.PROGRAM.NOT_FOUND,
+		);
 	});
 });

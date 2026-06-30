@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { api } from "../_generated/api";
 import { ERROR_CODES } from "../helpers/errors";
 import {
+	expectAppError,
 	primaryIns,
 	secondaryIns,
 	seedClasses,
@@ -27,7 +28,7 @@ describe("classes.create", () => {
 		);
 		const firstProgram = programs[0];
 
-		await expect(
+		await expectAppError(
 			t.mutation(
 				api.classes.create,
 				withSlug(firstIns, {
@@ -40,7 +41,8 @@ describe("classes.create", () => {
 					},
 				}),
 			),
-		).rejects.toThrow(ERROR_CODES.BASE.UNAUTHORIZED.message);
+			ERROR_CODES.BASE.UNAUTHORIZED,
+		);
 	});
 
 	it("creates class for active program", async () => {
@@ -132,7 +134,7 @@ describe("classes.create", () => {
 		);
 		const programInIns2 = programs[2];
 
-		await expect(
+		await expectAppError(
 			t
 				.withIdentity({
 					subject: user1._id,
@@ -151,7 +153,8 @@ describe("classes.create", () => {
 						},
 					}),
 				),
-		).rejects.toThrow(ERROR_CODES.PROGRAM.NOT_FOUND.message);
+			ERROR_CODES.PROGRAM.NOT_FOUND,
+		);
 	});
 });
 
@@ -168,9 +171,10 @@ describe("classes.list", () => {
 			seedPrograms(ctx, { user1, user2, ins1, ins2 }),
 		);
 
-		await expect(
+		await expectAppError(
 			t.query(api.classes.list, withSlug(ins1, { programId: programs[0]._id })),
-		).rejects.toThrow(ERROR_CODES.BASE.UNAUTHORIZED.message);
+			ERROR_CODES.BASE.UNAUTHORIZED,
+		);
 	});
 
 	it("lists classes for active program", async () => {
@@ -262,9 +266,10 @@ describe("classes.getById", () => {
 		);
 		const classId = classes.program1Classes[0]._id;
 
-		await expect(
+		await expectAppError(
 			t.query(api.classes.getById, withSlug(ins1, { id: classId })),
-		).rejects.toThrow(ERROR_CODES.BASE.UNAUTHORIZED.message);
+			ERROR_CODES.BASE.UNAUTHORIZED,
+		);
 	});
 
 	it("rejects if class doesn't exist", async () => {
@@ -295,7 +300,7 @@ describe("classes.getById", () => {
 			return clsId;
 		});
 
-		await expect(
+		await expectAppError(
 			t
 				.withIdentity({
 					subject: user1._id,
@@ -303,7 +308,8 @@ describe("classes.getById", () => {
 					sessionId: "ses-1",
 				})
 				.query(api.classes.getById, withSlug(ins1, { id: classId })),
-		).rejects.toThrow(ERROR_CODES.CLASS.NOT_FOUND.message);
+			ERROR_CODES.CLASS.NOT_FOUND,
+		);
 	});
 
 	it("gets class by id", async () => {
@@ -361,7 +367,7 @@ describe("classes.getById", () => {
 		);
 		const classInIns2 = classes.program2Classes[0]._id;
 
-		await expect(
+		await expectAppError(
 			t
 				.withIdentity({
 					subject: user1._id,
@@ -369,7 +375,8 @@ describe("classes.getById", () => {
 					sessionId: "ses-1",
 				})
 				.query(api.classes.getById, withSlug(ins1, { id: classInIns2 })),
-		).rejects.toThrow(ERROR_CODES.CLASS.NOT_FOUND.message);
+			ERROR_CODES.CLASS.NOT_FOUND,
+		);
 	});
 });
 
@@ -393,7 +400,7 @@ describe("classes.updateBasicInfo", () => {
 		);
 		const classId = classes.program1Classes[0]._id;
 
-		await expect(
+		await expectAppError(
 			t.mutation(
 				api.classes.updateBasicInfo,
 				withSlug(ins1, {
@@ -401,7 +408,8 @@ describe("classes.updateBasicInfo", () => {
 					body: { name: "Class 2", description: "Class 2 description" },
 				}),
 			),
-		).rejects.toThrow(ERROR_CODES.BASE.UNAUTHORIZED.message);
+			ERROR_CODES.BASE.UNAUTHORIZED,
+		);
 	});
 
 	it("rejects if class doesn't exist", async () => {
@@ -432,7 +440,7 @@ describe("classes.updateBasicInfo", () => {
 			return clsId;
 		});
 
-		await expect(
+		await expectAppError(
 			t
 				.withIdentity({
 					subject: user1._id,
@@ -446,7 +454,8 @@ describe("classes.updateBasicInfo", () => {
 						body: { name: "Class 2", description: "Class 2 description" },
 					}),
 				),
-		).rejects.toThrow(ERROR_CODES.CLASS.NOT_FOUND.message);
+			ERROR_CODES.CLASS.NOT_FOUND,
+		);
 	});
 
 	it("updates class basic info", async () => {

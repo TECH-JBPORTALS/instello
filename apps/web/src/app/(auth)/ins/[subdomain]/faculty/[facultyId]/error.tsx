@@ -4,6 +4,7 @@ import { Button } from "@instello/ui/components/button";
 import { IconArrowLeft } from "@tabler/icons-react";
 import Link from "next/link";
 import Container from "@/components/common/container";
+import { getConvexErrorMessage } from "@/lib/convex-error";
 
 export default function FacultyDetailError({
 	error,
@@ -26,7 +27,10 @@ export default function FacultyDetailError({
 				<div className="space-y-2">
 					<h1 className="text-lg font-semibold">Faculty member not found</h1>
 					<p className="text-sm text-muted-foreground">
-						{error.message || "This faculty member could not be loaded."}
+						{getConvexErrorMessage(
+							error,
+							"This faculty member could not be loaded.",
+						)}
 					</p>
 					<Button variant="outline" onClick={reset}>
 						Try again

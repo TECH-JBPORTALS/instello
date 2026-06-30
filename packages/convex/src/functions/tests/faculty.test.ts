@@ -3,6 +3,7 @@ import { api } from "../_generated/api";
 import { ERROR_CODES } from "../helpers/errors";
 import {
 	createFacultyInput,
+	expectAppError,
 	FACULTY_EMAIL,
 	FACULTY_PHONE,
 	FACULTY_STAFF_ID,
@@ -17,9 +18,10 @@ describe("faculty.create", () => {
 	it("requires authentication", async () => {
 		const { t, ins1 } = await setupTwoInstitutions();
 
-		await expect(
+		await expectAppError(
 			t.mutation(api.faculty.create, withSlug(ins1, createFacultyInput())),
-		).rejects.toThrow(ERROR_CODES.BASE.UNAUTHORIZED.message);
+			ERROR_CODES.BASE.UNAUTHORIZED,
+		);
 	});
 
 	it("creates a faculty member with all fields", async () => {
@@ -55,9 +57,10 @@ describe("faculty.create", () => {
 			withSlug(ins1, createFacultyInput()),
 		);
 
-		await expect(
+		await expectAppError(
 			authed.mutation(api.faculty.create, withSlug(ins1, createFacultyInput())),
-		).rejects.toThrow(ERROR_CODES.FACULTY.EMAIL_ALREADY_EXISTS.message);
+			ERROR_CODES.FACULTY.EMAIL_ALREADY_EXISTS,
+		);
 	});
 
 	it("rejects duplicate staff ID within the same institution", async () => {
@@ -69,7 +72,7 @@ describe("faculty.create", () => {
 			withSlug(ins1, createFacultyInput()),
 		);
 
-		await expect(
+		await expectAppError(
 			authed.mutation(
 				api.faculty.create,
 				withSlug(ins1, {
@@ -77,7 +80,8 @@ describe("faculty.create", () => {
 					email: "other@example.com",
 				}),
 			),
-		).rejects.toThrow(ERROR_CODES.FACULTY.STAFF_ID_ALREADY_EXISTS.message);
+			ERROR_CODES.FACULTY.STAFF_ID_ALREADY_EXISTS,
+		);
 	});
 
 	it("allows the same email in different institutions", async () => {
@@ -103,11 +107,12 @@ describe("faculty.create", () => {
 			seedFacultyMember(ctx, { institutionId: ins1._id }),
 		);
 
-		await expect(
+		await expectAppError(
 			t
 				.withIdentity(ownerIdentity(facultyUser._id, ins1._id))
 				.mutation(api.faculty.create, withSlug(ins1, createFacultyInput())),
-		).rejects.toThrow(ERROR_CODES.BASE.ACCESS_DENIED.message);
+			ERROR_CODES.BASE.ACCESS_DENIED,
+		);
 	});
 });
 
@@ -259,11 +264,12 @@ describe("faculty.getById", () => {
 			}),
 		);
 
-		await expect(
+		await expectAppError(
 			t
 				.withIdentity(ownerIdentity(user1._id, ins1._id))
 				.query(api.faculty.getById, withSlug(ins1, { id: facultyId })),
-		).rejects.toThrow(ERROR_CODES.FACULTY.NOT_FOUND.message);
+			ERROR_CODES.FACULTY.NOT_FOUND,
+		);
 	});
 });
 
@@ -314,7 +320,7 @@ describe("faculty.updatePersonalInfo", () => {
 			}),
 		);
 
-		await expect(
+		await expectAppError(
 			t.withIdentity(ownerIdentity(user1._id, ins1._id)).mutation(
 				api.faculty.updatePersonalInfo,
 				withSlug(ins1, {
@@ -322,7 +328,8 @@ describe("faculty.updatePersonalInfo", () => {
 					body: { email: "taken@example.com" },
 				}),
 			),
-		).rejects.toThrow(ERROR_CODES.FACULTY.EMAIL_ALREADY_EXISTS.message);
+			ERROR_CODES.FACULTY.EMAIL_ALREADY_EXISTS,
+		);
 	});
 
 	it("requires faculty:update permission", async () => {
@@ -339,7 +346,7 @@ describe("faculty.updatePersonalInfo", () => {
 			seedFacultyMember(ctx, { institutionId: ins1._id }),
 		);
 
-		await expect(
+		await expectAppError(
 			t.withIdentity(ownerIdentity(facultyUser._id, ins1._id)).mutation(
 				api.faculty.updatePersonalInfo,
 				withSlug(ins1, {
@@ -347,7 +354,8 @@ describe("faculty.updatePersonalInfo", () => {
 					body: { firstName: "Hacker" },
 				}),
 			),
-		).rejects.toThrow(ERROR_CODES.BASE.ACCESS_DENIED.message);
+			ERROR_CODES.BASE.ACCESS_DENIED,
+		);
 	});
 });
 

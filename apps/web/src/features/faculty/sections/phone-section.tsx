@@ -23,6 +23,7 @@ import { revalidateLogic } from "@tanstack/react-form-nextjs";
 import { useState } from "react";
 import { useInsMutation } from "@/hooks/convex-react";
 import { useAppForm } from "@/hooks/form";
+import { getConvexErrorMessage } from "@/lib/convex-error";
 import { cn } from "@/lib/utils";
 import { PatchPhoneSchema } from "../forms/shared-form";
 
@@ -58,9 +59,7 @@ export function PhoneSection({ faculty, disabled }: PhoneSectionProps) {
 				});
 			} catch (submitError) {
 				setError(
-					submitError instanceof Error
-						? submitError.message
-						: "Failed to update phone number",
+					getConvexErrorMessage(submitError, "Failed to update phone number"),
 				);
 			}
 		},

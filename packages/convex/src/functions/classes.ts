@@ -1,7 +1,6 @@
-import { ConvexError } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { insMutation, insQuery } from "./helpers/customFunctions";
-import { ERROR_CODES } from "./helpers/errors";
+import { ERROR_CODES, throwAppError } from "./helpers/errors";
 import * as Class from "./model/class";
 import * as Program from "./model/program";
 import { vv } from "./schema";
@@ -21,7 +20,7 @@ export const create = insMutation({
 		);
 
 		if (!program) {
-			throw new ConvexError(ERROR_CODES.PROGRAM.NOT_FOUND.message);
+			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
 		}
 
 		return await Class.create(ctx, {
@@ -48,7 +47,7 @@ export const list = insQuery({
 		);
 
 		if (!program) {
-			throw new ConvexError(ERROR_CODES.PROGRAM.NOT_FOUND.message);
+			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
 		}
 
 		return await Class.list(ctx, {
@@ -70,7 +69,7 @@ export const getById = insQuery({
 		const cls = await Class.getById(ctx, args.id);
 
 		if (!cls) {
-			throw new ConvexError(ERROR_CODES.CLASS.NOT_FOUND.message);
+			throwAppError(ERROR_CODES.CLASS.NOT_FOUND);
 		}
 
 		const program = await Program.getById(
@@ -80,7 +79,7 @@ export const getById = insQuery({
 		);
 
 		if (!program) {
-			throw new ConvexError(ERROR_CODES.CLASS.NOT_FOUND.message);
+			throwAppError(ERROR_CODES.CLASS.NOT_FOUND);
 		}
 
 		return Class.toDto(cls);
@@ -100,7 +99,7 @@ export const updateBasicInfo = insMutation({
 		const cls = await Class.getById(ctx, args.id);
 
 		if (!cls) {
-			throw new ConvexError(ERROR_CODES.CLASS.NOT_FOUND.message);
+			throwAppError(ERROR_CODES.CLASS.NOT_FOUND);
 		}
 
 		const program = await Program.getById(
@@ -110,7 +109,7 @@ export const updateBasicInfo = insMutation({
 		);
 
 		if (!program) {
-			throw new ConvexError(ERROR_CODES.CLASS.NOT_FOUND.message);
+			throwAppError(ERROR_CODES.CLASS.NOT_FOUND);
 		}
 
 		await Class.patch(ctx, args.id, args.body);

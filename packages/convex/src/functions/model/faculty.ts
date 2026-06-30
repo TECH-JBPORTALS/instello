@@ -1,8 +1,7 @@
 import type { PaginationOptions } from "convex/server";
 import type { Infer } from "convex/values";
-import { ConvexError } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
-import { ERROR_CODES } from "../helpers/errors";
+import { ERROR_CODES, throwAppError } from "../helpers/errors";
 import { vv } from "../schema";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 
@@ -157,7 +156,7 @@ export async function create(
 	const existingEmail = await findByEmail(ctx, args.institutionId, args.email);
 
 	if (existingEmail) {
-		throw new ConvexError(ERROR_CODES.FACULTY.EMAIL_ALREADY_EXISTS);
+		throwAppError(ERROR_CODES.FACULTY.EMAIL_ALREADY_EXISTS);
 	}
 
 	const existingStaffId = await findByStaffId(
@@ -167,7 +166,7 @@ export async function create(
 	);
 
 	if (existingStaffId) {
-		throw new ConvexError(ERROR_CODES.FACULTY.STAFF_ID_ALREADY_EXISTS);
+		throwAppError(ERROR_CODES.FACULTY.STAFF_ID_ALREADY_EXISTS);
 	}
 
 	const now = Date.now();
@@ -256,7 +255,7 @@ export async function patchPersonalInfo(
 		const existing = await findByEmail(ctx, faculty.institutionId, body.email);
 
 		if (existing && existing._id !== faculty._id) {
-			throw new ConvexError(ERROR_CODES.FACULTY.EMAIL_ALREADY_EXISTS.message);
+			throwAppError(ERROR_CODES.FACULTY.EMAIL_ALREADY_EXISTS);
 		}
 	}
 
@@ -282,9 +281,7 @@ export async function patchEmployment(
 		);
 
 		if (existing && existing._id !== faculty._id) {
-			throw new ConvexError(
-				ERROR_CODES.FACULTY.STAFF_ID_ALREADY_EXISTS.message,
-			);
+			throwAppError(ERROR_CODES.FACULTY.STAFF_ID_ALREADY_EXISTS);
 		}
 	}
 
