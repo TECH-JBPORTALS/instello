@@ -2,10 +2,11 @@ import type { PaginationOptions } from "convex/server";
 import type { Infer } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
+import { slugifyName } from "../helpers/slug";
 import { vv } from "../schema";
 import * as AcademicStage from "./academicStage";
-import * as InstitutionAcademicPattern from "./institutionAcademicPattern";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
+import * as InstitutionAcademicPattern from "./institutionAcademicPattern";
 
 export const ClassStageSummarySchema = vv.object({
 	_id: vv.id("academicStages"),
@@ -16,6 +17,7 @@ export const ClassStageSummarySchema = vv.object({
 
 export const CreateBodySchema = vv.object({
 	name: vv.string(),
+	slug: vv.string(),
 	description: vv.optional(vv.string()),
 	currentHeadStageId: vv.id("academicStages"),
 });
@@ -33,6 +35,7 @@ export const PatchBasicInfoSchema = vv.object({
 export const ClassListItemSchema = vv.object({
 	_id: vv.id("classes"),
 	name: vv.string(),
+	slug: vv.string(),
 	description: vv.optional(vv.string()),
 	status: vv.union(vv.literal("inactive"), vv.literal("active")),
 	currentHeadStage: ClassStageSummarySchema,
@@ -41,6 +44,7 @@ export const ClassListItemSchema = vv.object({
 export const ClassDtoSchema = vv.object({
 	_id: vv.id("classes"),
 	name: vv.string(),
+	slug: vv.string(),
 	description: vv.optional(vv.string()),
 	isGroupsEnabled: vv.boolean(),
 	status: vv.union(vv.literal("inactive"), vv.literal("active")),
@@ -82,6 +86,7 @@ export async function toDto(
 	return {
 		_id: cls._id,
 		name: cls.name,
+		slug: cls.slug,
 		description: cls.description,
 		isGroupsEnabled: cls.isGroupsEnabled,
 		status: cls.status,
@@ -104,6 +109,7 @@ async function toListItem(
 	return {
 		_id: cls._id,
 		name: cls.name,
+		slug: cls.slug,
 		description: cls.description,
 		status: cls.status,
 		currentHeadStage: toStageSummary(stage),
@@ -140,6 +146,70 @@ export async function validateHeadStage(
 	return stage;
 }
 
+export async function findBySlug(
+	ctx: AppQueryCtx | AppMutationCtx,
+	programId: Id<"programs">,
+	slug: string,
+) {
+	return await ctx.db
+		.query("classes")
+		.withIndex("by_program_and_slug", (q) =>
+			q.eq("programId", programId).eq("slug", slug),
+		)
+		.unique();
+}
+
+export async function findByName(
+	ctx: AppQueryCtx | AppMutationCtx,
+	programId: Id<"programs">,
+	name: string,
+) {
+	const trimmedName = name.trim();
+	const classes = await ctx.db
+		.query("classes")
+		.withIndex("by_program", (q) => q.eq("programId", programId))
+		.collect();
+
+	return (
+		classes.find(
+			(cls) => cls.name.trim().toLowerCase() === trimmedName.toLowerCase(),
+		) ?? null
+	);
+}
+
+function normalizeClassSlug(slug: string): string {
+	try {
+		return slugifyName(slug);
+	} catch {
+		throwAppError(ERROR_CODES.CLASS.INVALID_SLUG);
+	}
+}
+
+export function normalizeClassSlugForCheck(slug: string): string {
+	return slugifyName(slug);
+}
+
+async function assertNameAndSlugAvailable(
+	ctx: AppMutationCtx,
+	programId: Id<"programs">,
+	args: { name: string; slug: string; excludeId?: Id<"classes"> },
+) {
+	const trimmedName = args.name.trim();
+	const slug = normalizeClassSlug(args.slug);
+
+	const existingByName = await findByName(ctx, programId, trimmedName);
+	if (existingByName && existingByName._id !== args.excludeId) {
+		throwAppError(ERROR_CODES.CLASS.NAME_ALREADY_EXISTS);
+	}
+
+	const existingBySlug = await findBySlug(ctx, programId, slug);
+	if (existingBySlug && existingBySlug._id !== args.excludeId) {
+		throwAppError(ERROR_CODES.CLASS.SLUG_ALREADY_EXISTS);
+	}
+
+	return { name: trimmedName, slug };
+}
+
 export async function create(
 	ctx: AppMutationCtx,
 	args: {
@@ -148,10 +218,15 @@ export async function create(
 	},
 ) {
 	const now = Date.now();
+	const { name, slug } = await assertNameAndSlugAvailable(ctx, args.programId, {
+		name: args.body.name,
+		slug: args.body.slug,
+	});
 
 	return await ctx.db.insert("classes", {
 		programId: args.programId,
-		name: args.body.name.trim(),
+		name,
+		slug,
 		description: args.body.description?.trim(),
 		currentHeadStageId: args.body.currentHeadStageId,
 		createdAt: now,
@@ -182,9 +257,7 @@ export async function list(
 		const filtered = result.page.filter((cls) =>
 			cls.name.toLowerCase().includes(normalizedQuery),
 		);
-		const page = await Promise.all(
-			filtered.map((cls) => toListItem(ctx, cls)),
-		);
+		const page = await Promise.all(filtered.map((cls) => toListItem(ctx, cls)));
 
 		return {
 			page,
@@ -231,9 +304,24 @@ export async function patch(
 	ctx: AppMutationCtx,
 	id: Id<"classes">,
 	body: Infer<typeof PatchBasicInfoSchema>,
+	cls: Doc<"classes">,
 ) {
-	return await ctx.db.patch("classes", id, {
-		...body,
+	const updates: Partial<Doc<"classes">> = {
 		updatedAt: Date.now(),
-	});
+	};
+
+	if (body.description !== undefined) {
+		updates.description = body.description.trim();
+	}
+
+	if (body.name !== undefined) {
+		const { name } = await assertNameAndSlugAvailable(
+			ctx,
+			cls.programId as Id<"programs">,
+			{ name: body.name, slug: cls.slug, excludeId: id },
+		);
+		updates.name = name;
+	}
+
+	return await ctx.db.patch("classes", id, updates);
 }

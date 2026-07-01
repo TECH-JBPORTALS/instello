@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from "@instello/convex/api";
-import type { Id } from "@instello/convex/dataModel";
+import { Badge } from "@instello/ui/components/badge";
 import { Button } from "@instello/ui/components/button";
 import {
 	Select,
@@ -12,20 +12,25 @@ import {
 	SelectValue,
 } from "@instello/ui/components/select";
 import { Skeleton } from "@instello/ui/components/skeleton";
+import { Spinner } from "@instello/ui/components/spinner";
 import { IconPlus } from "@tabler/icons-react";
 import { isEmpty, isUndefined } from "lodash";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { ClassAvatar } from "@/features/classes/class-avatar";
 import { NewClassDialog } from "@/features/classes/new-class-dialog";
 import { useInsQuery } from "@/hooks/convex-react";
+import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
-import { ClassAvatar } from "@/features/classes/class-avatar";
+import { classPath } from "@/lib/class-path";
+import { getClassSegment } from "@/lib/sidebar-mode";
 
 export function ClassSwitcher() {
+	const router = useRouter();
+	const pathname = usePathname();
 	const programAlias = useProgramAlias();
+	const classSlug = useClassSlug();
 	const program = useInsQuery(api.programs.getByAlias, { alias: programAlias });
-	const [selectedClassId, setSelectedClassId] = useState<Id<"classes"> | null>(
-		null,
-	);
 	const [createOpen, setCreateOpen] = useState(false);
 	const [selectOpen, setSelectOpen] = useState(false);
 	const classes = useInsQuery(
@@ -34,8 +39,18 @@ export function ClassSwitcher() {
 	);
 
 	if (isUndefined(program) || isUndefined(classes)) {
-		return <Skeleton className="mx-2 mb-2 h-8 w-auto rounded-lg" />;
+		return (
+			<Skeleton className="h-8 border w-auto text-xs text-muted-foreground flex items-center gap-2 px-2">
+				<Spinner className="size-3" />
+				Loading classes...
+			</Skeleton>
+		);
 	}
+
+	const selectedClass = classSlug
+		? classes.find((cls) => cls.slug === classSlug)
+		: undefined;
+	const currentSegment = getClassSegment(pathname) ?? "students";
 
 	return (
 		<div>
@@ -43,24 +58,33 @@ export function ClassSwitcher() {
 				open={createOpen}
 				setOpen={setCreateOpen}
 				programId={program._id}
-				onCreated={(classId) => {
-					setSelectedClassId(classId);
-				}}
+				programAlias={programAlias}
 			/>
 			<Select
 				open={selectOpen}
 				onOpenChange={setSelectOpen}
-				value={selectedClassId ?? null}
+				value={selectedClass?.slug ?? null}
 				onValueChange={(value) => {
-					setSelectedClassId(value ? (value as Id<"classes">) : null);
+					if (!value) return;
+					router.push(classPath(programAlias, value, currentSegment));
 				}}
 			>
 				<SelectTrigger className="w-full">
 					<SelectValue placeholder="Select class">
 						<ClassAvatar size="sm" />
-						{selectedClassId
-							? classes.find((cls) => cls._id === selectedClassId)?.name
-							: "Select a class"}
+						{selectedClass?.name ? (
+							<>
+								<span>{selectedClass.name}</span>
+								<Badge
+									variant={"outline"}
+									className="text-muted-foreground uppercase text-xs!"
+								>
+									{selectedClass.currentHeadStage.alias}
+								</Badge>
+							</>
+						) : (
+							"Select a class"
+						)}
 					</SelectValue>
 				</SelectTrigger>
 				<SelectContent>
@@ -70,9 +94,15 @@ export function ClassSwitcher() {
 						</SelectItem>
 					) : (
 						classes.map((cls) => (
-							<SelectItem key={cls._id} value={cls._id}>
+							<SelectItem key={cls._id} value={cls.slug}>
 								<ClassAvatar size="sm" />
 								{cls.name}
+								<Badge
+									variant={"outline"}
+									className="text-muted-foreground uppercase text-xs!"
+								>
+									{cls.currentHeadStage.alias}
+								</Badge>
 							</SelectItem>
 						))
 					)}

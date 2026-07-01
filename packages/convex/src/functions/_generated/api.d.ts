@@ -17,6 +17,7 @@ import type * as helpers_academicPatternTemplates from "../helpers/academicPatte
 import type * as helpers_auth from "../helpers/auth.js";
 import type * as helpers_constants from "../helpers/constants.js";
 import type * as helpers_customFunctions from "../helpers/customFunctions.js";
+import type * as helpers_slug from "../helpers/slug.js";
 import type * as helpers_utils from "../helpers/utils.js";
 import type * as http from "../http.js";
 import type * as institutions from "../institutions.js";
@@ -54,6 +55,7 @@ declare const fullApi: ApiFromModules<{
   "helpers/auth": typeof helpers_auth;
   "helpers/constants": typeof helpers_constants;
   "helpers/customFunctions": typeof helpers_customFunctions;
+  "helpers/slug": typeof helpers_slug;
   "helpers/utils": typeof helpers_utils;
   http: typeof http;
   institutions: typeof institutions;

@@ -19,7 +19,7 @@ import { ProgramAvatar } from "@/features/programs/program-avatar";
 import { useInsQuery, useInstitutionSlug } from "@/hooks/convex-react";
 import { useProgramAlias } from "@/hooks/use-program-alias";
 import { programPath } from "@/lib/program-path";
-import { getProgramSegment } from "@/lib/sidebar-mode";
+import { getProgramSegment, getSidebarMode } from "@/lib/sidebar-mode";
 
 export function ProgramSwitcher() {
 	const router = useRouter();
@@ -46,6 +46,10 @@ export function ProgramSwitcher() {
 			onValueChange={(value) => {
 				if (!value || value === "__all__") {
 					router.push("/programs");
+					return;
+				}
+				if (getSidebarMode(pathname) === "class") {
+					router.push(programPath(value, "classes"));
 					return;
 				}
 				router.push(

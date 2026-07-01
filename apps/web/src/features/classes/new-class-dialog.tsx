@@ -2,6 +2,7 @@
 
 import { api } from "@instello/convex/api";
 import type { Id } from "@instello/convex/dataModel";
+import { ERROR_CODES } from "@instello/convex/errors";
 import {
 	Alert,
 	AlertDescription,
@@ -26,6 +27,11 @@ import {
 } from "@instello/ui/components/field";
 import { Input } from "@instello/ui/components/input";
 import {
+	InputGroup,
+	InputGroupAddon,
+	InputGroupInput,
+} from "@instello/ui/components/input-group";
+import {
 	Select,
 	SelectContent,
 	SelectItem,
@@ -33,24 +39,39 @@ import {
 	SelectValue,
 } from "@instello/ui/components/select";
 import { Textarea } from "@instello/ui/components/textarea";
-import { IconAlertCircle } from "@tabler/icons-react";
+import { IconAlertCircle, IconCircleCheckFilled } from "@tabler/icons-react";
 import { revalidateLogic, useForm } from "@tanstack/react-form-nextjs";
+import { useConvex } from "convex/react";
 import { ConvexError } from "convex/values";
-import { useEffect, useMemo, useState } from "react";
-import { useInsMutation, useInsQuery } from "@/hooks/convex-react";
-import { NewClassSchema } from "./shared-form";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import * as v from "valibot";
+import {
+	useInsMutation,
+	useInsQuery,
+	useInstitutionSlug,
+} from "@/hooks/convex-react";
+import { classPath } from "@/lib/class-path";
+import { slugifyName } from "@/lib/slugify";
+import { protocol } from "@/lib/utils";
+import { ClassSlugSchema, NewClassSchema } from "./shared-form";
 
 export function NewClassDialog({
 	open,
 	setOpen,
 	programId,
+	programAlias,
 	onCreated,
 }: {
 	open: boolean;
 	setOpen: (open: boolean) => void;
 	programId: Id<"programs">;
-	onCreated?: (classId: Id<"classes">) => void;
+	programAlias?: string;
+	onCreated?: (slug: string) => void;
 }) {
+	const router = useRouter();
+	const institutionSlug = useInstitutionSlug();
+	const convex = useConvex();
 	const createClass = useInsMutation(api.classes.create);
 	const adoptedPattern = useInsQuery(
 		api.academicPatterns.getAdoptedForActiveInstitution,
@@ -58,6 +79,7 @@ export function NewClassDialog({
 	);
 	const [globalError, setGlobalError] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const slugManuallyEditedRef = useRef(false);
 
 	const sortedStages = useMemo(() => {
 		if (!adoptedPattern?.stages) return [];
@@ -67,10 +89,12 @@ export function NewClassDialog({
 	}, [adoptedPattern?.stages]);
 
 	const defaultStageId = sortedStages[0]?._id ?? ("" as const);
+	const slugPathPrefix = programAlias ? `/p/${programAlias}/c/` : "/p/…/c/";
 
 	const form = useForm({
 		defaultValues: {
 			name: "",
+			slug: "",
 			description: "",
 			currentHeadStageId: "" as string,
 		},
@@ -83,10 +107,13 @@ export function NewClassDialog({
 			setIsSubmitting(true);
 
 			try {
-				const classId = await createClass({
+				const trimmedName = value.name.trim();
+				const trimmedSlug = value.slug.trim();
+				await createClass({
 					programId,
 					body: {
-						name: value.name.trim(),
+						name: trimmedName,
+						slug: trimmedSlug,
 						description: value.description.trim() || undefined,
 						currentHeadStageId:
 							value.currentHeadStageId as Id<"academicStages">,
@@ -94,8 +121,12 @@ export function NewClassDialog({
 				});
 
 				form.reset();
+				slugManuallyEditedRef.current = false;
 				setOpen(false);
-				onCreated?.(classId);
+				onCreated?.(trimmedSlug);
+				if (programAlias) {
+					router.push(classPath(programAlias, trimmedSlug, "students"));
+				}
 			} catch (error) {
 				setGlobalError(
 					error instanceof ConvexError
@@ -111,6 +142,7 @@ export function NewClassDialog({
 	useEffect(() => {
 		if (!open) {
 			form.reset();
+			slugManuallyEditedRef.current = false;
 			setGlobalError(null);
 			return;
 		}
@@ -160,10 +192,40 @@ export function NewClassDialog({
 					}}
 				>
 					<FieldGroup>
-						<form.Field name="name">
+						<form.Field
+							name="name"
+							validators={{
+								onChangeAsync: async ({ value }) => {
+									const name = value.trim();
+									if (!name) return undefined;
+
+									const { available } = await convex.query(
+										api.classes.checkName,
+										{ slug: institutionSlug, programId, name },
+									);
+
+									if (!available) {
+										return ERROR_CODES.CLASS.NAME_ALREADY_EXISTS.message;
+									}
+
+									return undefined;
+								},
+								onChangeAsyncDebounceMs: 500,
+							}}
+						>
 							{(field) => {
-								const isInvalid =
-									field.state.meta.isTouched && !field.state.meta.isValid;
+								const showErrors =
+									field.state.meta.isTouched ||
+									field.state.meta.errors.length > 0;
+								const isInvalid = showErrors && !field.state.meta.isValid;
+								const name = field.state.value.trim();
+								const isChecking = field.state.meta.isValidating;
+								const showAvailable =
+									name.length > 0 &&
+									field.state.meta.isDirty &&
+									!isChecking &&
+									field.state.meta.isValid;
+
 								return (
 									<Field data-invalid={isInvalid}>
 										<FieldLabel htmlFor={field.name}>Name</FieldLabel>
@@ -172,13 +234,133 @@ export function NewClassDialog({
 											name={field.name}
 											value={field.state.value}
 											onBlur={field.handleBlur}
-											onChange={(e) => field.handleChange(e.target.value)}
+											onChange={(e) => {
+												const nextName = e.target.value;
+												field.handleChange(nextName);
+
+												if (!slugManuallyEditedRef.current) {
+													form.setFieldValue("slug", slugifyName(nextName));
+												}
+											}}
 											placeholder="e.g. 2026 Batch"
 											disabled={noPattern || isSubmitting}
 											aria-invalid={isInvalid}
 										/>
 										{isInvalid && (
-											<FieldError errors={field.state.meta.errors} />
+											<FieldError
+												errors={field.state.meta.errors.map((error) =>
+													typeof error === "string"
+														? { message: error }
+														: error,
+												)}
+											/>
+										)}
+										{isChecking && name.length > 0 && (
+											<FieldDescription>
+												Checking availability…
+											</FieldDescription>
+										)}
+										{showAvailable && !isInvalid && (
+											<FieldDescription className="flex items-center-safe gap-0.5 text-success">
+												<IconCircleCheckFilled className="size-4" />
+												<span>This name is available</span>
+											</FieldDescription>
+										)}
+									</Field>
+								);
+							}}
+						</form.Field>
+
+						<form.Field
+							name="slug"
+							validators={{
+								onChange: ClassSlugSchema,
+								onChangeAsync: async ({ value }) => {
+									const classSlug = value.trim();
+									if (!classSlug) return undefined;
+
+									const parsed = v.safeParse(ClassSlugSchema, classSlug);
+									if (!parsed.success) return undefined;
+
+									const { available } = await convex.query(
+										api.classes.checkSlug,
+										{
+											slug: institutionSlug,
+											programId,
+											classSlug,
+										},
+									);
+
+									if (!available) {
+										return ERROR_CODES.CLASS.SLUG_ALREADY_EXISTS.message;
+									}
+
+									return undefined;
+								},
+								onChangeAsyncDebounceMs: 500,
+							}}
+						>
+							{(field) => {
+								const showErrors =
+									field.state.meta.isTouched ||
+									field.state.meta.errors.length > 0;
+								const isInvalid = showErrors && !field.state.meta.isValid;
+								const classSlug = field.state.value.trim();
+								const isChecking = field.state.meta.isValidating;
+								const showAvailable =
+									classSlug.length > 0 &&
+									field.state.meta.isDirty &&
+									!isChecking &&
+									field.state.meta.isValid;
+
+								return (
+									<Field data-invalid={isInvalid}>
+										<FieldLabel htmlFor={field.name}>Class slug</FieldLabel>
+										<InputGroup>
+											<InputGroupAddon align="inline-start">
+												{protocol}://{window.location.host}
+												{slugPathPrefix}
+											</InputGroupAddon>
+											<InputGroupInput
+												id={field.name}
+												name={field.name}
+												value={field.state.value}
+												onBlur={field.handleBlur}
+												onChange={(e) => {
+													slugManuallyEditedRef.current = true;
+													field.handleChange(e.target.value);
+												}}
+												placeholder="2026-batch"
+												disabled={noPattern || isSubmitting}
+												aria-invalid={isInvalid}
+												autoComplete="off"
+											/>
+										</InputGroup>
+										{isInvalid && (
+											<FieldError
+												errors={field.state.meta.errors.map((error) =>
+													typeof error === "string"
+														? { message: error }
+														: error,
+												)}
+											/>
+										)}
+										{isChecking && classSlug.length > 0 && (
+											<FieldDescription>
+												Checking availability…
+											</FieldDescription>
+										)}
+										{showAvailable && !isInvalid && (
+											<FieldDescription className="flex items-center-safe gap-0.5 text-success">
+												<IconCircleCheckFilled className="size-4" />
+												<span>This slug is available</span>
+											</FieldDescription>
+										)}
+										{!isChecking && !showAvailable && !isInvalid && (
+											<FieldDescription>
+												Lowercase letters, numbers, and hyphens only. Must be
+												unique within this program.
+											</FieldDescription>
 										)}
 									</Field>
 								);

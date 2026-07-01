@@ -26,7 +26,7 @@ export function InstitutionSidebar() {
 	return (
 		<Sidebar>
 			<AppSidebarHeader />
-			<SidebarAnimatedContent>
+			<SidebarAnimatedContent mode="institution">
 				<SidebarContent>
 					{mainNavSections.map((section) => (
 						<SidebarGroup key={section.label ?? "main"}>

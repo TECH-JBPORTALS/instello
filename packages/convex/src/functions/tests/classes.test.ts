@@ -52,6 +52,7 @@ describe("classes.create", () => {
 				programId: programs.ce._id,
 				body: createClassBody(academicAdoptions.ins2FirstStage._id, {
 					name: "Class 2",
+					slug: "class-2",
 					description: "Class 2 description",
 					currentHeadStageId: academicAdoptions.ins2FirstStage._id,
 				}),
@@ -67,16 +68,45 @@ describe("classes.create", () => {
 			expect(classes).toMatchObject([
 				{
 					name: "Class 1",
+					slug: "class-1",
 					description: "Class 1 description",
 					currentHeadStageId: academicAdoptions.ins1FirstStage._id,
 				},
 				{
 					name: "Class 2",
+					slug: "class-2",
 					description: "Class 2 description",
 					currentHeadStageId: academicAdoptions.ins2FirstStage._id,
 				},
 			]);
 		});
+	});
+
+	test("rejects duplicate class name in same program", async ({
+		user1,
+		ins1,
+		programs,
+		academicAdoptions,
+		asOwner,
+	}) => {
+		await asOwner(user1, ins1).mutation(
+			api.classes.create,
+			withSlug(ins1, {
+				programId: programs.me._id,
+				body: createClassBody(academicAdoptions.ins1FirstStage._id),
+			}),
+		);
+
+		await expectAppError(
+			asOwner(user1, ins1).mutation(
+				api.classes.create,
+				withSlug(ins1, {
+					programId: programs.me._id,
+					body: createClassBody(academicAdoptions.ins1FirstStage._id),
+				}),
+			),
+			ERROR_CODES.CLASS.NAME_ALREADY_EXISTS,
+		);
 	});
 
 	test("rejects program from another institution", async ({
@@ -249,6 +279,7 @@ describe("classes.getById", () => {
 			const clsId = await ctx.db.insert("classes", {
 				programId: programs.me._id,
 				name: "Class 1",
+				slug: "class-1",
 				description: "Class 1 description",
 				isGroupsEnabled: false,
 				currentHeadStageId: academicAdoptions.ins1FirstStage._id,
@@ -338,6 +369,7 @@ describe("classes.updateBasicInfo", () => {
 			const clsId = await ctx.db.insert("classes", {
 				programId: programs.me._id,
 				name: "Class 1",
+				slug: "class-1",
 				description: "Class 1 description",
 				isGroupsEnabled: false,
 				currentHeadStageId: academicAdoptions.ins1FirstStage._id,
@@ -382,7 +414,121 @@ describe("classes.updateBasicInfo", () => {
 
 		expect(patchedClass).toMatchObject({
 			name: "Class 1 Updated",
+			slug: classes.class1.slug,
 			description: classes.class1.description,
 		});
+	});
+});
+
+describe("classes.checkName", () => {
+	const test = classTest();
+
+	test("returns available for unused name", async ({
+		ins1,
+		programs,
+		asOwner,
+	}) => {
+		const result = await asOwner({ _id: ins1.userId }, ins1).query(
+			api.classes.checkName,
+			withSlug(ins1, {
+				programId: programs.me._id,
+				name: "Unique Class",
+			}),
+		);
+
+		expect(result).toEqual({ available: true });
+	});
+
+	test("returns unavailable for existing name", async ({
+		ins1,
+		programs,
+		classes,
+		asOwner,
+	}) => {
+		const result = await asOwner({ _id: ins1.userId }, ins1).query(
+			api.classes.checkName,
+			withSlug(ins1, {
+				programId: programs.me._id,
+				name: classes.class1.name,
+			}),
+		);
+
+		expect(result).toEqual({ available: false });
+	});
+});
+
+describe("classes.checkSlug", () => {
+	const test = classTest();
+
+	test("returns available for unused slug", async ({
+		ins1,
+		programs,
+		asOwner,
+	}) => {
+		const result = await asOwner({ _id: ins1.userId }, ins1).query(
+			api.classes.checkSlug,
+			withSlug(ins1, {
+				programId: programs.me._id,
+				classSlug: "unique-class",
+			}),
+		);
+
+		expect(result).toEqual({ available: true });
+	});
+
+	test("returns unavailable for existing slug", async ({
+		ins1,
+		programs,
+		classes,
+		asOwner,
+	}) => {
+		const result = await asOwner({ _id: ins1.userId }, ins1).query(
+			api.classes.checkSlug,
+			withSlug(ins1, {
+				programId: programs.me._id,
+				classSlug: classes.class1.slug,
+			}),
+		);
+
+		expect(result).toEqual({ available: false });
+	});
+});
+
+describe("classes.getBySlug", () => {
+	const test = classTest();
+
+	test("gets class by slug", async ({
+		user1,
+		ins1,
+		programs,
+		classes,
+		asOwner,
+	}) => {
+		const cls = await asOwner(user1, ins1).query(
+			api.classes.getBySlug,
+			withSlug(ins1, {
+				programId: programs.me._id,
+				classSlug: classes.class1.slug,
+			}),
+		);
+
+		expect(cls).toMatchObject({
+			_id: classes.class1._id,
+			name: classes.class1.name,
+			slug: classes.class1.slug,
+		});
+	});
+
+	test("rejects unknown slug", async ({ user1, ins1, programs, asOwner }) => {
+		await expectAppError(
+			asOwner(user1, ins1).query(
+				api.classes.getBySlug,
+				withSlug(ins1, {
+					programId: programs.me._id,
+					classSlug: "unknown-class",
+				}),
+			),
+			ERROR_CODES.CLASS.NOT_FOUND,
+		);
 	});
 });

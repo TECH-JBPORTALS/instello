@@ -3,6 +3,7 @@ import { SidebarInset, SidebarProvider } from "@instello/ui/components/sidebar";
 import type { Metadata } from "next";
 import { WorkspaceLoading } from "@/components/common/workspace-loading";
 import { SyncActiveInstitution } from "@/components/sidebars/institution-sidebar/sync-active-institution";
+import { SidebarLayoutClient } from "@/components/sidebars/sidebar-layout-client";
 
 export async function generateMetadata({
 	params,
@@ -31,7 +32,7 @@ export default function Layout({
 		<ConvexBetterAuthGuard loadingComponent={<WorkspaceLoading />}>
 			<SidebarProvider>
 				<SyncActiveInstitution />
-				{sidebar}
+				<SidebarLayoutClient sidebar={sidebar} />
 				<SidebarInset>{children}</SidebarInset>
 			</SidebarProvider>
 		</ConvexBetterAuthGuard>

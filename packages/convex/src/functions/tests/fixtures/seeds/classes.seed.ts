@@ -27,6 +27,7 @@ export async function seedClasses(
 	const class1Id = await ctx.db.insert("classes", {
 		programId: args.program1Id,
 		name: CLASS_1.name,
+		slug: CLASS_1.slug,
 		description: CLASS_1.description,
 		currentHeadStageId: args.program1FirstStageId,
 		createdAt: now,
@@ -38,6 +39,7 @@ export async function seedClasses(
 	const class2Id = await ctx.db.insert("classes", {
 		programId: args.program1Id,
 		name: CLASS_2.name,
+		slug: CLASS_2.slug,
 		description: CLASS_2.description,
 		currentHeadStageId: args.program1SecondStageId,
 		createdAt: now,
@@ -49,6 +51,7 @@ export async function seedClasses(
 	const class3Id = await ctx.db.insert("classes", {
 		programId: args.program2Id,
 		name: CLASS_3.name,
+		slug: CLASS_3.slug,
 		description: CLASS_3.description,
 		currentHeadStageId: args.program2FirstStageId,
 		createdAt: now,

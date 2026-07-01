@@ -22,19 +22,24 @@ import {
 import { Skeleton } from "@instello/ui/components/skeleton";
 import { IconPlus, IconUsersGroup } from "@tabler/icons-react";
 import { isEmpty } from "lodash";
+import Link from "next/link";
 import { useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useInsPaginatedQuery } from "@/hooks/convex-react";
+import { useProgramAlias } from "@/hooks/use-program-alias";
+import { classPath } from "@/lib/class-path";
+import { ClassAvatar } from "./class-avatar";
 import { CLASS_LIST_PAGE_SIZE } from "./constants";
 import { NewClassDialog } from "./new-class-dialog";
-import { ClassAvatar } from "./class-avatar";
 
 function ClassesListEmpty({
 	searchQuery,
 	programId,
+	programAlias,
 }: {
 	searchQuery: string;
 	programId: Id<"programs">;
+	programAlias: string;
 }) {
 	const [open, setOpen] = useState(false);
 
@@ -61,7 +66,12 @@ function ClassesListEmpty({
 					</Button>
 				</EmptyContent>
 			)}
-			<NewClassDialog open={open} setOpen={setOpen} programId={programId} />
+			<NewClassDialog
+				open={open}
+				setOpen={setOpen}
+				programId={programId}
+				programAlias={programAlias}
+			/>
 		</Empty>
 	);
 }
@@ -91,6 +101,7 @@ export function ClassesList({
 	searchQuery: string;
 	programId: Id<"programs">;
 }) {
+	const programAlias = useProgramAlias();
 	const trimmedQuery = searchQuery.trim();
 	const { results, status, loadMore, isLoading } = useInsPaginatedQuery(
 		api.classes.list,
@@ -106,7 +117,13 @@ export function ClassesList({
 	}
 
 	if (isEmpty(results)) {
-		return <ClassesListEmpty searchQuery={searchQuery} programId={programId} />;
+		return (
+			<ClassesListEmpty
+				searchQuery={searchQuery}
+				programId={programId}
+				programAlias={programAlias}
+			/>
+		);
 	}
 
 	return (
@@ -120,6 +137,9 @@ export function ClassesList({
 				{results.map((cls) => (
 					<Item
 						key={cls._id}
+						render={
+							<Link href={classPath(programAlias, cls.slug, "students")} />
+						}
 						className="border-x-0 border-t-0 hover:bg-accent/30 last:border-b-0 relative rounded-none border-border!"
 					>
 						<ItemMedia>

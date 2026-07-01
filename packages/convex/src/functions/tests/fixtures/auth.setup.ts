@@ -22,5 +22,5 @@ export function withSlug<T extends Record<string, unknown>>(
 	institution: { slug: string },
 	args: T,
 ): T & { slug: string } {
-	return { slug: institution.slug, ...args };
+	return { ...args, slug: institution.slug };
 }

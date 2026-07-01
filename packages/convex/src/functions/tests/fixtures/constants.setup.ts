@@ -14,16 +14,19 @@ export const PROGRAM_CE = { name: "Civil Engineering", alias: "CE" } as const;
 
 export const CLASS_1 = {
 	name: "Class 1",
+	slug: "class-1",
 	description: "Class 1 description",
 } as const;
 
 export const CLASS_2 = {
 	name: "Class 2",
+	slug: "class-2",
 	description: "Class 2 description",
 } as const;
 
 export const CLASS_3 = {
 	name: "Class 3",
+	slug: "class-3",
 	description: "Class 3 description",
 } as const;
 

@@ -187,7 +187,7 @@ function FacultyListItem({ faculty, showDeactivate }: FacultyListItemProps) {
 			<Item className="relative rounded-none! border-x-0! border-t-0! border-border! last:border-b-0! hover:bg-accent/50!">
 				<Link className="absolute inset-0" href={`/faculty/${faculty._id}`} />
 				<ItemMedia variant="image">
-					<Avatar size="lg" className={"border-2 border-primary"}>
+					<Avatar size="lg">
 						{faculty.profilePicUrl && (
 							<AvatarImage src={faculty.profilePicUrl} alt={displayName} />
 						)}

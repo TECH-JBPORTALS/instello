@@ -78,7 +78,12 @@ export default function ClassesView() {
 
 			<ClassesList searchQuery={debouncedSearch} programId={program._id} />
 
-			<NewClassDialog open={open} setOpen={setOpen} programId={program._id} />
+			<NewClassDialog
+				open={open}
+				setOpen={setOpen}
+				programId={program._id}
+				programAlias={programAlias}
+			/>
 		</Container>
 	);
 }

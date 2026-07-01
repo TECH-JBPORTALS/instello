@@ -6,6 +6,103 @@ import * as Class from "./model/class";
 import * as Program from "./model/program";
 import { vv } from "./schema";
 
+/** Check if a class name is available in the current program */
+export const checkName = insQuery({
+	permissions: ["class:create"],
+	args: {
+		programId: vv.id("programs"),
+		name: vv.string(),
+	},
+	returns: vv.object({ available: vv.boolean() }),
+	handler: async (ctx, args) => {
+		const name = args.name.trim();
+		if (!name) return { available: false };
+
+		const program = await Program.getById(
+			ctx,
+			args.programId,
+			ctx.institution._id,
+		);
+
+		if (!program) {
+			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
+		}
+
+		const existing = await Class.findByName(ctx, args.programId, name);
+
+		return { available: existing === null };
+	},
+});
+
+/** Check if a class slug is available in the current program */
+export const checkSlug = insQuery({
+	permissions: ["class:create"],
+	args: {
+		programId: vv.id("programs"),
+		classSlug: vv.string(),
+	},
+	returns: vv.object({ available: vv.boolean() }),
+	handler: async (ctx, args) => {
+		const classSlug = args.classSlug.trim();
+		if (!classSlug) return { available: false };
+
+		const program = await Program.getById(
+			ctx,
+			args.programId,
+			ctx.institution._id,
+		);
+
+		if (!program) {
+			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
+		}
+
+		let normalizedSlug: string;
+		try {
+			normalizedSlug = Class.normalizeClassSlugForCheck(classSlug);
+		} catch {
+			return { available: false };
+		}
+
+		const existing = await Class.findBySlug(
+			ctx,
+			args.programId,
+			normalizedSlug,
+		);
+
+		return { available: existing === null };
+	},
+});
+
+/** Get class by slug within a program */
+export const getBySlug = insQuery({
+	permissions: ["class:view"],
+	args: {
+		programId: vv.id("programs"),
+		classSlug: vv.string(),
+	},
+	returns: Class.ClassDtoSchema,
+	handler: async (ctx, args) => {
+		const classSlug = args.classSlug.trim();
+		const program = await Program.getById(
+			ctx,
+			args.programId,
+			ctx.institution._id,
+		);
+
+		if (!program) {
+			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
+		}
+
+		const cls = await Class.findBySlug(ctx, args.programId, classSlug);
+
+		if (!cls) {
+			throwAppError(ERROR_CODES.CLASS.NOT_FOUND);
+		}
+
+		return await Class.toDto(ctx, cls);
+	},
+});
+
 /** Creates class in the current program
  * @returns class id
  */
@@ -146,7 +243,7 @@ export const updateBasicInfo = insMutation({
 			throwAppError(ERROR_CODES.CLASS.NOT_FOUND);
 		}
 
-		await Class.patch(ctx, args.id, args.body);
+		await Class.patch(ctx, args.id, args.body, cls);
 		return null;
 	},
 });

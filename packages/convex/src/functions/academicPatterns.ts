@@ -239,7 +239,6 @@ export const getByInstitution = userQuery({
 	},
 });
 
-
 /** Returns the academic pattern adopted by the active institution, if any. */
 export const getAdoptedForActiveInstitution = insQuery({
 	permissions: ["class:view"],

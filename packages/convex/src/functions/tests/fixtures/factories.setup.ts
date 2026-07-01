@@ -67,11 +67,13 @@ export const createClassBody = (
 	currentHeadStageId: Id<"academicStages">,
 	overrides?: Partial<{
 		name: string;
+		slug: string;
 		description: string;
 		currentHeadStageId: Id<"academicStages">;
 	}>,
 ) => ({
 	name: CLASS_1.name,
+	slug: CLASS_1.slug,
 	description: CLASS_1.description,
 	currentHeadStageId,
 	...overrides,

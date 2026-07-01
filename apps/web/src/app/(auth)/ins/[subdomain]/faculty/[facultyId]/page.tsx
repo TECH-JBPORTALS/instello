@@ -1,4 +1,4 @@
-import { FacultyDetailPage } from "@/features/faculty/detail-page";
+import { FacultyDetailPage } from "@/features/faculty/faculty-detail-view";
 
 export default function Page() {
 	return <FacultyDetailPage />;

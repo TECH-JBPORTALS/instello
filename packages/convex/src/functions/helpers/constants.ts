@@ -45,6 +45,18 @@ export const ERROR_CODES = {
 			code: "CLASS_NOT_FOUND",
 			message: "Class not found",
 		},
+		NAME_ALREADY_EXISTS: {
+			code: "CLASS_NAME_ALREADY_EXISTS",
+			message: "Class name already exists in this program",
+		},
+		SLUG_ALREADY_EXISTS: {
+			code: "CLASS_SLUG_ALREADY_EXISTS",
+			message: "Class slug already exists in this program",
+		},
+		INVALID_SLUG: {
+			code: "CLASS_INVALID_SLUG",
+			message: "Class slug must contain at least one alphanumeric character",
+		},
 	},
 	FACULTY: {
 		NOT_FOUND: {

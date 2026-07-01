@@ -1,7 +1,7 @@
 import type { Doc, Id } from "../../../_generated/dataModel";
+import * as AcademicStage from "../../../model/academicStage";
 import type { AppMutationCtx } from "../../../model/common.types";
 import * as InstitutionAcademicPattern from "../../../model/institutionAcademicPattern";
-import * as AcademicStage from "../../../model/academicStage";
 
 export type SeededAcademicAdoptions = {
 	ins1PatternId: Id<"academicPatterns">;
@@ -27,7 +27,9 @@ export async function seedInstitutionAcademicPatterns(
 		)
 		.collect();
 
-	const engineeringPattern = patterns.find((p) => p.templateKey === "engineering");
+	const engineeringPattern = patterns.find(
+		(p) => p.templateKey === "engineering",
+	);
 
 	if (!engineeringPattern) {
 		throw new Error("Engineering pattern not found for owner org 1");

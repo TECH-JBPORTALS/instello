@@ -113,6 +113,7 @@ const tables = {
 	classes: defineTable({
 		programId: v.string(),
 		name: v.string(),
+		slug: v.string(),
 		description: v.optional(v.string()),
 		isGroupsEnabled: v.boolean(),
 		currentHeadStageId: v.id("academicStages"),
@@ -121,6 +122,8 @@ const tables = {
 		updatedAt: v.optional(v.number()),
 	})
 		.index("by_program", ["programId"])
+		.index("by_program_and_slug", ["programId", "slug"])
+		.index("by_program_and_name", ["programId", "name"])
 		.searchIndex("search_by_name", {
 			searchField: "name",
 			filterFields: ["programId"],

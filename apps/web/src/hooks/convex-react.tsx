@@ -27,7 +27,7 @@ function withInsSlug<T extends { slug: string }>(
 	args: InsArgs<T> | undefined,
 ): T | "skip" {
 	if (args === "skip" || !slug) return "skip";
-	return { slug, ...(args ?? {}) } as T;
+	return { ...(args ?? {}), slug } as T;
 }
 
 /** Returns the institution slug from the URL */
@@ -75,7 +75,7 @@ export function useInsMutation<Mutation extends FunctionReference<"mutation">>(
 				);
 			}
 
-			return mutate({ slug, ...args } as FunctionArgs<Mutation>);
+			return mutate({ ...(args ?? {}), slug } as FunctionArgs<Mutation>);
 		},
 		[mutate, slug],
 	);
