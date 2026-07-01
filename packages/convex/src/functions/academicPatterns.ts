@@ -1,41 +1,40 @@
 import { components } from "./_generated/api";
 import { ERROR_CODES, throwAppError } from "./helpers/constants";
-import type { UserMutationCtx, UserQueryCtx } from "./helpers/customFunctions";
 import { userMutation, userQuery } from "./helpers/customFunctions";
 import * as AcademicPattern from "./model/academicPattern";
 import * as InstitutionAcademicPattern from "./model/institutionAcademicPattern";
 import * as OwnerOrganization from "./model/ownerOrganization";
 import { vv } from "./schema";
 
-async function requireOwnerOrg(ctx: UserQueryCtx | UserMutationCtx) {
-	const ownerOrg = await OwnerOrganization.getByUserId(ctx, {
-		userId: ctx.session.userId,
-	});
-
-	if (!ownerOrg) {
-		throwAppError(ERROR_CODES.OWNER_ORGANIZATION.NOT_FOUND);
-	}
-
-	return ownerOrg;
-}
-
-/** List all academic patterns for the current owner organization */
+/** Lists academic patterns belonging to the authenticated owner organization. */
 export const list = userQuery({
 	args: {},
 	returns: vv.array(AcademicPattern.AcademicPatternDtoSchema),
 	handler: async (ctx) => {
-		const ownerOrg = await requireOwnerOrg(ctx);
+		const ownerOrg = await OwnerOrganization.getByUserId(ctx, {
+			userId: ctx.session.userId,
+		});
+
+		if (!ownerOrg) {
+			throwAppError(ERROR_CODES.OWNER_ORGANIZATION.NOT_FOUND);
+		}
 
 		return await AcademicPattern.listByOwnerOrg(ctx, ownerOrg._id);
 	},
 });
 
-/** Get academic pattern by id with its stages */
+/** Returns an academic pattern and its ordered stages for the authenticated owner organization. */
 export const getById = userQuery({
 	args: { id: vv.id("academicPatterns") },
 	returns: AcademicPattern.AcademicPatternDetailDtoSchema,
 	handler: async (ctx, args) => {
-		const ownerOrg = await requireOwnerOrg(ctx);
+		const ownerOrg = await OwnerOrganization.getByUserId(ctx, {
+			userId: ctx.session.userId,
+		});
+
+		if (!ownerOrg) {
+			throwAppError(ERROR_CODES.OWNER_ORGANIZATION.NOT_FOUND);
+		}
 
 		const pattern = await AcademicPattern.getById(ctx, args.id, ownerOrg._id);
 
@@ -47,12 +46,18 @@ export const getById = userQuery({
 	},
 });
 
-/** Create a custom academic pattern with initial stages */
+/** Creates a custom academic pattern with its initial stages for the authenticated owner organization. */
 export const create = userMutation({
 	args: AcademicPattern.CreateInputSchema,
 	returns: vv.id("academicPatterns"),
 	handler: async (ctx, args) => {
-		const ownerOrg = await requireOwnerOrg(ctx);
+		const ownerOrg = await OwnerOrganization.getByUserId(ctx, {
+			userId: ctx.session.userId,
+		});
+
+		if (!ownerOrg) {
+			throwAppError(ERROR_CODES.OWNER_ORGANIZATION.NOT_FOUND);
+		}
 
 		return await AcademicPattern.create(ctx, {
 			...args,
@@ -61,7 +66,7 @@ export const create = userMutation({
 	},
 });
 
-/** Update pattern name and description (always allowed) */
+/** Updates pattern name and description. Allowed even when core structure is locked. */
 export const patchMetadata = userMutation({
 	args: {
 		id: vv.id("academicPatterns"),
@@ -69,7 +74,13 @@ export const patchMetadata = userMutation({
 	},
 	returns: vv.null(),
 	handler: async (ctx, args) => {
-		const ownerOrg = await requireOwnerOrg(ctx);
+		const ownerOrg = await OwnerOrganization.getByUserId(ctx, {
+			userId: ctx.session.userId,
+		});
+
+		if (!ownerOrg) {
+			throwAppError(ERROR_CODES.OWNER_ORGANIZATION.NOT_FOUND);
+		}
 
 		const pattern = await AcademicPattern.getById(ctx, args.id, ownerOrg._id);
 
@@ -83,7 +94,10 @@ export const patchMetadata = userMutation({
 	},
 });
 
-/** Update pattern core fields (only when canBeEdited is true) */
+/**
+ * Updates system type and/or duration for an editable pattern.
+ * Resyncs stages when either core field changes.
+ */
 export const patchCore = userMutation({
 	args: {
 		id: vv.id("academicPatterns"),
@@ -91,7 +105,13 @@ export const patchCore = userMutation({
 	},
 	returns: vv.null(),
 	handler: async (ctx, args) => {
-		const ownerOrg = await requireOwnerOrg(ctx);
+		const ownerOrg = await OwnerOrganization.getByUserId(ctx, {
+			userId: ctx.session.userId,
+		});
+
+		if (!ownerOrg) {
+			throwAppError(ERROR_CODES.OWNER_ORGANIZATION.NOT_FOUND);
+		}
 
 		const pattern = await AcademicPattern.getById(ctx, args.id, ownerOrg._id);
 
@@ -105,7 +125,7 @@ export const patchCore = userMutation({
 	},
 });
 
-/** Adopt an academic pattern for an institution owned by the current user */
+/** Adopts an academic pattern for an institution and locks the pattern core structure. */
 export const adopt = userMutation({
 	args: {
 		institutionId: vv.string(),
@@ -113,7 +133,13 @@ export const adopt = userMutation({
 	},
 	returns: vv.id("institutionAcademicPatterns"),
 	handler: async (ctx, args) => {
-		const ownerOrg = await requireOwnerOrg(ctx);
+		const ownerOrg = await OwnerOrganization.getByUserId(ctx, {
+			userId: ctx.session.userId,
+		});
+
+		if (!ownerOrg) {
+			throwAppError(ERROR_CODES.OWNER_ORGANIZATION.NOT_FOUND);
+		}
 
 		const membership = await ctx.runQuery(
 			components.betterAuth.institutions.getMembership,
@@ -135,12 +161,18 @@ export const adopt = userMutation({
 	},
 });
 
-/** Release the adopted academic pattern from an institution */
+/** Releases an institution's adopted pattern and unlocks the pattern when no adoptions remain. */
 export const release = userMutation({
 	args: { institutionId: vv.string() },
 	returns: vv.null(),
 	handler: async (ctx, args) => {
-		const ownerOrg = await requireOwnerOrg(ctx);
+		const ownerOrg = await OwnerOrganization.getByUserId(ctx, {
+			userId: ctx.session.userId,
+		});
+
+		if (!ownerOrg) {
+			throwAppError(ERROR_CODES.OWNER_ORGANIZATION.NOT_FOUND);
+		}
 
 		const membership = await ctx.runQuery(
 			components.betterAuth.institutions.getMembership,
@@ -163,12 +195,18 @@ export const release = userMutation({
 	},
 });
 
-/** Get the adopted academic pattern for an institution */
+/** Returns the academic pattern adopted by an institution, if any. */
 export const getByInstitution = userQuery({
 	args: { institutionId: vv.string() },
 	returns: vv.nullable(AcademicPattern.AcademicPatternDetailDtoSchema),
 	handler: async (ctx, args) => {
-		const ownerOrg = await requireOwnerOrg(ctx);
+		const ownerOrg = await OwnerOrganization.getByUserId(ctx, {
+			userId: ctx.session.userId,
+		});
+
+		if (!ownerOrg) {
+			throwAppError(ERROR_CODES.OWNER_ORGANIZATION.NOT_FOUND);
+		}
 
 		const membership = await ctx.runQuery(
 			components.betterAuth.institutions.getMembership,

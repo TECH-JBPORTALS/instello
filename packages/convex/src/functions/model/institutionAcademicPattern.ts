@@ -1,8 +1,9 @@
 import type { Id } from "../_generated/dataModel";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
-import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 import * as AcademicPattern from "./academicPattern";
+import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 
+/** Returns the adoption row for an institution, if one exists. */
 export async function getByInstitution(
 	ctx: AppQueryCtx,
 	institutionId: string,
@@ -13,6 +14,7 @@ export async function getByInstitution(
 		.first();
 }
 
+/** Lists all institution adoptions for a pattern. */
 export async function getByPattern(
 	ctx: AppQueryCtx,
 	academicPatternId: Id<"academicPatterns">,
@@ -25,6 +27,7 @@ export async function getByPattern(
 		.take(50);
 }
 
+/** Creates an adoption row for an institution and locks the adopted pattern. */
 export async function adopt(
 	ctx: AppMutationCtx,
 	args: {
@@ -64,6 +67,7 @@ export async function adopt(
 	return adoptionId;
 }
 
+/** Removes an institution adoption and unlocks the pattern when it has no remaining adoptions. */
 export async function release(
 	ctx: AppMutationCtx,
 	args: {

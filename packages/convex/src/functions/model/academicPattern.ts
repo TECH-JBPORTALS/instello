@@ -1,10 +1,10 @@
 import type { Infer } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
+import { DEFAULT_PATTERN_TEMPLATES } from "../helpers/academicPatternTemplates";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
-import { DEFAULT_PATTERN_TEMPLATES } from "./academicPatternTemplates";
 import { vv } from "../schema";
-import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 import * as AcademicStage from "./academicStage";
+import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 
 export const CreateInputSchema = {
 	name: vv.string(),
@@ -66,6 +66,7 @@ export type AcademicPatternDetailDto = Infer<
 	typeof AcademicPatternDetailDtoSchema
 >;
 
+/** Maps a pattern document to the list DTO, including a precomputed stage count. */
 export function toDto(
 	pattern: Doc<"academicPatterns">,
 	stageCount: number,
@@ -83,6 +84,7 @@ export function toDto(
 	};
 }
 
+/** Maps a pattern document to the detail DTO, loading ordered stages from the database. */
 export async function toDetailDto(
 	ctx: AppQueryCtx,
 	pattern: Doc<"academicPatterns">,
@@ -102,6 +104,7 @@ export async function toDetailDto(
 	};
 }
 
+/** Lists all patterns for an owner organization with stage counts. */
 export async function listByOwnerOrg(
 	ctx: AppQueryCtx,
 	ownerOrganizationId: Id<"ownerOrganizations">,
@@ -121,6 +124,10 @@ export async function listByOwnerOrg(
 	);
 }
 
+/**
+ * Loads a pattern by id.
+ * When `ownerOrganizationId` is provided, returns null if the pattern belongs to another org.
+ */
 export async function getById(
 	ctx: AppQueryCtx,
 	id: Id<"academicPatterns">,
@@ -139,6 +146,7 @@ export async function getById(
 	return pattern;
 }
 
+/** Creates a pattern and inserts its initial stages. */
 export async function create(
 	ctx: AppMutationCtx,
 	args: {
@@ -182,6 +190,7 @@ export async function create(
 	return patternId;
 }
 
+/** Updates editable pattern metadata such as name and description. */
 export async function patchMetadata(
 	ctx: AppMutationCtx,
 	id: Id<"academicPatterns">,
@@ -201,6 +210,10 @@ export async function patchMetadata(
 	await ctx.db.patch("academicPatterns", id, updates);
 }
 
+/**
+ * Updates core pattern fields when the pattern is editable.
+ * Resyncs stages when system type or duration changes.
+ */
 export async function patchCore(
 	ctx: AppMutationCtx,
 	id: Id<"academicPatterns">,
@@ -216,6 +229,14 @@ export async function patchCore(
 		throwAppError(ERROR_CODES.ACADEMIC_PATTERN.NOT_EDITABLE);
 	}
 
+	const nextSystemType = body.systemType ?? pattern.systemType;
+	const nextDurationInYears = body.durationInYears ?? pattern.durationInYears;
+	const systemTypeChanged =
+		body.systemType !== undefined && body.systemType !== pattern.systemType;
+	const durationChanged =
+		body.durationInYears !== undefined &&
+		body.durationInYears !== pattern.durationInYears;
+
 	const updates: Partial<Doc<"academicPatterns">> = { updatedAt: Date.now() };
 
 	if (body.systemType !== undefined) updates.systemType = body.systemType;
@@ -223,8 +244,18 @@ export async function patchCore(
 		updates.durationInYears = body.durationInYears;
 
 	await ctx.db.patch("academicPatterns", id, updates);
+
+	if (systemTypeChanged || durationChanged) {
+		await AcademicStage.resyncForPatternCoreChange(ctx, {
+			academicPatternId: id,
+			systemType: nextSystemType,
+			durationInYears: nextDurationInYears,
+			resetLabels: systemTypeChanged,
+		});
+	}
 }
 
+/** Locks core pattern fields after an institution adopts the pattern. */
 export async function lock(ctx: AppMutationCtx, id: Id<"academicPatterns">) {
 	const pattern = await ctx.db.get("academicPatterns", id);
 
@@ -238,6 +269,7 @@ export async function lock(ctx: AppMutationCtx, id: Id<"academicPatterns">) {
 	});
 }
 
+/** Unlocks a pattern when it is no longer adopted by any institution. */
 export async function unlockIfUnused(
 	ctx: AppMutationCtx,
 	id: Id<"academicPatterns">,
@@ -259,6 +291,9 @@ export async function unlockIfUnused(
 	});
 }
 
+/* SEEDING FUNCTIONS */
+
+/** Seeds the default engineering and diploma templates for a new owner organization. */
 export async function seedDefaults(
 	ctx: AppMutationCtx,
 	ownerOrganizationId: Id<"ownerOrganizations">,
@@ -287,6 +322,7 @@ export async function seedDefaults(
 	}
 }
 
+/** Backfills default stage names and aliases for editable seeded patterns. */
 export async function normalizeTemplateStages(
 	ctx: AppMutationCtx,
 	ownerOrganizationId: Id<"ownerOrganizations">,

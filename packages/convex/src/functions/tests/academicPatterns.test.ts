@@ -171,6 +171,172 @@ describe("academicPatterns.patchCore", () => {
 			ERROR_CODES.ACADEMIC_PATTERN.NOT_EDITABLE,
 		);
 	});
+
+	test("removes stages when duration decreases", async ({
+		user1,
+		asOwnerUser,
+	}) => {
+		const patterns = await asOwnerUser(user1).query(api.academicPatterns.list);
+		const diploma = patterns.find(
+			(pattern) => pattern.templateKey === "diploma",
+		);
+
+		expect(diploma).toBeDefined();
+
+		await asOwnerUser(user1).mutation(api.academicPatterns.patchCore, {
+			// biome-ignore lint/style/noNonNullAssertion: diploma is defined above
+			id: diploma!._id,
+			body: { durationInYears: 2 },
+		});
+
+		const detail = await asOwnerUser(user1).query(
+			api.academicPatterns.getById,
+			{
+				// biome-ignore lint/style/noNonNullAssertion: diploma is defined above
+				id: diploma!._id,
+			},
+		);
+
+		expect(detail.durationInYears).toBe(2);
+		expect(detail.stages).toHaveLength(4);
+		expect(detail.stages.at(-1)?.sequenceNumber).toBe(4);
+	});
+
+	test("adds stages when duration increases", async ({
+		user1,
+		asOwnerUser,
+	}) => {
+		const patterns = await asOwnerUser(user1).query(api.academicPatterns.list);
+		const diploma = patterns.find(
+			(pattern) => pattern.templateKey === "diploma",
+		);
+
+		expect(diploma).toBeDefined();
+
+		await asOwnerUser(user1).mutation(api.academicPatterns.patchCore, {
+			// biome-ignore lint/style/noNonNullAssertion: diploma is defined above
+			id: diploma!._id,
+			body: { durationInYears: 4 },
+		});
+
+		const detail = await asOwnerUser(user1).query(
+			api.academicPatterns.getById,
+			{
+				// biome-ignore lint/style/noNonNullAssertion: diploma is defined above
+				id: diploma!._id,
+			},
+		);
+
+		expect(detail.durationInYears).toBe(4);
+		expect(detail.stages).toHaveLength(8);
+		expect(detail.stages.at(-1)).toMatchObject({
+			name: "Semester 8",
+			alias: "s8",
+			sequenceNumber: 8,
+			yearNumber: 4,
+		});
+	});
+
+	test("preserves custom stage labels when only duration changes", async ({
+		user1,
+		asOwnerUser,
+	}) => {
+		const patterns = await asOwnerUser(user1).query(api.academicPatterns.list);
+		const diploma = patterns.find(
+			(pattern) => pattern.templateKey === "diploma",
+		);
+
+		expect(diploma).toBeDefined();
+
+		const detail = await asOwnerUser(user1).query(
+			api.academicPatterns.getById,
+			{
+				// biome-ignore lint/style/noNonNullAssertion: diploma is defined above
+				id: diploma!._id,
+			},
+		);
+		const firstStage = detail.stages[0];
+
+		expect(firstStage).toBeDefined();
+
+		await asOwnerUser(user1).mutation(api.academicStages.patchMetadata, {
+			// biome-ignore lint/style/noNonNullAssertion: first stage is defined above
+			id: firstStage!._id,
+			body: { name: "Custom Semester", alias: "custom" },
+		});
+
+		await asOwnerUser(user1).mutation(api.academicPatterns.patchCore, {
+			// biome-ignore lint/style/noNonNullAssertion: diploma is defined above
+			id: diploma!._id,
+			body: { durationInYears: 4 },
+		});
+
+		const updated = await asOwnerUser(user1).query(
+			api.academicPatterns.getById,
+			{
+				// biome-ignore lint/style/noNonNullAssertion: diploma is defined above
+				id: diploma!._id,
+			},
+		);
+
+		expect(updated.stages[0]).toMatchObject({
+			name: "Custom Semester",
+			alias: "custom",
+		});
+		expect(updated.stages.at(-1)).toMatchObject({
+			name: "Semester 8",
+			alias: "s8",
+		});
+	});
+
+	test("rebuilds stages when system type changes", async ({
+		user1,
+		asOwnerUser,
+	}) => {
+		const patterns = await asOwnerUser(user1).query(api.academicPatterns.list);
+		const diploma = patterns.find(
+			(pattern) => pattern.templateKey === "diploma",
+		);
+
+		expect(diploma).toBeDefined();
+
+		await asOwnerUser(user1).mutation(api.academicPatterns.patchCore, {
+			// biome-ignore lint/style/noNonNullAssertion: diploma is defined above
+			id: diploma!._id,
+			body: { systemType: "annual" },
+		});
+
+		const detail = await asOwnerUser(user1).query(
+			api.academicPatterns.getById,
+			{
+				// biome-ignore lint/style/noNonNullAssertion: diploma is defined above
+				id: diploma!._id,
+			},
+		);
+
+		expect(detail.systemType).toBe("annual");
+		expect(detail.stages).toHaveLength(3);
+		expect(detail.stages).toEqual([
+			expect.objectContaining({
+				name: "Year 1",
+				alias: "y1",
+				sequenceNumber: 1,
+				yearNumber: 1,
+			}),
+			expect.objectContaining({
+				name: "Year 2",
+				alias: "y2",
+				sequenceNumber: 2,
+				yearNumber: 2,
+			}),
+			expect.objectContaining({
+				name: "Year 3",
+				alias: "y3",
+				sequenceNumber: 3,
+				yearNumber: 3,
+			}),
+		]);
+	});
 });
 
 describe("academicPatterns.adopt", () => {

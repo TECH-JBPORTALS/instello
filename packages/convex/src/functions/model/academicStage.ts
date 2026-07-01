@@ -1,5 +1,6 @@
 import type { Infer } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
+import { buildStagesForPattern } from "../helpers/academicPatternTemplates";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import { vv } from "../schema";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
@@ -26,6 +27,7 @@ export const AcademicStageDtoSchema = vv.object({
 
 export type AcademicStageDto = Infer<typeof AcademicStageDtoSchema>;
 
+/** Maps a stage document to its API DTO. */
 export function toDto(stage: Doc<"academicStages">): AcademicStageDto {
 	return {
 		_id: stage._id,
@@ -38,6 +40,7 @@ export function toDto(stage: Doc<"academicStages">): AcademicStageDto {
 	};
 }
 
+/** Lists stages for a pattern ordered by sequence number. */
 export async function listByPattern(
 	ctx: AppQueryCtx,
 	academicPatternId: Id<"academicPatterns">,
@@ -51,6 +54,10 @@ export async function listByPattern(
 		.take(50);
 }
 
+/**
+ * Loads a stage by id.
+ * When `academicPatternId` is provided, returns null if the stage belongs to another pattern.
+ */
 export async function getById(
 	ctx: AppQueryCtx,
 	id: Id<"academicStages">,
@@ -66,6 +73,7 @@ export async function getById(
 	return stage;
 }
 
+/** Inserts a stage for a pattern using the default document shape. */
 export async function insertForPattern(
 	ctx: AppMutationCtx,
 	args: {
@@ -89,6 +97,7 @@ export async function insertForPattern(
 	});
 }
 
+/** Updates editable stage metadata such as name and alias. */
 export async function patchMetadata(
 	ctx: AppMutationCtx,
 	id: Id<"academicStages">,
@@ -108,23 +117,73 @@ export async function patchMetadata(
 	await ctx.db.patch("academicStages", id, updates);
 }
 
-async function ensurePatternEditable(
+/**
+ * Adds, removes, or updates stages after a pattern's core fields change.
+ * Preserves custom labels when only duration changes; resets labels when system type changes.
+ */
+export async function resyncForPatternCoreChange(
 	ctx: AppMutationCtx,
-	academicPatternId: Id<"academicPatterns">,
+	args: {
+		academicPatternId: Id<"academicPatterns">;
+		systemType: "semester" | "annual";
+		durationInYears: number;
+		resetLabels: boolean;
+	},
 ) {
-	const pattern = await ctx.db.get("academicPatterns", academicPatternId);
+	const expectedStages = buildStagesForPattern(
+		args.systemType,
+		args.durationInYears,
+	);
+	const existingStages = await listByPattern(ctx, args.academicPatternId);
+	const existingBySequence = new Map(
+		existingStages.map((stage) => [stage.sequenceNumber, stage]),
+	);
+	const expectedSequences = new Set(
+		expectedStages.map((stage) => stage.sequenceNumber),
+	);
 
-	if (!pattern) {
-		throwAppError(ERROR_CODES.ACADEMIC_PATTERN.NOT_FOUND);
+	for (const stage of existingStages) {
+		if (!expectedSequences.has(stage.sequenceNumber)) {
+			await ctx.db.delete("academicStages", stage._id);
+		}
 	}
 
-	if (!pattern.canBeEdited) {
-		throwAppError(ERROR_CODES.ACADEMIC_STAGE.NOT_EDITABLE);
-	}
+	for (const template of expectedStages) {
+		const existing = existingBySequence.get(template.sequenceNumber);
 
-	return pattern;
+		if (existing) {
+			const updates: Partial<Doc<"academicStages">> = {
+				updatedAt: Date.now(),
+			};
+
+			if (existing.yearNumber !== template.yearNumber) {
+				updates.yearNumber = template.yearNumber;
+			}
+
+			if (args.resetLabels) {
+				if (existing.name !== template.name) updates.name = template.name;
+				if (existing.alias !== template.alias)
+					updates.alias = template.alias.trim();
+			}
+
+			if (Object.keys(updates).length > 1) {
+				await ctx.db.patch("academicStages", existing._id, updates);
+			}
+
+			continue;
+		}
+
+		await insertForPattern(ctx, {
+			academicPatternId: args.academicPatternId,
+			name: template.name,
+			alias: template.alias,
+			sequenceNumber: template.sequenceNumber,
+			yearNumber: template.yearNumber,
+		});
+	}
 }
 
+/** Updates structural stage fields when the parent pattern is editable. */
 export async function patchCore(
 	ctx: AppMutationCtx,
 	id: Id<"academicStages">,
@@ -136,7 +195,15 @@ export async function patchCore(
 		throwAppError(ERROR_CODES.ACADEMIC_STAGE.NOT_FOUND);
 	}
 
-	await ensurePatternEditable(ctx, stage.academicPatternId);
+	const pattern = await ctx.db.get("academicPatterns", stage.academicPatternId);
+
+	if (!pattern) {
+		throwAppError(ERROR_CODES.ACADEMIC_PATTERN.NOT_FOUND);
+	}
+
+	if (!pattern.canBeEdited) {
+		throwAppError(ERROR_CODES.ACADEMIC_STAGE.NOT_EDITABLE);
+	}
 
 	const updates: Partial<Doc<"academicStages">> = { updatedAt: Date.now() };
 
