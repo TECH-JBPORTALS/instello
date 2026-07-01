@@ -1,15 +1,28 @@
+import { ERROR_CODES, throwAppError } from "./helpers/constants";
 import { userMutation, userQuery } from "./helpers/customFunctions";
 import * as OwnerOrganization from "./model/ownerOrganization";
 import { vv } from "./schema";
 
 /**
  *  **Create organization for current user**
- *  @returns inserted ownerOrganizatoin ID
+ *  @returns inserted ownerOrganization ID
  * */
 export const create = userMutation({
-	args: OwnerOrganization.OwnerOrgSchema,
+	args: OwnerOrganization.OwnerOrgCreateSchema,
+	returns: vv.id("ownerOrganizations"),
 	handler: async (ctx, args) => {
-		await OwnerOrganization.create(ctx, args);
+		const existing = await OwnerOrganization.getByUserId(ctx, {
+			userId: ctx.session.userId,
+		});
+
+		if (existing) {
+			throwAppError(ERROR_CODES.OWNER_ORGANIZATION.ALREADY_EXISTS);
+		}
+
+		return await OwnerOrganization.create(ctx, {
+			...args,
+			ownerId: ctx.session.userId,
+		});
 	},
 });
 

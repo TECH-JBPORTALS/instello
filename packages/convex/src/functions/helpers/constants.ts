@@ -80,6 +80,50 @@ export const ERROR_CODES = {
 			message: "You can't seed in production environment",
 		},
 	},
+	OWNER_ORGANIZATION: {
+		NOT_FOUND: {
+			code: "OWNER_ORGANIZATION_NOT_FOUND",
+			message: "Owner organization not found",
+		},
+		ALREADY_EXISTS: {
+			code: "OWNER_ORGANIZATION_ALREADY_EXISTS",
+			message: "Owner organization already exists for this user",
+		},
+	},
+	ACADEMIC_PATTERN: {
+		NOT_FOUND: {
+			code: "ACADEMIC_PATTERN_NOT_FOUND",
+			message: "Academic pattern not found",
+		},
+		NOT_EDITABLE: {
+			code: "ACADEMIC_PATTERN_NOT_EDITABLE",
+			message: "Academic pattern cannot be edited while in use",
+		},
+		IN_USE: {
+			code: "ACADEMIC_PATTERN_IN_USE",
+			message: "Academic pattern is in use by an institution",
+		},
+	},
+	ACADEMIC_STAGE: {
+		NOT_FOUND: {
+			code: "ACADEMIC_STAGE_NOT_FOUND",
+			message: "Academic stage not found",
+		},
+		NOT_EDITABLE: {
+			code: "ACADEMIC_STAGE_NOT_EDITABLE",
+			message: "Academic stage cannot be edited while its pattern is in use",
+		},
+	},
+	INSTITUTION_ACADEMIC_PATTERN: {
+		NOT_FOUND: {
+			code: "INSTITUTION_ACADEMIC_PATTERN_NOT_FOUND",
+			message: "Institution has not adopted an academic pattern",
+		},
+		ALREADY_ADOPTED: {
+			code: "INSTITUTION_ACADEMIC_PATTERN_ALREADY_ADOPTED",
+			message: "Institution has already adopted an academic pattern",
+		},
+	},
 	/** Better auth organization error codes */
 	ORGANIZATION: ORGANIZATION_ERROR_CODES,
 } as const;

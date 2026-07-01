@@ -1,0 +1,291 @@
+import type { Infer } from "convex/values";
+import type { Doc, Id } from "../_generated/dataModel";
+import { ERROR_CODES, throwAppError } from "../helpers/constants";
+import { DEFAULT_PATTERN_TEMPLATES } from "./academicPatternTemplates";
+import { vv } from "../schema";
+import type { AppMutationCtx, AppQueryCtx } from "./common.types";
+import * as AcademicStage from "./academicStage";
+
+export const CreateInputSchema = {
+	name: vv.string(),
+	description: vv.optional(vv.string()),
+	systemType: vv.union(vv.literal("semester"), vv.literal("annual")),
+	durationInYears: vv.number(),
+	stages: vv.array(
+		vv.object({
+			name: vv.string(),
+			alias: vv.string(),
+			description: vv.optional(vv.string()),
+			sequenceNumber: vv.number(),
+			yearNumber: vv.number(),
+		}),
+	),
+};
+
+export const PatchMetadataSchema = vv.object({
+	name: vv.optional(vv.string()),
+	description: vv.optional(vv.string()),
+});
+
+export const PatchCoreSchema = vv.object({
+	systemType: vv.optional(
+		vv.union(vv.literal("semester"), vv.literal("annual")),
+	),
+	durationInYears: vv.optional(vv.number()),
+});
+
+export const AcademicPatternDtoSchema = vv.object({
+	_id: vv.id("academicPatterns"),
+	name: vv.string(),
+	description: vv.optional(vv.string()),
+	systemType: vv.union(vv.literal("semester"), vv.literal("annual")),
+	durationInYears: vv.number(),
+	templateKey: vv.optional(
+		vv.union(vv.literal("engineering"), vv.literal("diploma")),
+	),
+	canBeEdited: vv.boolean(),
+	stageCount: vv.number(),
+	createdAt: vv.number(),
+});
+
+export const AcademicPatternDetailDtoSchema = vv.object({
+	_id: vv.id("academicPatterns"),
+	name: vv.string(),
+	description: vv.optional(vv.string()),
+	systemType: vv.union(vv.literal("semester"), vv.literal("annual")),
+	durationInYears: vv.number(),
+	templateKey: vv.optional(
+		vv.union(vv.literal("engineering"), vv.literal("diploma")),
+	),
+	canBeEdited: vv.boolean(),
+	createdAt: vv.number(),
+	stages: vv.array(AcademicStage.AcademicStageDtoSchema),
+});
+
+export type AcademicPatternDto = Infer<typeof AcademicPatternDtoSchema>;
+export type AcademicPatternDetailDto = Infer<
+	typeof AcademicPatternDetailDtoSchema
+>;
+
+export function toDto(
+	pattern: Doc<"academicPatterns">,
+	stageCount: number,
+): AcademicPatternDto {
+	return {
+		_id: pattern._id,
+		name: pattern.name,
+		description: pattern.description,
+		systemType: pattern.systemType,
+		durationInYears: pattern.durationInYears,
+		templateKey: pattern.templateKey,
+		canBeEdited: pattern.canBeEdited,
+		stageCount,
+		createdAt: pattern.createdAt,
+	};
+}
+
+export async function toDetailDto(
+	ctx: AppQueryCtx,
+	pattern: Doc<"academicPatterns">,
+): Promise<AcademicPatternDetailDto> {
+	const stages = await AcademicStage.listByPattern(ctx, pattern._id);
+
+	return {
+		_id: pattern._id,
+		name: pattern.name,
+		description: pattern.description,
+		systemType: pattern.systemType,
+		durationInYears: pattern.durationInYears,
+		templateKey: pattern.templateKey,
+		canBeEdited: pattern.canBeEdited,
+		createdAt: pattern.createdAt,
+		stages: stages.map(AcademicStage.toDto),
+	};
+}
+
+export async function listByOwnerOrg(
+	ctx: AppQueryCtx,
+	ownerOrganizationId: Id<"ownerOrganizations">,
+): Promise<AcademicPatternDto[]> {
+	const patterns = await ctx.db
+		.query("academicPatterns")
+		.withIndex("by_ownerOrganization", (q) =>
+			q.eq("ownerOrganizationId", ownerOrganizationId),
+		)
+		.take(50);
+
+	return await Promise.all(
+		patterns.map(async (pattern) => {
+			const stages = await AcademicStage.listByPattern(ctx, pattern._id);
+			return toDto(pattern, stages.length);
+		}),
+	);
+}
+
+export async function getById(
+	ctx: AppQueryCtx,
+	id: Id<"academicPatterns">,
+	ownerOrganizationId?: Id<"ownerOrganizations">,
+) {
+	const pattern = await ctx.db.get("academicPatterns", id);
+
+	if (!pattern) return null;
+	if (
+		ownerOrganizationId &&
+		pattern.ownerOrganizationId !== ownerOrganizationId
+	) {
+		return null;
+	}
+
+	return pattern;
+}
+
+export async function create(
+	ctx: AppMutationCtx,
+	args: {
+		ownerOrganizationId: Id<"ownerOrganizations">;
+		name: string;
+		description?: string;
+		systemType: "semester" | "annual";
+		durationInYears: number;
+		templateKey?: "engineering" | "diploma";
+		stages: Array<{
+			name: string;
+			alias: string;
+			description?: string;
+			sequenceNumber: number;
+			yearNumber: number;
+		}>;
+	},
+) {
+	const now = Date.now();
+	const patternId = await ctx.db.insert("academicPatterns", {
+		ownerOrganizationId: args.ownerOrganizationId,
+		name: args.name,
+		description: args.description,
+		systemType: args.systemType,
+		durationInYears: args.durationInYears,
+		templateKey: args.templateKey,
+		canBeEdited: true,
+		createdAt: now,
+		updatedAt: now,
+	});
+
+	for (const stage of args.stages) {
+		await AcademicStage.create(ctx, {
+			academicPatternId: patternId,
+			name: stage.name,
+			alias: stage.alias.trim(),
+			description: stage.description,
+			sequenceNumber: stage.sequenceNumber,
+			yearNumber: stage.yearNumber,
+		});
+	}
+
+	return patternId;
+}
+
+export async function patchMetadata(
+	ctx: AppMutationCtx,
+	id: Id<"academicPatterns">,
+	body: Infer<typeof PatchMetadataSchema>,
+) {
+	const pattern = await ctx.db.get("academicPatterns", id);
+
+	if (!pattern) {
+		throwAppError(ERROR_CODES.ACADEMIC_PATTERN.NOT_FOUND);
+	}
+
+	const updates: Partial<Doc<"academicPatterns">> = { updatedAt: Date.now() };
+
+	if (body.name !== undefined) updates.name = body.name;
+	if (body.description !== undefined) updates.description = body.description;
+
+	await ctx.db.patch("academicPatterns", id, updates);
+}
+
+export async function patchCore(
+	ctx: AppMutationCtx,
+	id: Id<"academicPatterns">,
+	body: Infer<typeof PatchCoreSchema>,
+) {
+	const pattern = await ctx.db.get("academicPatterns", id);
+
+	if (!pattern) {
+		throwAppError(ERROR_CODES.ACADEMIC_PATTERN.NOT_FOUND);
+	}
+
+	if (!pattern.canBeEdited) {
+		throwAppError(ERROR_CODES.ACADEMIC_PATTERN.NOT_EDITABLE);
+	}
+
+	const updates: Partial<Doc<"academicPatterns">> = { updatedAt: Date.now() };
+
+	if (body.systemType !== undefined) updates.systemType = body.systemType;
+	if (body.durationInYears !== undefined)
+		updates.durationInYears = body.durationInYears;
+
+	await ctx.db.patch("academicPatterns", id, updates);
+}
+
+export async function lock(ctx: AppMutationCtx, id: Id<"academicPatterns">) {
+	const pattern = await ctx.db.get("academicPatterns", id);
+
+	if (!pattern) {
+		throwAppError(ERROR_CODES.ACADEMIC_PATTERN.NOT_FOUND);
+	}
+
+	await ctx.db.patch("academicPatterns", id, {
+		canBeEdited: false,
+		updatedAt: Date.now(),
+	});
+}
+
+export async function unlockIfUnused(
+	ctx: AppMutationCtx,
+	id: Id<"academicPatterns">,
+) {
+	const adoption = await ctx.db
+		.query("institutionAcademicPatterns")
+		.withIndex("by_academicPattern", (q) => q.eq("academicPatternId", id))
+		.first();
+
+	if (adoption) return;
+
+	const pattern = await ctx.db.get("academicPatterns", id);
+
+	if (!pattern) return;
+
+	await ctx.db.patch("academicPatterns", id, {
+		canBeEdited: true,
+		updatedAt: Date.now(),
+	});
+}
+
+export async function seedDefaults(
+	ctx: AppMutationCtx,
+	ownerOrganizationId: Id<"ownerOrganizations">,
+) {
+	for (const template of DEFAULT_PATTERN_TEMPLATES) {
+		const existing = await ctx.db
+			.query("academicPatterns")
+			.withIndex("by_ownerOrganization_and_templateKey", (q) =>
+				q
+					.eq("ownerOrganizationId", ownerOrganizationId)
+					.eq("templateKey", template.templateKey),
+			)
+			.first();
+
+		if (existing) continue;
+
+		await create(ctx, {
+			ownerOrganizationId,
+			name: template.name,
+			description: template.description,
+			systemType: template.systemType,
+			durationInYears: template.durationInYears,
+			templateKey: template.templateKey,
+			stages: template.stages,
+		});
+	}
+}

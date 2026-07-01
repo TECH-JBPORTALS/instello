@@ -93,7 +93,7 @@ export function ProgramsList() {
 				<Item
 					key={program._id}
 					className="border-x-0 border-t-0 hover:bg-accent/30 last:border-b-0 relative rounded-none border-border!"
-					render={<Link href={programPath(program.alias)} />}
+					render={<Link href={programPath(program.alias, "/classes")} />}
 				>
 					<ItemMedia variant={"image"}>
 						<ProgramAvatar name={program.name} />
