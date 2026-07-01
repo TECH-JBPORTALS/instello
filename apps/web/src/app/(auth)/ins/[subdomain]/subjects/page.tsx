@@ -1,5 +1,5 @@
-import { PlaceholderPage } from "@/components/common/placeholder-page";
+import SubjectsView from "@/features/subjects/subjects-view";
 
 export default function Page() {
-	return <PlaceholderPage title="Subjects" />;
+	return <SubjectsView />;
 }

@@ -99,3 +99,39 @@ export const EXPECTED_PROGRAMS_INS1 = [
 		user: { name: OWNER_1_NAME },
 	},
 ];
+
+export const SUBJECT_MATH = {
+	name: "Mathematics",
+	code: "14MAT01T",
+	alias: "mathematics",
+	color: "#3B82F6",
+} as const;
+
+export const SUBJECT_APPLIED_SCIENCE = {
+	name: "Applied Science",
+	code: "15CSE09T",
+	alias: "applied-science",
+	color: "#F97316",
+} as const;
+
+export const SUBJECT_PHYSICS = {
+	name: "Physics",
+	code: "14PHY01T",
+	alias: "physics",
+	color: "#22C55E",
+} as const;
+
+export const EXPECTED_SUBJECTS_INS1 = [
+	{
+		name: SUBJECT_APPLIED_SCIENCE.name,
+		code: SUBJECT_APPLIED_SCIENCE.code,
+		alias: SUBJECT_APPLIED_SCIENCE.alias,
+		status: "active" as const,
+	},
+	{
+		name: SUBJECT_MATH.name,
+		code: SUBJECT_MATH.code,
+		alias: SUBJECT_MATH.alias,
+		status: "active" as const,
+	},
+];

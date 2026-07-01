@@ -4,6 +4,7 @@ import {
 	FACULTY_PHONE,
 	FACULTY_STAFF_ID,
 	PROGRAM_CS,
+	SUBJECT_MATH,
 } from "./constants.setup";
 
 export const createFacultyInput = (
@@ -42,6 +43,24 @@ export const createProgramInput = (
 	alias: PROGRAM_CS.alias,
 	...overrides,
 });
+
+export const createSubjectInput = (
+	overrides?: Partial<{
+		name: string;
+		code: string;
+		alias: string;
+		color: string;
+		description: string;
+	}>,
+) => ({
+	name: SUBJECT_MATH.name,
+	code: SUBJECT_MATH.code,
+	alias: SUBJECT_MATH.alias,
+	color: SUBJECT_MATH.color,
+	...overrides,
+});
+
+export type CreateSubjectInput = ReturnType<typeof createSubjectInput>;
 
 export const createClassBody = (
 	overrides?: Partial<{

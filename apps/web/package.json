@@ -27,6 +27,7 @@
 		"papaparse": "^5.5.4",
 		"react": "catalog:",
 		"react-dom": "catalog:",
+		"react-infinite-scroll-component": "^7.2.1",
 		"tailwind-merge": "^3.6.0",
 		"valibot": "^1.4.1",
 		"xlsx": "^0.18.5"

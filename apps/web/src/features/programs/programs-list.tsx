@@ -25,8 +25,8 @@ import { useQuery } from "convex-helpers/react/cache";
 import { isEmpty, isUndefined } from "lodash";
 import Link from "next/link";
 import { useState } from "react";
-import { programPath } from "@/lib/program-path";
 import { useInstitutionSlug } from "@/hooks/convex-react";
+import { programPath } from "@/lib/program-path";
 import { NewProgramDialog } from "./new-program-dialog";
 import { ProgramAvatar } from "./program-avatar";
 

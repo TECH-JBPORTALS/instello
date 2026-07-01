@@ -60,6 +60,20 @@ export const ERROR_CODES = {
 			message: "Faculty staff ID already exists in this institution",
 		},
 	},
+	SUBJECT: {
+		NOT_FOUND: {
+			code: "SUBJECT_NOT_FOUND",
+			message: "Subject not found",
+		},
+		ALIAS_ALREADY_EXISTS: {
+			code: "SUBJECT_ALIAS_ALREADY_EXISTS",
+			message: "Subject alias already exists in this institution",
+		},
+		CODE_ALREADY_EXISTS: {
+			code: "SUBJECT_CODE_ALREADY_EXISTS",
+			message: "Subject code already exists in this institution",
+		},
+	},
 	SEED: {
 		NOT_ALLOWED_IN_PRODUCTION: {
 			code: "SEED_NOT_ALLOWED_IN_PRODUCTION",

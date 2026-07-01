@@ -22,10 +22,13 @@ import type * as model_faculty from "../model/faculty.js";
 import type * as model_institution from "../model/institution.js";
 import type * as model_ownerOrganization from "../model/ownerOrganization.js";
 import type * as model_program from "../model/program.js";
+import type * as model_subject from "../model/subject.js";
 import type * as ownerOrganizations from "../ownerOrganizations.js";
 import type * as programs from "../programs.js";
 import type * as seed_institutions from "../seed/institutions.js";
+import type * as seed_mock from "../seed/mock.js";
 import type * as seed_users from "../seed/users.js";
+import type * as subjects from "../subjects.js";
 import type * as users from "../users.js";
 
 import type {
@@ -49,10 +52,13 @@ declare const fullApi: ApiFromModules<{
   "model/institution": typeof model_institution;
   "model/ownerOrganization": typeof model_ownerOrganization;
   "model/program": typeof model_program;
+  "model/subject": typeof model_subject;
   ownerOrganizations: typeof ownerOrganizations;
   programs: typeof programs;
   "seed/institutions": typeof seed_institutions;
+  "seed/mock": typeof seed_mock;
   "seed/users": typeof seed_users;
+  subjects: typeof subjects;
   users: typeof users;
 }>;
 

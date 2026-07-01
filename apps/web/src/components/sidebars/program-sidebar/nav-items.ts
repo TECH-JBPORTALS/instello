@@ -3,7 +3,6 @@
 import type { Icon } from "@tabler/icons-react";
 import {
 	IconBook,
-	IconCalendar,
 	IconCalendarCheck,
 	IconSchool,
 	IconTable,
