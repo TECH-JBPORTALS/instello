@@ -1,5 +1,5 @@
-import { InstitutionSidebar } from "@/components/sidebars/institution-sidebar";
+import { InstitutionSidebarContent } from "@/components/sidebars/institution-sidebar";
 
 export default function ProgramsSidebar() {
-	return <InstitutionSidebar />;
+	return <InstitutionSidebarContent />;
 }

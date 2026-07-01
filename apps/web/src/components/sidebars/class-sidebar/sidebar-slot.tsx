@@ -1,7 +1,7 @@
 "use client";
 
-import { ClassSidebar } from "./index";
+import { ClassSidebarContent } from "./index";
 
 export function ClassSidebarSlot() {
-	return <ClassSidebar />;
+	return <ClassSidebarContent />;
 }

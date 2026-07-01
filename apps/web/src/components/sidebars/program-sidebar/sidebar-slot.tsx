@@ -1,7 +1,7 @@
 "use client";
 
-import { ProgramSidebar } from "./index";
+import { ProgramSidebarContent } from "./index";
 
 export function ProgramSidebarSlot() {
-	return <ProgramSidebar />;
+	return <ProgramSidebarContent />;
 }
