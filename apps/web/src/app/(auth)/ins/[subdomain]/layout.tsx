@@ -2,7 +2,6 @@ import { ConvexBetterAuthGuard } from "@instello/convex/better-auth/provider";
 import { SidebarInset, SidebarProvider } from "@instello/ui/components/sidebar";
 import type { Metadata } from "next";
 import { WorkspaceLoading } from "@/components/common/workspace-loading";
-import { InstitutionSidebar } from "@/components/sidebars/institution-sidebar";
 import { SyncActiveInstitution } from "@/components/sidebars/institution-sidebar/sync-active-institution";
 
 export async function generateMetadata({
@@ -21,12 +20,18 @@ export async function generateMetadata({
 	};
 }
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function Layout({
+	children,
+	sidebar,
+}: {
+	children: React.ReactNode;
+	sidebar: React.ReactNode;
+}) {
 	return (
 		<ConvexBetterAuthGuard loadingComponent={<WorkspaceLoading />}>
 			<SidebarProvider>
 				<SyncActiveInstitution />
-				<InstitutionSidebar />
+				{sidebar}
 				<SidebarInset>{children}</SidebarInset>
 			</SidebarProvider>
 		</ConvexBetterAuthGuard>

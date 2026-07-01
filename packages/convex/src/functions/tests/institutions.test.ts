@@ -8,7 +8,7 @@ import {
 	institutionTest,
 	ownerTest,
 	seedSingleInstitution,
-} from "./fixtures";
+} from "./fixtures/index.setup";
 
 describe("institutions.listMyOwned", () => {
 	const test = institutionTest();

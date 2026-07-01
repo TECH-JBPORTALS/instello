@@ -35,6 +35,10 @@ export const ERROR_CODES = {
 			code: "PROGRAM_NOT_FOUND",
 			message: "Program not found",
 		},
+		ALIAS_ALREADY_EXISTS: {
+			code: "PROGRAM_ALIAS_ALREADY_EXISTS",
+			message: "Program alias already exists in this institution",
+		},
 	},
 	CLASS: {
 		NOT_FOUND: {
@@ -54,6 +58,20 @@ export const ERROR_CODES = {
 		STAFF_ID_ALREADY_EXISTS: {
 			code: "FACULTY_STAFF_ID_ALREADY_EXISTS",
 			message: "Faculty staff ID already exists in this institution",
+		},
+	},
+	SUBJECT: {
+		NOT_FOUND: {
+			code: "SUBJECT_NOT_FOUND",
+			message: "Subject not found",
+		},
+		ALIAS_ALREADY_EXISTS: {
+			code: "SUBJECT_ALIAS_ALREADY_EXISTS",
+			message: "Subject alias already exists in this institution",
+		},
+		CODE_ALREADY_EXISTS: {
+			code: "SUBJECT_CODE_ALREADY_EXISTS",
+			message: "Subject code already exists in this institution",
 		},
 	},
 	SEED: {

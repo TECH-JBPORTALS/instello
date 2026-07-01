@@ -19,6 +19,21 @@ export const create = insMutation({
 	},
 });
 
+/** Check if a program alias is available in the current institution */
+export const checkAlias = insQuery({
+	permissions: ["program:create"],
+	args: { alias: vv.string() },
+	returns: vv.object({ available: vv.boolean() }),
+	handler: async (ctx, args) => {
+		const alias = args.alias.trim();
+		if (!alias) return { available: false };
+
+		const existing = await Program.findByAlias(ctx, ctx.institution._id, alias);
+
+		return { available: existing === null };
+	},
+});
+
 /** Lists program in the current institution
  * @returns programs
  */
@@ -33,6 +48,26 @@ export const list = insQuery({
 			institutionId: ctx.institution._id,
 			query: args.query,
 		});
+	},
+});
+
+/** Get the program by alias in the current institution
+ * @param alias - program alias
+ * @returns program
+ */
+export const getByAlias = insQuery({
+	permissions: ["program:view"],
+	args: { alias: vv.string() },
+	returns: Program.ProgramDtoSchema,
+	handler: async (ctx, args) => {
+		const alias = args.alias.trim();
+		const program = await Program.findByAlias(ctx, ctx.institution._id, alias);
+
+		if (!program) {
+			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
+		}
+
+		return Program.toDto(program);
 	},
 });
 

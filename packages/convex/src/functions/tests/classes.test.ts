@@ -7,7 +7,7 @@ import {
 	expectAppError,
 	programTest,
 	withSlug,
-} from "./fixtures";
+} from "./fixtures/index.setup";
 
 describe("classes.create", () => {
 	const test = programTest();

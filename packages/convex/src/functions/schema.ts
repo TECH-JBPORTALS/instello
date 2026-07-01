@@ -52,6 +52,7 @@ const tables = {
 		updatedAt: v.number(),
 	})
 		.index("by_institution_name", ["institutionId", "name"])
+		.index("by_institution_and_alias", ["institutionId", "alias"])
 		.searchIndex("search_by_name", {
 			searchField: "name",
 			filterFields: ["institutionId"],
@@ -107,6 +108,47 @@ const tables = {
 		.index("by_institution_and_email", ["institutionId", "email"])
 		.index("by_institution_and_staff_id", ["institutionId", "staffId"])
 		.index("by_institution_and_status", ["institutionId", "status"]),
+
+	subjects: defineTable({
+		name: v.string(),
+		color: v.string(),
+		code: v.string(),
+		alias: v.string(),
+		status: v.union(v.literal("inactive"), v.literal("active")),
+		description: v.optional(v.string()),
+		institutionId: v.string(),
+		createdAt: v.number(),
+		updatedAt: v.number(),
+	})
+		.index("by_institution", ["institutionId"])
+		.index("by_institution_name", ["institutionId", "name"])
+		.index("by_institution_and_alias", ["institutionId", "alias"])
+		.index("by_institution_and_code", ["institutionId", "code"])
+		.searchIndex("search_by_name", {
+			searchField: "name",
+			filterFields: ["institutionId"],
+		}),
+
+	// programSubjects: defineTable({
+	// 	programId: v.string(),
+	// 	subjectId: v.string(),
+	// 	semester: v.number(),
+	// 	type: v.union(v.literal("theory"), v.literal("practical")),
+	// 	createdAt: v.number(),
+	// 	updatedAt: v.number(),
+	// }).index("by_subject", ["subjectId"]),
+
+	// classSubjectsAllocation: defineTable({
+	// 	classId: v.string(),
+	// 	programSubjectId: v.string(),
+	// 	userId: v.string(),
+	// 	facultyId: v.optional(v.string()),
+	// 	createdAt: v.number(),
+	// 	updatedAt: v.number(),
+	// })
+	// 	.index("by_class", ["classId"])
+	// 	.index("by_program_subject", ["programSubjectId"])
+	// 	.index("by_faculty", ["facultyId"]),
 };
 
 const schema = defineSchema(tables);
