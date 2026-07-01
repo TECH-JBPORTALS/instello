@@ -1,6 +1,6 @@
-import { ownerIdentity } from "../auth";
-import { seedInstitutions } from "../seeds/institutions";
-import { ownerTest } from "./owner";
+import { ownerIdentity } from "../auth.setup";
+import { seedInstitutions } from "../seeds/institutions.seed";
+import { ownerTest } from "./owner.setup";
 
 const institution = ownerTest()
 	.extend(

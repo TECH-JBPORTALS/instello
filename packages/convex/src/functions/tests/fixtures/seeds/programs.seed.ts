@@ -1,6 +1,6 @@
 import type { Doc } from "../../../_generated/dataModel";
 import type { AppMutationCtx } from "../../../model/common.types";
-import { PROGRAM_CE, PROGRAM_CS, PROGRAM_ME } from "../constants";
+import { PROGRAM_CE, PROGRAM_CS, PROGRAM_ME } from "../constants.setup";
 
 export type SeededPrograms = {
 	me: Doc<"programs">;

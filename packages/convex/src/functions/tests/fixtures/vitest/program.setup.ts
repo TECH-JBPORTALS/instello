@@ -1,5 +1,5 @@
-import { seedPrograms } from "../seeds/programs";
-import { institutionTest } from "./institution";
+import { seedPrograms } from "../seeds/programs.seed";
+import { institutionTest } from "./institution.setup";
 
 const program = institutionTest().extend(
 	"programs",

@@ -1,5 +1,5 @@
-import { seedOwners } from "../seeds/owners";
-import { baseTest } from "./base";
+import { seedOwners } from "../seeds/owners.seed";
+import { baseTest } from "./base.setup";
 
 const owner = baseTest()
 	.extend("owners", async ({ t }) => await t.run(seedOwners))

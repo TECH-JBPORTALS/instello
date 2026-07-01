@@ -1,6 +1,9 @@
 import { components } from "../../../_generated/api";
 import type { AppMutationCtx } from "../../../model/common.types";
-import { type CreateFacultyInput, createFacultyInput } from "../factories";
+import {
+	type CreateFacultyInput,
+	createFacultyInput,
+} from "../factories.setup";
 
 export async function seedFaculty(
 	ctx: AppMutationCtx,

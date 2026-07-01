@@ -5,7 +5,7 @@ import {
 	OWNER_1_NAME,
 	OWNER_2_EMAIL,
 	OWNER_2_NAME,
-} from "../constants";
+} from "../constants.setup";
 
 export async function seedOwners(ctx: AppMutationCtx) {
 	const user1 = await ctx.runMutation(components.betterAuth.adapter.create, {

@@ -11,7 +11,7 @@ import {
 	seedFaculty,
 	seedFacultyMember,
 	withSlug,
-} from "./fixtures";
+} from "./fixtures/index.setup";
 
 const test = institutionTest();
 

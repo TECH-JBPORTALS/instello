@@ -4,7 +4,7 @@ import {
 	FACULTY_PHONE,
 	FACULTY_STAFF_ID,
 	PROGRAM_CS,
-} from "./constants";
+} from "./constants.setup";
 
 export const createFacultyInput = (
 	overrides?: Partial<{

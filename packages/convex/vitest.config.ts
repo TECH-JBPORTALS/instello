@@ -6,5 +6,6 @@ export default defineConfig({
 	},
 	test: {
 		environment: "edge-runtime",
+		globals: true,
 	},
 });

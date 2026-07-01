@@ -1,5 +1,5 @@
 import { ERROR_CODES } from "../../helpers/constants";
-import { expectAppError } from "./assertions";
+import { expectAppError } from "./assertions.setup";
 
 export const expectUnauthorized = {
 	query: (promise: Promise<unknown>) =>

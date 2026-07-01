@@ -24,6 +24,7 @@ import type * as model_ownerOrganization from "../model/ownerOrganization.js";
 import type * as model_program from "../model/program.js";
 import type * as ownerOrganizations from "../ownerOrganizations.js";
 import type * as programs from "../programs.js";
+import type * as seed_institutions from "../seed/institutions.js";
 import type * as seed_users from "../seed/users.js";
 import type * as users from "../users.js";
 
@@ -50,6 +51,7 @@ declare const fullApi: ApiFromModules<{
   "model/program": typeof model_program;
   ownerOrganizations: typeof ownerOrganizations;
   programs: typeof programs;
+  "seed/institutions": typeof seed_institutions;
   "seed/users": typeof seed_users;
   users: typeof users;
 }>;

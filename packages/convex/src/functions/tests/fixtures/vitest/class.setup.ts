@@ -1,5 +1,5 @@
-import { seedClasses } from "../seeds/classes";
-import { programTest } from "./program";
+import { seedClasses } from "../seeds/classes.seed";
+import { programTest } from "./program.setup";
 
 const classLayer = programTest().extend(
 	"classes",

@@ -10,7 +10,7 @@ import {
 	PROGRAM_CS,
 	programTest,
 	withSlug,
-} from "./fixtures";
+} from "./fixtures/index.setup";
 
 describe("programs.create", () => {
 	const test = institutionTest();
