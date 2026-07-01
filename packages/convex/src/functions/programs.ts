@@ -51,6 +51,26 @@ export const list = insQuery({
 	},
 });
 
+/** Get the program by alias in the current institution
+ * @param alias - program alias
+ * @returns program
+ */
+export const getByAlias = insQuery({
+	permissions: ["program:view"],
+	args: { alias: vv.string() },
+	returns: Program.ProgramDtoSchema,
+	handler: async (ctx, args) => {
+		const alias = args.alias.trim();
+		const program = await Program.findByAlias(ctx, ctx.institution._id, alias);
+
+		if (!program) {
+			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
+		}
+
+		return Program.toDto(program);
+	},
+});
+
 /** Get the program by id
  * @param id - program id
  * @returns program

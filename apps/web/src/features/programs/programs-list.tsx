@@ -23,7 +23,9 @@ import { Skeleton } from "@instello/ui/components/skeleton";
 import { IconBlocks, IconPlus } from "@tabler/icons-react";
 import { useQuery } from "convex-helpers/react/cache";
 import { isEmpty, isUndefined } from "lodash";
+import Link from "next/link";
 import { useState } from "react";
+import { programPath } from "@/lib/program-path";
 import { useInstitutionSlug } from "@/hooks/convex-react";
 import { NewProgramDialog } from "./new-program-dialog";
 import { ProgramAvatar } from "./program-avatar";
@@ -91,6 +93,7 @@ export function ProgramsList() {
 				<Item
 					key={program._id}
 					className="border-x-0 border-t-0 hover:bg-accent/30 last:border-b-0 relative rounded-none border-border!"
+					render={<Link href={programPath(program.alias)} />}
 				>
 					<ItemMedia variant={"image"}>
 						<ProgramAvatar name={program.name} />

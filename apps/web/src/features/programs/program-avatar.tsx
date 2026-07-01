@@ -6,11 +6,17 @@ import {
 	AvatarImage,
 } from "@instello/ui/components/avatar";
 
-export function ProgramAvatar({ name }: { name: string }) {
+export function ProgramAvatar({
+	name,
+	size = "lg",
+}: {
+	name: string;
+	size?: "sm" | "lg" | "default";
+}) {
 	return (
-		<Avatar size="lg" className={"after:rounded-lg"}>
+		<Avatar size={size} className={"after:rounded-lg"}>
 			<AvatarImage
-				src={`https://ui-avatars.com/api/?name=${name}&background=FAFAFA&color=000&rounded=false`}
+				src={`https://ui-avatars.com/api/?name=${name}&background=FAFAFA&color=000&rounded=false&bold=true&font-size=0.33&format=svg`}
 				className={"rounded-lg"}
 			/>
 			<AvatarFallback className={"rounded-lg"}>{name.charAt(0)}</AvatarFallback>

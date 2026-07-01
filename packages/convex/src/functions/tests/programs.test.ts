@@ -115,6 +115,63 @@ describe("programs.checkAlias", () => {
 	});
 });
 
+describe("programs.getByAlias", () => {
+	const test = programTest();
+
+	test("rejects unthencticated user", async ({ t, ins1, programs }) => {
+		await expectAppError(
+			t.query(
+				api.programs.getByAlias,
+				withSlug(ins1, { alias: programs.cs.alias }),
+			),
+			ERROR_CODES.BASE.UNAUTHORIZED,
+		);
+	});
+
+	test("gets program by alias", async ({ user1, ins1, programs, asOwner }) => {
+		const program = await asOwner(user1, ins1).query(
+			api.programs.getByAlias,
+			withSlug(ins1, { alias: programs.cs.alias }),
+		);
+
+		expect(program).toMatchObject({
+			_id: programs.cs._id,
+			name: PROGRAM_CS.name,
+			alias: PROGRAM_CS.alias,
+			status: "active",
+		});
+	});
+
+	test("throws error if program alias doesn't exist", async ({
+		user1,
+		ins1,
+		asOwner,
+	}) => {
+		await expectAppError(
+			asOwner(user1, ins1).query(
+				api.programs.getByAlias,
+				withSlug(ins1, { alias: "nonexistent" }),
+			),
+			ERROR_CODES.PROGRAM.NOT_FOUND,
+		);
+	});
+
+	test("rejects program from another institution", async ({
+		user1,
+		ins1,
+		programs,
+		asOwner,
+	}) => {
+		await expectAppError(
+			asOwner(user1, ins1).query(
+				api.programs.getByAlias,
+				withSlug(ins1, { alias: programs.ce.alias }),
+			),
+			ERROR_CODES.PROGRAM.NOT_FOUND,
+		);
+	});
+});
+
 describe("programs.list", () => {
 	const test = programTest();
 

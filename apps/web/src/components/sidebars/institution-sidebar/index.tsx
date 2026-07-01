@@ -18,6 +18,7 @@ import {
 	isNavActive,
 	mainNavSections,
 } from "@/components/sidebars/institution-sidebar/nav-items";
+import { SidebarAnimatedContent } from "@/components/sidebars/sidebar-animated-content";
 
 export function InstitutionSidebar() {
 	const pathname = usePathname();
@@ -25,30 +26,32 @@ export function InstitutionSidebar() {
 	return (
 		<Sidebar>
 			<AppSidebarHeader />
-			<SidebarContent>
-				{mainNavSections.map((section) => (
-					<SidebarGroup key={section.label ?? "main"}>
-						{section.label ? (
-							<SidebarGroupLabel>{section.label}</SidebarGroupLabel>
-						) : null}
-						<SidebarGroupContent>
-							<SidebarMenu>
-								{section.items.map((item) => (
-									<SidebarMenuItem key={item.id}>
-										<SidebarMenuButton
-											isActive={isNavActive(pathname, item.href)}
-											render={<Link href={item.href} />}
-										>
-											<item.icon className="size-4" />
-											{item.label}
-										</SidebarMenuButton>
-									</SidebarMenuItem>
-								))}
-							</SidebarMenu>
-						</SidebarGroupContent>
-					</SidebarGroup>
-				))}
-			</SidebarContent>
+			<SidebarAnimatedContent>
+				<SidebarContent>
+					{mainNavSections.map((section) => (
+						<SidebarGroup key={section.label ?? "main"}>
+							{section.label ? (
+								<SidebarGroupLabel>{section.label}</SidebarGroupLabel>
+							) : null}
+							<SidebarGroupContent>
+								<SidebarMenu>
+									{section.items.map((item) => (
+										<SidebarMenuItem key={item.id}>
+											<SidebarMenuButton
+												isActive={isNavActive(pathname, item.href)}
+												render={<Link href={item.href} />}
+											>
+												<item.icon className="size-4" />
+												{item.label}
+											</SidebarMenuButton>
+										</SidebarMenuItem>
+									))}
+								</SidebarMenu>
+							</SidebarGroupContent>
+						</SidebarGroup>
+					))}
+				</SidebarContent>
+			</SidebarAnimatedContent>
 			<InstitutionSidebarFooter />
 		</Sidebar>
 	);
