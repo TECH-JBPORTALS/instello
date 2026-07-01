@@ -1,102 +1,56 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect } from "vitest";
 import { api } from "../_generated/api";
 import { ERROR_CODES } from "../helpers/constants";
 import {
+	classTest,
+	createClassBody,
 	expectAppError,
-	primaryIns,
-	secondaryIns,
-	seedClasses,
-	seedInstitutions,
-	seedOwners,
-	seedPrograms,
+	programTest,
 	withSlug,
-} from "./test.helpers";
-import { createTest } from "./test.setup";
+} from "./fixtures";
 
 describe("classes.create", () => {
-	it("rejects unthencticated user", async () => {
-		const t = createTest();
+	const test = programTest();
 
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
-		);
-		const firstIns = primaryIns(institutions);
-		const secondIns = secondaryIns(institutions);
-		const programs = await t.run((ctx) =>
-			seedPrograms(ctx, { user1, user2, ins1: firstIns, ins2: secondIns }),
-		);
-		const firstProgram = programs[0];
-
+	test("rejects unthencticated user", async ({ t, ins1, programs }) => {
 		await expectAppError(
 			t.mutation(
 				api.classes.create,
-				withSlug(firstIns, {
-					programId: firstProgram._id,
-					body: {
-						name: "Class 1",
-						description: "Class 1 description",
-						academicYear: 2026,
-						semester: 1,
-					},
+				withSlug(ins1, {
+					programId: programs.me._id,
+					body: createClassBody(),
 				}),
 			),
 			ERROR_CODES.BASE.UNAUTHORIZED,
 		);
 	});
 
-	it("creates class for active program", async () => {
-		const t = createTest();
-
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
+	test("creates class for active program", async ({
+		t,
+		ins1,
+		ins2,
+		programs,
+		asOwner,
+	}) => {
+		const firstClassId = await asOwner({ _id: ins1.userId }, ins1).mutation(
+			api.classes.create,
+			withSlug(ins1, {
+				programId: programs.me._id,
+				body: createClassBody(),
+			}),
 		);
-		const firstIns = primaryIns(institutions);
-		const secondIns = secondaryIns(institutions);
-		const programs = await t.run((ctx) =>
-			seedPrograms(ctx, { user1, user2, ins1: firstIns, ins2: secondIns }),
+
+		const secondClassId = await asOwner({ _id: ins2.userId }, ins2).mutation(
+			api.classes.create,
+			withSlug(ins2, {
+				programId: programs.ce._id,
+				body: createClassBody({
+					name: "Class 2",
+					description: "Class 2 description",
+					semester: 4,
+				}),
+			}),
 		);
-		const firstProgram = programs[0];
-		const secondProgram = programs[2];
-
-		const firstClassId = await t
-			.withIdentity({
-				subject: firstIns.userId,
-				activeInstitutionId: firstIns._id,
-				sessionId: "ses-1",
-			})
-			.mutation(
-				api.classes.create,
-				withSlug(firstIns, {
-					programId: firstProgram._id,
-					body: {
-						name: "Class 1",
-						description: "Class 1 description",
-						academicYear: 2026,
-						semester: 1,
-					},
-				}),
-			);
-
-		const secondClassId = await t
-			.withIdentity({
-				subject: secondIns.userId,
-				activeInstitutionId: secondIns._id,
-				sessionId: "ses-1",
-			})
-			.mutation(
-				api.classes.create,
-				withSlug(secondIns, {
-					programId: secondProgram._id,
-					body: {
-						name: "Class 2",
-						description: "Class 2 description",
-						academicYear: 2026,
-						semester: 4,
-					},
-				}),
-			);
 
 		expect(firstClassId).toBeDefined();
 		expect(secondClassId).toBeDefined();
@@ -121,93 +75,47 @@ describe("classes.create", () => {
 		});
 	});
 
-	it("rejects program from another institution", async () => {
-		const t = createTest();
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
-		);
-		const ins1 = primaryIns(institutions);
-		const ins2 = secondaryIns(institutions);
-		const programs = await t.run((ctx) =>
-			seedPrograms(ctx, { user1, user2, ins1, ins2 }),
-		);
-		const programInIns2 = programs[2];
-
+	test("rejects program from another institution", async ({
+		user1,
+		ins1,
+		programs,
+		asOwner,
+	}) => {
 		await expectAppError(
-			t
-				.withIdentity({
-					subject: user1._id,
-					activeInstitutionId: ins1._id,
-					sessionId: "ses-1",
-				})
-				.mutation(
-					api.classes.create,
-					withSlug(ins1, {
-						programId: programInIns2._id,
-						body: {
-							name: "Class 1",
-							description: "Class 1 description",
-							academicYear: 2026,
-							semester: 1,
-						},
-					}),
-				),
+			asOwner(user1, ins1).mutation(
+				api.classes.create,
+				withSlug(ins1, {
+					programId: programs.ce._id,
+					body: createClassBody(),
+				}),
+			),
 			ERROR_CODES.PROGRAM.NOT_FOUND,
 		);
 	});
 });
 
 describe("classes.list", () => {
-	it("rejects unthencticated user", async () => {
-		const t = createTest();
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
-		);
-		const ins1 = primaryIns(institutions);
-		const ins2 = secondaryIns(institutions);
-		const programs = await t.run((ctx) =>
-			seedPrograms(ctx, { user1, user2, ins1, ins2 }),
-		);
+	const test = classTest();
 
+	test("rejects unthencticated user", async ({ t, ins1, programs }) => {
 		await expectAppError(
-			t.query(api.classes.list, withSlug(ins1, { programId: programs[0]._id })),
+			t.query(api.classes.list, withSlug(ins1, { programId: programs.me._id })),
 			ERROR_CODES.BASE.UNAUTHORIZED,
 		);
 	});
 
-	it("lists classes for active program", async () => {
-		const t = createTest();
-
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
-		);
-		const firstIns = primaryIns(institutions);
-		const secondIns = secondaryIns(institutions);
-		const programs = await t.run((ctx) =>
-			seedPrograms(ctx, { user1, user2, ins1: firstIns, ins2: secondIns }),
-		);
-		const firstProgram = programs[0];
-		const secondProgram = programs[2];
-		const classes = await t.run((ctx) =>
-			seedClasses(ctx, {
-				program1Id: firstProgram._id,
-				program2Id: secondProgram._id,
-			}),
+	test("lists classes for active program", async ({
+		ins1,
+		ins2,
+		programs,
+		classes,
+		asOwner,
+	}) => {
+		const classesList = await asOwner({ _id: ins1.userId }, ins1).query(
+			api.classes.list,
+			withSlug(ins1, { programId: programs.me._id }),
 		);
 
-		const classesList = await t
-			.withIdentity({
-				subject: firstIns.userId,
-				activeInstitutionId: firstIns._id,
-				sessionId: "ses-1",
-			})
-			.query(
-				api.classes.list,
-				withSlug(firstIns, { programId: firstProgram._id }),
-			);
 		expect(classesList).toHaveLength(classes.program1Classes.length);
 		expect(classesList).toMatchObject(
 			classes.program1Classes.map((cls) => ({
@@ -221,16 +129,11 @@ describe("classes.list", () => {
 			})),
 		);
 
-		const classesList2 = await t
-			.withIdentity({
-				subject: secondIns.userId,
-				activeInstitutionId: secondIns._id,
-				sessionId: "ses-1",
-			})
-			.query(
-				api.classes.list,
-				withSlug(secondIns, { programId: secondProgram._id }),
-			);
+		const classesList2 = await asOwner({ _id: ins2.userId }, ins2).query(
+			api.classes.list,
+			withSlug(ins2, { programId: programs.ce._id }),
+		);
+
 		expect(classesList2).toHaveLength(classes.program2Classes.length);
 		expect(classesList2).toMatchObject(
 			classes.program2Classes.map((cls) => ({
@@ -247,46 +150,25 @@ describe("classes.list", () => {
 });
 
 describe("classes.getById", () => {
-	it("rejects unthencticated user", async () => {
-		const t = createTest();
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
-		);
-		const ins1 = primaryIns(institutions);
-		const ins2 = secondaryIns(institutions);
-		const programs = await t.run((ctx) =>
-			seedPrograms(ctx, { user1, user2, ins1, ins2 }),
-		);
-		const classes = await t.run((ctx) =>
-			seedClasses(ctx, {
-				program1Id: programs[0]._id,
-				program2Id: programs[1]._id,
-			}),
-		);
-		const classId = classes.program1Classes[0]._id;
+	const test = classTest();
 
+	test("rejects unthencticated user", async ({ t, ins1, classes }) => {
 		await expectAppError(
-			t.query(api.classes.getById, withSlug(ins1, { id: classId })),
+			t.query(api.classes.getById, withSlug(ins1, { id: classes.class1._id })),
 			ERROR_CODES.BASE.UNAUTHORIZED,
 		);
 	});
 
-	it("rejects if class doesn't exist", async () => {
-		const t = createTest();
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
-		);
-		const ins1 = primaryIns(institutions);
-		const ins2 = secondaryIns(institutions);
-		const programs = await t.run((ctx) =>
-			seedPrograms(ctx, { user1, user2, ins1, ins2 }),
-		);
-
+	test("rejects if class doesn't exist", async ({
+		t,
+		user1,
+		ins1,
+		programs,
+		asOwner,
+	}) => {
 		const classId = await t.run(async (ctx) => {
 			const clsId = await ctx.db.insert("classes", {
-				programId: programs[0]._id,
+				programId: programs.me._id,
 				name: "Class 1",
 				description: "Class 1 description",
 				isGroupsEnabled: false,
@@ -301,110 +183,55 @@ describe("classes.getById", () => {
 		});
 
 		await expectAppError(
-			t
-				.withIdentity({
-					subject: user1._id,
-					activeInstitutionId: ins1._id,
-					sessionId: "ses-1",
-				})
-				.query(api.classes.getById, withSlug(ins1, { id: classId })),
+			asOwner(user1, ins1).query(
+				api.classes.getById,
+				withSlug(ins1, { id: classId }),
+			),
 			ERROR_CODES.CLASS.NOT_FOUND,
 		);
 	});
 
-	it("gets class by id", async () => {
-		const t = createTest();
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
+	test("gets class by id", async ({ user1, ins1, classes, asOwner }) => {
+		const cls = await asOwner(user1, ins1).query(
+			api.classes.getById,
+			withSlug(ins1, { id: classes.class1._id }),
 		);
-		const ins1 = primaryIns(institutions);
-		const ins2 = secondaryIns(institutions);
-		const programs = await t.run((ctx) =>
-			seedPrograms(ctx, { user1, user2, ins1, ins2 }),
-		);
-		const classes = await t.run((ctx) =>
-			seedClasses(ctx, {
-				program1Id: programs[0]._id,
-				program2Id: programs[1]._id,
-			}),
-		);
-		const classId = classes.program1Classes[0]._id;
 
-		const cls = await t
-			.withIdentity({
-				subject: user1._id,
-				activeInstitutionId: ins1._id,
-				sessionId: "ses-1",
-			})
-			.query(api.classes.getById, withSlug(ins1, { id: classId }));
 		expect(cls).toMatchObject({
-			name: classes.program1Classes[0].name,
-			description: classes.program1Classes[0].description,
+			name: classes.class1.name,
+			description: classes.class1.description,
 			isGroupsEnabled: false,
-			academicYear: classes.program1Classes[0].academicYear,
-			semester: classes.program1Classes[0].semester,
+			academicYear: classes.class1.academicYear,
+			semester: classes.class1.semester,
 			status: "active",
 		});
 	});
 
-	it("rejects class from another institution", async () => {
-		const t = createTest();
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
-		);
-		const ins1 = primaryIns(institutions);
-		const ins2 = secondaryIns(institutions);
-		const programs = await t.run((ctx) =>
-			seedPrograms(ctx, { user1, user2, ins1, ins2 }),
-		);
-		const classes = await t.run((ctx) =>
-			seedClasses(ctx, {
-				program1Id: programs[0]._id,
-				program2Id: programs[2]._id,
-			}),
-		);
-		const classInIns2 = classes.program2Classes[0]._id;
-
+	test("rejects class from another institution", async ({
+		user1,
+		ins1,
+		classes,
+		asOwner,
+	}) => {
 		await expectAppError(
-			t
-				.withIdentity({
-					subject: user1._id,
-					activeInstitutionId: ins1._id,
-					sessionId: "ses-1",
-				})
-				.query(api.classes.getById, withSlug(ins1, { id: classInIns2 })),
+			asOwner(user1, ins1).query(
+				api.classes.getById,
+				withSlug(ins1, { id: classes.class3._id }),
+			),
 			ERROR_CODES.CLASS.NOT_FOUND,
 		);
 	});
 });
 
 describe("classes.updateBasicInfo", () => {
-	it("rejects unthencticated user", async () => {
-		const t = createTest();
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
-		);
-		const ins1 = primaryIns(institutions);
-		const ins2 = secondaryIns(institutions);
-		const programs = await t.run((ctx) =>
-			seedPrograms(ctx, { user1, user2, ins1, ins2 }),
-		);
-		const classes = await t.run((ctx) =>
-			seedClasses(ctx, {
-				program1Id: programs[0]._id,
-				program2Id: programs[1]._id,
-			}),
-		);
-		const classId = classes.program1Classes[0]._id;
+	const test = classTest();
 
+	test("rejects unthencticated user", async ({ t, ins1, classes }) => {
 		await expectAppError(
 			t.mutation(
 				api.classes.updateBasicInfo,
 				withSlug(ins1, {
-					id: classId,
+					id: classes.class1._id,
 					body: { name: "Class 2", description: "Class 2 description" },
 				}),
 			),
@@ -412,21 +239,16 @@ describe("classes.updateBasicInfo", () => {
 		);
 	});
 
-	it("rejects if class doesn't exist", async () => {
-		const t = createTest();
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
-		);
-		const ins1 = primaryIns(institutions);
-		const ins2 = secondaryIns(institutions);
-		const programs = await t.run((ctx) =>
-			seedPrograms(ctx, { user1, user2, ins1, ins2 }),
-		);
-
+	test("rejects if class doesn't exist", async ({
+		t,
+		user1,
+		ins1,
+		programs,
+		asOwner,
+	}) => {
 		const classId = await t.run(async (ctx) => {
 			const clsId = await ctx.db.insert("classes", {
-				programId: programs[0]._id,
+				programId: programs.me._id,
 				name: "Class 1",
 				description: "Class 1 description",
 				isGroupsEnabled: false,
@@ -441,67 +263,39 @@ describe("classes.updateBasicInfo", () => {
 		});
 
 		await expectAppError(
-			t
-				.withIdentity({
-					subject: user1._id,
-					activeInstitutionId: ins1._id,
-					sessionId: "ses-1",
-				})
-				.mutation(
-					api.classes.updateBasicInfo,
-					withSlug(ins1, {
-						id: classId,
-						body: { name: "Class 2", description: "Class 2 description" },
-					}),
-				),
+			asOwner(user1, ins1).mutation(
+				api.classes.updateBasicInfo,
+				withSlug(ins1, {
+					id: classId,
+					body: { name: "Class 2", description: "Class 2 description" },
+				}),
+			),
 			ERROR_CODES.CLASS.NOT_FOUND,
 		);
 	});
 
-	it("updates class basic info", async () => {
-		const t = createTest();
-
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
-		);
-
-		const ins1 = primaryIns(institutions);
-		const ins2 = secondaryIns(institutions);
-
-		const programs = await t.run((ctx) =>
-			seedPrograms(ctx, { user1, user2, ins1, ins2 }),
-		);
-		const firstProgram = programs[0];
-		const secondProgram = programs[2];
-		const classes = await t.run((ctx) =>
-			seedClasses(ctx, {
-				program1Id: firstProgram._id,
-				program2Id: secondProgram._id,
+	test("updates class basic info", async ({
+		t,
+		user1,
+		ins1,
+		classes,
+		asOwner,
+	}) => {
+		await asOwner(user1, ins1).mutation(
+			api.classes.updateBasicInfo,
+			withSlug(ins1, {
+				id: classes.class1._id,
+				body: { name: "Class 1 Updated" },
 			}),
 		);
 
-		await t
-			.withIdentity({
-				subject: user1._id,
-				activeInstitutionId: ins1._id,
-				sessionId: "ses-1",
-			})
-			.mutation(
-				api.classes.updateBasicInfo,
-				withSlug(ins1, {
-					id: classes.program1Classes[0]._id,
-					body: { name: "Class 1 Updated" },
-				}),
-			);
-
 		const patchedClass = await t.run((ctx) =>
-			ctx.db.get("classes", classes.program1Classes[0]._id),
+			ctx.db.get("classes", classes.class1._id),
 		);
 
 		expect(patchedClass).toMatchObject({
 			name: "Class 1 Updated",
-			description: classes.program1Classes[0].description,
+			description: classes.class1.description,
 		});
 	});
 });

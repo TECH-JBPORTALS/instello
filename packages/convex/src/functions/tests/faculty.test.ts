@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect } from "vitest";
 import { api } from "../_generated/api";
 import { ERROR_CODES } from "../helpers/constants";
 import {
@@ -7,29 +7,32 @@ import {
 	FACULTY_EMAIL,
 	FACULTY_PHONE,
 	FACULTY_STAFF_ID,
-	ownerIdentity,
+	institutionTest,
 	seedFaculty,
 	seedFacultyMember,
-	setupTwoInstitutions,
 	withSlug,
-} from "./test.helpers";
+} from "./fixtures";
+
+const test = institutionTest();
 
 describe("faculty.create", () => {
-	it("requires authentication", async () => {
-		const { t, ins1 } = await setupTwoInstitutions();
-
+	test("requires authentication", async ({ t, ins1 }) => {
 		await expectAppError(
 			t.mutation(api.faculty.create, withSlug(ins1, createFacultyInput())),
 			ERROR_CODES.BASE.UNAUTHORIZED,
 		);
 	});
 
-	it("creates a faculty member with all fields", async () => {
-		const { t, user1, ins1 } = await setupTwoInstitutions();
-
-		const facultyId = await t
-			.withIdentity(ownerIdentity(user1._id, ins1._id))
-			.mutation(api.faculty.create, withSlug(ins1, createFacultyInput()));
+	test("creates a faculty member with all fields", async ({
+		t,
+		user1,
+		ins1,
+		asOwner,
+	}) => {
+		const facultyId = await asOwner(user1, ins1).mutation(
+			api.faculty.create,
+			withSlug(ins1, createFacultyInput()),
+		);
 
 		expect(facultyId).toBeDefined();
 
@@ -48,9 +51,12 @@ describe("faculty.create", () => {
 		});
 	});
 
-	it("rejects duplicate email within the same institution", async () => {
-		const { t, user1, ins1 } = await setupTwoInstitutions();
-		const authed = t.withIdentity(ownerIdentity(user1._id, ins1._id));
+	test("rejects duplicate email within the same institution", async ({
+		user1,
+		ins1,
+		asOwner,
+	}) => {
+		const authed = asOwner(user1, ins1);
 
 		await authed.mutation(
 			api.faculty.create,
@@ -63,9 +69,12 @@ describe("faculty.create", () => {
 		);
 	});
 
-	it("rejects duplicate staff ID within the same institution", async () => {
-		const { t, user1, ins1 } = await setupTwoInstitutions();
-		const authed = t.withIdentity(ownerIdentity(user1._id, ins1._id));
+	test("rejects duplicate staff ID within the same institution", async ({
+		user1,
+		ins1,
+		asOwner,
+	}) => {
+		const authed = asOwner(user1, ins1);
 
 		await authed.mutation(
 			api.faculty.create,
@@ -84,42 +93,52 @@ describe("faculty.create", () => {
 		);
 	});
 
-	it("allows the same email in different institutions", async () => {
-		const { t, user1, user2, ins1, ins2 } = await setupTwoInstitutions();
+	test("allows the same email in different institutions", async ({
+		user1,
+		user2,
+		ins1,
+		ins2,
+		asOwner,
+	}) => {
+		const id1 = await asOwner(user1, ins1).mutation(
+			api.faculty.create,
+			withSlug(ins1, createFacultyInput()),
+		);
 
-		const id1 = await t
-			.withIdentity(ownerIdentity(user1._id, ins1._id))
-			.mutation(api.faculty.create, withSlug(ins1, createFacultyInput()));
-
-		const id2 = await t
-			.withIdentity(ownerIdentity(user2._id, ins2._id))
-			.mutation(api.faculty.create, withSlug(ins2, createFacultyInput()));
+		const id2 = await asOwner(user2, ins2).mutation(
+			api.faculty.create,
+			withSlug(ins2, createFacultyInput()),
+		);
 
 		expect(id1).toBeDefined();
 		expect(id2).toBeDefined();
 		expect(id1).not.toEqual(id2);
 	});
 
-	it("requires faculty:create permission", async () => {
-		const { t, ins1 } = await setupTwoInstitutions();
-
+	test("requires faculty:create permission", async ({ t, ins1, asOwner }) => {
 		const facultyUser = await t.run((ctx) =>
 			seedFacultyMember(ctx, { institutionId: ins1._id }),
 		);
 
 		await expectAppError(
-			t
-				.withIdentity(ownerIdentity(facultyUser._id, ins1._id))
-				.mutation(api.faculty.create, withSlug(ins1, createFacultyInput())),
+			asOwner(facultyUser, ins1).mutation(
+				api.faculty.create,
+				withSlug(ins1, createFacultyInput()),
+			),
 			ERROR_CODES.BASE.ACCESS_DENIED,
 		);
 	});
 });
 
 describe("faculty.list", () => {
-	it("returns faculty only for the active institution", async () => {
-		const { t, user1, user2, ins1, ins2 } = await setupTwoInstitutions();
-
+	test("returns faculty only for the active institution", async ({
+		t,
+		user1,
+		user2,
+		ins1,
+		ins2,
+		asOwner,
+	}) => {
 		await t.run((ctx) =>
 			seedFaculty(ctx, {
 				institutionId: ins1._id,
@@ -134,14 +153,12 @@ describe("faculty.list", () => {
 			}),
 		);
 
-		const result = await t
-			.withIdentity(ownerIdentity(user1._id, ins1._id))
-			.query(
-				api.faculty.list,
-				withSlug(ins1, {
-					paginationOpts: { numItems: 10, cursor: null },
-				}),
-			);
+		const result = await asOwner(user1, ins1).query(
+			api.faculty.list,
+			withSlug(ins1, {
+				paginationOpts: { numItems: 10, cursor: null },
+			}),
+		);
 
 		expect(result.page).toHaveLength(1);
 		expect(result.page[0]).toMatchObject({
@@ -150,9 +167,7 @@ describe("faculty.list", () => {
 		});
 	});
 
-	it("filters faculty by status", async () => {
-		const { t, user1, ins1 } = await setupTwoInstitutions();
-
+	test("filters faculty by status", async ({ t, user1, ins1, asOwner }) => {
 		await t.run((ctx) =>
 			seedFaculty(ctx, {
 				institutionId: ins1._id,
@@ -176,23 +191,19 @@ describe("faculty.list", () => {
 			}),
 		);
 
-		const activeResult = await t
-			.withIdentity(ownerIdentity(user1._id, ins1._id))
-			.query(
-				api.faculty.list,
-				withSlug(ins1, {
-					paginationOpts: { numItems: 10, cursor: null },
-					status: "active",
-				}),
-			);
+		const activeResult = await asOwner(user1, ins1).query(
+			api.faculty.list,
+			withSlug(ins1, {
+				paginationOpts: { numItems: 10, cursor: null },
+				status: "active",
+			}),
+		);
 
 		expect(activeResult.page).toHaveLength(1);
 		expect(activeResult.page[0]?.email).toBe("active@example.com");
 	});
 
-	it("paginates faculty results", async () => {
-		const { t, user1, ins1 } = await setupTwoInstitutions();
-
+	test("paginates faculty results", async ({ t, user1, ins1, asOwner }) => {
 		for (let i = 0; i < 3; i++) {
 			await t.run((ctx) =>
 				seedFaculty(ctx, {
@@ -206,26 +217,22 @@ describe("faculty.list", () => {
 			);
 		}
 
-		const firstPage = await t
-			.withIdentity(ownerIdentity(user1._id, ins1._id))
-			.query(
-				api.faculty.list,
-				withSlug(ins1, {
-					paginationOpts: { numItems: 2, cursor: null },
-				}),
-			);
+		const firstPage = await asOwner(user1, ins1).query(
+			api.faculty.list,
+			withSlug(ins1, {
+				paginationOpts: { numItems: 2, cursor: null },
+			}),
+		);
 
 		expect(firstPage.page).toHaveLength(2);
 		expect(firstPage.isDone).toBe(false);
 
-		const secondPage = await t
-			.withIdentity(ownerIdentity(user1._id, ins1._id))
-			.query(
-				api.faculty.list,
-				withSlug(ins1, {
-					paginationOpts: { numItems: 2, cursor: firstPage.continueCursor },
-				}),
-			);
+		const secondPage = await asOwner(user1, ins1).query(
+			api.faculty.list,
+			withSlug(ins1, {
+				paginationOpts: { numItems: 2, cursor: firstPage.continueCursor },
+			}),
+		);
 
 		expect(secondPage.page).toHaveLength(1);
 		expect(secondPage.isDone).toBe(true);
@@ -233,9 +240,12 @@ describe("faculty.list", () => {
 });
 
 describe("faculty.getById", () => {
-	it("returns faculty by id for the active institution", async () => {
-		const { t, user1, ins1 } = await setupTwoInstitutions();
-
+	test("returns faculty by id for the active institution", async ({
+		t,
+		user1,
+		ins1,
+		asOwner,
+	}) => {
 		const facultyId = await t.run((ctx) =>
 			seedFaculty(ctx, {
 				institutionId: ins1._id,
@@ -243,9 +253,10 @@ describe("faculty.getById", () => {
 			}),
 		);
 
-		const faculty = await t
-			.withIdentity(ownerIdentity(user1._id, ins1._id))
-			.query(api.faculty.getById, withSlug(ins1, { id: facultyId }));
+		const faculty = await asOwner(user1, ins1).query(
+			api.faculty.getById,
+			withSlug(ins1, { id: facultyId }),
+		);
 
 		expect(faculty).toMatchObject({
 			_id: facultyId,
@@ -254,9 +265,14 @@ describe("faculty.getById", () => {
 		});
 	});
 
-	it("requires institution access", async () => {
-		const { t, user1, user2, ins1, ins2 } = await setupTwoInstitutions();
-
+	test("requires institution access", async ({
+		t,
+		user1,
+		user2,
+		ins1,
+		ins2,
+		asOwner,
+	}) => {
 		const facultyId = await t.run((ctx) =>
 			seedFaculty(ctx, {
 				institutionId: ins2._id,
@@ -265,18 +281,17 @@ describe("faculty.getById", () => {
 		);
 
 		await expectAppError(
-			t
-				.withIdentity(ownerIdentity(user1._id, ins1._id))
-				.query(api.faculty.getById, withSlug(ins1, { id: facultyId })),
+			asOwner(user1, ins1).query(
+				api.faculty.getById,
+				withSlug(ins1, { id: facultyId }),
+			),
 			ERROR_CODES.FACULTY.NOT_FOUND,
 		);
 	});
 });
 
 describe("faculty.updatePersonalInfo", () => {
-	it("updates personal information", async () => {
-		const { t, user1, ins1 } = await setupTwoInstitutions();
-
+	test("updates personal information", async ({ t, user1, ins1, asOwner }) => {
 		const facultyId = await t.run((ctx) =>
 			seedFaculty(ctx, {
 				institutionId: ins1._id,
@@ -284,7 +299,7 @@ describe("faculty.updatePersonalInfo", () => {
 			}),
 		);
 
-		await t.withIdentity(ownerIdentity(user1._id, ins1._id)).mutation(
+		await asOwner(user1, ins1).mutation(
 			api.faculty.updatePersonalInfo,
 			withSlug(ins1, {
 				id: facultyId,
@@ -301,9 +316,12 @@ describe("faculty.updatePersonalInfo", () => {
 		});
 	});
 
-	it("rejects duplicate email on update", async () => {
-		const { t, user1, ins1 } = await setupTwoInstitutions();
-
+	test("rejects duplicate email on update", async ({
+		t,
+		user1,
+		ins1,
+		asOwner,
+	}) => {
 		const facultyId = await t.run((ctx) =>
 			seedFaculty(ctx, {
 				institutionId: ins1._id,
@@ -321,7 +339,7 @@ describe("faculty.updatePersonalInfo", () => {
 		);
 
 		await expectAppError(
-			t.withIdentity(ownerIdentity(user1._id, ins1._id)).mutation(
+			asOwner(user1, ins1).mutation(
 				api.faculty.updatePersonalInfo,
 				withSlug(ins1, {
 					id: facultyId,
@@ -332,9 +350,12 @@ describe("faculty.updatePersonalInfo", () => {
 		);
 	});
 
-	it("requires faculty:update permission", async () => {
-		const { t, user1, ins1 } = await setupTwoInstitutions();
-
+	test("requires faculty:update permission", async ({
+		t,
+		user1,
+		ins1,
+		asOwner,
+	}) => {
 		const facultyId = await t.run((ctx) =>
 			seedFaculty(ctx, {
 				institutionId: ins1._id,
@@ -347,7 +368,7 @@ describe("faculty.updatePersonalInfo", () => {
 		);
 
 		await expectAppError(
-			t.withIdentity(ownerIdentity(facultyUser._id, ins1._id)).mutation(
+			asOwner(facultyUser, ins1).mutation(
 				api.faculty.updatePersonalInfo,
 				withSlug(ins1, {
 					id: facultyId,
@@ -360,9 +381,12 @@ describe("faculty.updatePersonalInfo", () => {
 });
 
 describe("faculty.updatePhoneNumber", () => {
-	it("updates phone number and resets verified to false", async () => {
-		const { t, user1, ins1 } = await setupTwoInstitutions();
-
+	test("updates phone number and resets verified to false", async ({
+		t,
+		user1,
+		ins1,
+		asOwner,
+	}) => {
 		const facultyId = await t.run((ctx) =>
 			seedFaculty(ctx, {
 				institutionId: ins1._id,
@@ -371,7 +395,7 @@ describe("faculty.updatePhoneNumber", () => {
 			}),
 		);
 
-		await t.withIdentity(ownerIdentity(user1._id, ins1._id)).mutation(
+		await asOwner(user1, ins1).mutation(
 			api.faculty.updatePhoneNumber,
 			withSlug(ins1, {
 				id: facultyId,
@@ -389,9 +413,7 @@ describe("faculty.updatePhoneNumber", () => {
 });
 
 describe("faculty.deactivate", () => {
-	it("deactivates a faculty member", async () => {
-		const { t, user1, ins1 } = await setupTwoInstitutions();
-
+	test("deactivates a faculty member", async ({ t, user1, ins1, asOwner }) => {
 		const facultyId = await t.run((ctx) =>
 			seedFaculty(ctx, {
 				institutionId: ins1._id,
@@ -399,7 +421,7 @@ describe("faculty.deactivate", () => {
 			}),
 		);
 
-		const authed = t.withIdentity(ownerIdentity(user1._id, ins1._id));
+		const authed = asOwner(user1, ins1);
 
 		await authed.mutation(
 			api.faculty.deactivate,
@@ -415,9 +437,7 @@ describe("faculty.deactivate", () => {
 });
 
 describe("faculty.activate", () => {
-	it("activates a faculty member", async () => {
-		const { t, user1, ins1 } = await setupTwoInstitutions();
-
+	test("activates a faculty member", async ({ t, user1, ins1, asOwner }) => {
 		const facultyId = await t.run((ctx) =>
 			seedFaculty(ctx, {
 				institutionId: ins1._id,
@@ -426,7 +446,7 @@ describe("faculty.activate", () => {
 			}),
 		);
 
-		const authed = t.withIdentity(ownerIdentity(user1._id, ins1._id));
+		const authed = asOwner(user1, ins1);
 
 		await authed.mutation(
 			api.faculty.activate,
@@ -442,9 +462,12 @@ describe("faculty.activate", () => {
 });
 
 describe("faculty.updateEmployment", () => {
-	it("updates employment information", async () => {
-		const { t, user1, ins1 } = await setupTwoInstitutions();
-
+	test("updates employment information", async ({
+		t,
+		user1,
+		ins1,
+		asOwner,
+	}) => {
 		const facultyId = await t.run((ctx) =>
 			seedFaculty(ctx, {
 				institutionId: ins1._id,
@@ -452,7 +475,7 @@ describe("faculty.updateEmployment", () => {
 			}),
 		);
 
-		await t.withIdentity(ownerIdentity(user1._id, ins1._id)).mutation(
+		await asOwner(user1, ins1).mutation(
 			api.faculty.updateEmployment,
 			withSlug(ins1, {
 				id: facultyId,

@@ -1,60 +1,37 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect } from "vitest";
 import { api } from "../_generated/api";
 import { ERROR_CODES } from "../helpers/constants";
 import {
+	createProgramInput,
+	EXPECTED_PROGRAMS_INS1,
 	expectAppError,
-	primaryIns,
-	secondaryIns,
-	seedInstitutions,
-	seedOwners,
-	seedPrograms,
+	institutionTest,
+	OWNER_1_NAME,
+	PROGRAM_CS,
+	programTest,
 	withSlug,
-} from "./test.helpers";
-import { createTest } from "./test.setup";
+} from "./fixtures";
 
 describe("programs.create", () => {
-	it("rejects unthencticated user", async () => {
-		const t = createTest();
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
-		);
-		const firstIns = primaryIns(institutions);
+	const test = institutionTest();
 
+	test("rejects unthencticated user", async ({ t, ins1 }) => {
 		await expectAppError(
-			t.mutation(
-				api.programs.create,
-				withSlug(firstIns, {
-					name: "Computer Science",
-					alias: "CS",
-				}),
-			),
+			t.mutation(api.programs.create, withSlug(ins1, createProgramInput())),
 			ERROR_CODES.BASE.UNAUTHORIZED,
 		);
 	});
 
-	it("creates program for active institution", async () => {
-		const t = createTest();
-
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
+	test("creates program for active institution", async ({
+		t,
+		user1,
+		ins1,
+		asOwner,
+	}) => {
+		const programId = await asOwner(user1, ins1).mutation(
+			api.programs.create,
+			withSlug(ins1, createProgramInput()),
 		);
-		const firstIns = primaryIns(institutions);
-
-		const programId = await t
-			.withIdentity({
-				subject: firstIns.userId,
-				activeInstitutionId: firstIns._id,
-				sessionId: "ses-1",
-			})
-			.mutation(
-				api.programs.create,
-				withSlug(firstIns, {
-					name: "Computer Science",
-					alias: "CS",
-				}),
-			);
 
 		expect(programId).toBeDefined();
 
@@ -63,243 +40,135 @@ describe("programs.create", () => {
 		);
 
 		expect(insertedPrograms).toMatchObject([
-			{ name: "Computer Science", alias: "CS" },
+			{ name: PROGRAM_CS.name, alias: PROGRAM_CS.alias },
 		]);
 	});
 });
 
 describe("programs.list", () => {
-	it("rejects unthencticated user", async () => {
-		const t = createTest();
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
-		);
-		const ins1 = primaryIns(institutions);
+	const test = programTest();
 
+	test("rejects unthencticated user", async ({ t, ins1 }) => {
 		await expectAppError(
 			t.query(api.programs.list, withSlug(ins1, {})),
 			ERROR_CODES.BASE.UNAUTHORIZED,
 		);
 	});
 
-	it("lists programs for the active institution ordered by name", async () => {
-		const t = createTest();
-
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
+	test("lists programs for the active institution ordered by name", async ({
+		user1,
+		ins1,
+		asOwner,
+		programs: _programs,
+	}) => {
+		const result = await asOwner(user1, ins1).query(
+			api.programs.list,
+			withSlug(ins1, {}),
 		);
 
-		const ins1 = primaryIns(institutions);
-		const ins2 = secondaryIns(institutions);
-
-		await t.run((ctx) => seedPrograms(ctx, { user1, user2, ins1, ins2 }));
-
-		const programs = await t
-			.withIdentity({
-				subject: user1._id,
-				activeInstitutionId: ins1._id,
-				sessionId: "ses-1",
-			})
-			.query(api.programs.list, withSlug(ins1, {}));
-
-		expect(programs).toHaveLength(2);
-		expect(programs).toMatchObject([
-			{
-				name: "Computer Science",
-				alias: "CS",
-				status: "active",
-				user: { name: user1.name },
-			},
-			{
-				name: "Mechanical Engineering",
-				alias: "ME",
-				status: "active",
-				user: { name: user1.name },
-			},
-		]);
+		expect(result).toHaveLength(2);
+		expect(result).toMatchObject(EXPECTED_PROGRAMS_INS1);
 	});
 
-	it("lists programs by name for given query", async () => {
-		const t = createTest();
-
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
+	test("lists programs by name for given query", async ({
+		user1,
+		ins1,
+		asOwner,
+		programs: _programs,
+	}) => {
+		const query1 = await asOwner(user1, ins1).query(
+			api.programs.list,
+			withSlug(ins1, { query: "computer" }),
 		);
-
-		const ins1 = primaryIns(institutions);
-		const ins2 = secondaryIns(institutions);
-
-		await t.run((ctx) => seedPrograms(ctx, { user1, user2, ins1, ins2 }));
-
-		const query1 = await t
-			.withIdentity({
-				subject: user1._id,
-				activeInstitutionId: ins1._id,
-				sessionId: "ses-1",
-			})
-			.query(api.programs.list, withSlug(ins1, { query: "computer" }));
 
 		expect(query1).toHaveLength(1);
 		expect(query1).toMatchObject([
 			{
-				name: "Computer Science",
-				alias: "CS",
+				name: PROGRAM_CS.name,
+				alias: PROGRAM_CS.alias,
 				status: "active",
-				user: { name: "Walter White" },
+				user: { name: OWNER_1_NAME },
 			},
 		]);
 
-		const query2 = await t
-			.withIdentity({
-				subject: user1._id,
-				activeInstitutionId: ins1._id,
-				sessionId: "ses-1",
-			})
-			.query(api.programs.list, withSlug(ins1, { query: "some rubbish!" }));
+		const query2 = await asOwner(user1, ins1).query(
+			api.programs.list,
+			withSlug(ins1, { query: "some rubbish!" }),
+		);
 		expect(query2).toHaveLength(0);
 		expect(query2).toMatchObject([]);
 	});
 });
 
 describe("programs.getById", () => {
-	it("rejects unthencticated user", async () => {
-		const t = createTest();
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
-		);
-		const ins1 = primaryIns(institutions);
+	const test = programTest();
 
-		const programs = await t.run((ctx) =>
-			seedPrograms(ctx, {
-				user1,
-				user2,
-				ins1,
-				ins2: secondaryIns(institutions),
-			}),
-		);
-		const programId = programs[0]._id;
-
+	test("rejects unthencticated user", async ({ t, ins1, programs }) => {
 		await expectAppError(
-			t.query(api.programs.getById, withSlug(ins1, { id: programId })),
+			t.query(api.programs.getById, withSlug(ins1, { id: programs.me._id })),
 			ERROR_CODES.BASE.UNAUTHORIZED,
 		);
 	});
 
-	it("gets program by id", async () => {
-		const t = createTest();
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
+	test("gets program by id", async ({ user1, ins1, programs, asOwner }) => {
+		const program = await asOwner(user1, ins1).query(
+			api.programs.getById,
+			withSlug(ins1, { id: programs.cs._id }),
 		);
-		const ins1 = primaryIns(institutions);
-		const ins2 = institutions[2];
-
-		const programs = await t.run((ctx) =>
-			seedPrograms(ctx, { user1, user2, ins1, ins2 }),
-		);
-		const programId = programs[1]._id;
-
-		const program = await t
-			.withIdentity({
-				subject: user1._id,
-				activeInstitutionId: ins1._id,
-				sessionId: "ses-1",
-			})
-			.query(api.programs.getById, withSlug(ins1, { id: programId }));
 
 		expect(program).toMatchObject({
-			name: "Computer Science",
-			alias: "CS",
+			name: PROGRAM_CS.name,
+			alias: PROGRAM_CS.alias,
 			status: "active",
 		});
 	});
 
-	it("throws error if program doesn't exists", async () => {
-		const t = createTest();
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
-		);
-		const ins1 = primaryIns(institutions);
-
+	test("throws error if program doesn't exists", async ({
+		t,
+		user1,
+		ins1,
+		programs,
+		asOwner,
+	}) => {
 		const programId = await t.run(async (ctx) => {
-			const programs = await seedPrograms(ctx, {
-				user1,
-				user2,
-				ins1,
-				ins2: secondaryIns(institutions),
-			});
-			const id = programs[0]._id;
-			await ctx.db.delete("programs", id);
-			return id;
+			await ctx.db.delete("programs", programs.me._id);
+			return programs.me._id;
 		});
 
 		await expectAppError(
-			t
-				.withIdentity({
-					subject: user1._id,
-					activeInstitutionId: ins1._id,
-					sessionId: "ses-1",
-				})
-				.query(api.programs.getById, withSlug(ins1, { id: programId })),
+			asOwner(user1, ins1).query(
+				api.programs.getById,
+				withSlug(ins1, { id: programId }),
+			),
 			ERROR_CODES.PROGRAM.NOT_FOUND,
 		);
 	});
 
-	it("rejects program from another institution", async () => {
-		const t = createTest();
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
-		);
-		const ins1 = primaryIns(institutions);
-		const ins2 = institutions[2];
-
-		const programs = await t.run((ctx) =>
-			seedPrograms(ctx, { user1, user2, ins1, ins2 }),
-		);
-		const programInIns2 = programs[2];
-
+	test("rejects program from another institution", async ({
+		user1,
+		ins1,
+		programs,
+		asOwner,
+	}) => {
 		await expectAppError(
-			t
-				.withIdentity({
-					subject: user1._id,
-					activeInstitutionId: ins1._id,
-					sessionId: "ses-1",
-				})
-				.query(api.programs.getById, withSlug(ins1, { id: programInIns2._id })),
+			asOwner(user1, ins1).query(
+				api.programs.getById,
+				withSlug(ins1, { id: programs.ce._id }),
+			),
 			ERROR_CODES.PROGRAM.NOT_FOUND,
 		);
 	});
 });
 
 describe("programs.updateName", () => {
-	it("rejects unthencticated user", async () => {
-		const t = createTest();
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
-		);
-		const ins1 = primaryIns(institutions);
+	const test = programTest();
 
-		const programs = await t.run((ctx) =>
-			seedPrograms(ctx, {
-				user1,
-				user2,
-				ins1,
-				ins2: secondaryIns(institutions),
-			}),
-		);
-
+	test("rejects unthencticated user", async ({ t, ins1, programs }) => {
 		await expectAppError(
 			t.mutation(
 				api.programs.updateName,
 				withSlug(ins1, {
-					id: programs[0]._id,
+					id: programs.me._id,
 					body: { name: "New program name" },
 				}),
 			),
@@ -307,108 +176,66 @@ describe("programs.updateName", () => {
 		);
 	});
 
-	it("updates program name", async () => {
-		const t = createTest();
-
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
+	test("updates program name", async ({
+		t,
+		user1,
+		ins1,
+		programs,
+		asOwner,
+	}) => {
+		await asOwner(user1, ins1).mutation(
+			api.programs.updateName,
+			withSlug(ins1, {
+				id: programs.cs._id,
+				body: { name: "Computer Science & Engineering" },
+			}),
 		);
-
-		const ins1 = primaryIns(institutions);
-		const ins2 = secondaryIns(institutions);
-
-		const programs = await t.run((ctx) =>
-			seedPrograms(ctx, { user1, user2, ins1, ins2 }),
-		);
-
-		const computerScience = programs[0];
-
-		await t
-			.withIdentity({
-				subject: user1._id,
-				activeInstitutionId: ins1._id,
-				sessionId: "ses-1",
-			})
-			.mutation(
-				api.programs.updateName,
-				withSlug(ins1, {
-					id: computerScience._id,
-					body: { name: "Computer Science & Engineering" },
-				}),
-			);
 
 		const patchedProgram = await t.run((ctx) =>
-			ctx.db.get("programs", computerScience._id),
+			ctx.db.get("programs", programs.cs._id),
 		);
 
 		expect(patchedProgram).toMatchObject({
 			name: "Computer Science & Engineering",
-			alias: computerScience.alias,
-			status: computerScience.status,
+			alias: programs.cs.alias,
+			status: programs.cs.status,
 		});
 	});
 
-	it("throws error if trying to update name for non existing program", async () => {
-		const t = createTest();
-
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
-		);
-
-		const ins1 = primaryIns(institutions);
-		const ins2 = secondaryIns(institutions);
-
+	test("throws error if trying to update name for non existing program", async ({
+		t,
+		user1,
+		ins1,
+		programs,
+		asOwner,
+	}) => {
 		const programId = await t.run(async (ctx) => {
-			const programs = await seedPrograms(ctx, { user1, user2, ins1, ins2 });
-			const computerScience = programs[0];
-			await ctx.db.delete("programs", computerScience._id);
-			return computerScience._id;
+			await ctx.db.delete("programs", programs.cs._id);
+			return programs.cs._id;
 		});
 
 		await expectAppError(
-			t
-				.withIdentity({
-					subject: user1._id,
-					activeInstitutionId: ins1._id,
-					sessionId: "ses-1",
-				})
-				.mutation(
-					api.programs.updateName,
-					withSlug(ins1, {
-						id: programId,
-						body: { name: "Computer Science & Engineering" },
-					}),
-				),
+			asOwner(user1, ins1).mutation(
+				api.programs.updateName,
+				withSlug(ins1, {
+					id: programId,
+					body: { name: "Computer Science & Engineering" },
+				}),
+			),
 			ERROR_CODES.PROGRAM.NOT_FOUND,
 		);
 	});
 });
 
 describe("programs.updateAlias", () => {
-	it("rejects unthencticated user", async () => {
-		const t = createTest();
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
-		);
-		const ins1 = primaryIns(institutions);
+	const test = programTest();
 
-		const programs = await t.run((ctx) =>
-			seedPrograms(ctx, {
-				user1,
-				user2,
-				ins1,
-				ins2: secondaryIns(institutions),
-			}),
-		);
-
+	test("rejects unthencticated user", async ({ t, ins1, programs }) => {
 		await expectAppError(
 			t.mutation(
 				api.programs.updateName,
 				withSlug(ins1, {
-					id: programs[0]._id,
+					id: programs.me._id,
 					body: { name: "New program name" },
 				}),
 			),
@@ -416,78 +243,52 @@ describe("programs.updateAlias", () => {
 		);
 	});
 
-	it("updates program alias", async () => {
-		const t = createTest();
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
+	test("updates program alias", async ({
+		t,
+		user1,
+		ins1,
+		programs,
+		asOwner,
+	}) => {
+		await asOwner(user1, ins1).mutation(
+			api.programs.updateAlias,
+			withSlug(ins1, {
+				id: programs.cs._id,
+				body: { alias: "CSE" },
+			}),
 		);
-
-		const ins1 = primaryIns(institutions);
-		const ins2 = secondaryIns(institutions);
-
-		const programs = await t.run((ctx) =>
-			seedPrograms(ctx, { user1, user2, ins1, ins2 }),
-		);
-		const computerScience = programs[0];
-
-		await t
-			.withIdentity({
-				subject: user1._id,
-				activeInstitutionId: ins1._id,
-				sessionId: "ses-1",
-			})
-			.mutation(
-				api.programs.updateAlias,
-				withSlug(ins1, {
-					id: computerScience._id,
-					body: { alias: "CSE" },
-				}),
-			);
 
 		const patchedProgram = await t.run((ctx) =>
-			ctx.db.get("programs", computerScience._id),
+			ctx.db.get("programs", programs.cs._id),
 		);
 
 		expect(patchedProgram).toMatchObject({
-			name: computerScience.name,
+			name: programs.cs.name,
 			alias: "CSE",
-			status: computerScience.status,
+			status: programs.cs.status,
 		});
 	});
 
-	it("throws error if trying to update alias for non existing program", async () => {
-		const t = createTest();
-
-		const { user1, user2 } = await t.run(seedOwners);
-		const institutions = await t.run((ctx) =>
-			seedInstitutions(ctx, { user1, user2 }),
-		);
-
-		const ins1 = primaryIns(institutions);
-		const ins2 = secondaryIns(institutions);
-
+	test("throws error if trying to update alias for non existing program", async ({
+		t,
+		user1,
+		ins1,
+		programs,
+		asOwner,
+	}) => {
 		const programId = await t.run(async (ctx) => {
-			const programs = await seedPrograms(ctx, { user1, user2, ins1, ins2 });
-			const computerScience = programs[0];
-			await ctx.db.delete("programs", computerScience._id);
-			return computerScience._id;
+			await ctx.db.delete("programs", programs.cs._id);
+			return programs.cs._id;
 		});
 
 		await expectAppError(
-			t
-				.withIdentity({
-					subject: user1._id,
-					activeInstitutionId: ins1._id,
-					sessionId: "ses-1",
-				})
-				.mutation(
-					api.programs.updateAlias,
-					withSlug(ins1, {
-						id: programId,
-						body: { alias: "CSE" },
-					}),
-				),
+			asOwner(user1, ins1).mutation(
+				api.programs.updateAlias,
+				withSlug(ins1, {
+					id: programId,
+					body: { alias: "CSE" },
+				}),
+			),
 			ERROR_CODES.PROGRAM.NOT_FOUND,
 		);
 	});
