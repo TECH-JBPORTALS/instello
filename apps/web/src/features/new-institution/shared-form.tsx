@@ -67,6 +67,13 @@ export const AddressSchema = v.object({
 	),
 });
 
+export const PatternSchema = v.object({
+	academicPatternId: v.pipe(
+		v.string(),
+		v.nonEmpty("Select an academic pattern"),
+	),
+});
+
 export const newInstitutionFormOpt = formOptions({
 	defaultValues: {
 		basicInfo: {
@@ -80,6 +87,9 @@ export const newInstitutionFormOpt = formOptions({
 			district: "",
 			state: "",
 			zipCode: "",
+		},
+		pattern: {
+			academicPatternId: "",
 		},
 	},
 });

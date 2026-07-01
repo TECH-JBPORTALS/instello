@@ -6,7 +6,9 @@ import {
 	expectAppError,
 	expectedInstitutionsForUser,
 	institutionTest,
+	ownerOrgInstitutionTest,
 	ownerTest,
+	ownerUserIdentity,
 	seedSingleInstitution,
 } from "./fixtures/index.setup";
 
@@ -62,6 +64,32 @@ describe("institutions.listMyOwned", () => {
 
 		expect(myInstitutions).toHaveLength(expectedUser2Institutions.length);
 		expect(myInstitutions).toEqual(expectedUser2Institutions);
+	});
+});
+
+describe("institutions.listMyOwned adopted pattern", () => {
+	const test = ownerOrgInstitutionTest();
+
+	test("includes adopted pattern summary", async ({ t, user1, ins1 }) => {
+		const client = t.withIdentity(ownerUserIdentity(user1._id));
+		const patterns = await client.query(api.academicPatterns.list);
+		const pattern = patterns[0];
+
+		if (!pattern) throw new Error("Expected at least one academic pattern");
+
+		await client.mutation(api.academicPatterns.adopt, {
+			institutionId: ins1._id,
+			academicPatternId: pattern._id,
+		});
+
+		const myInstitutions = await client.query(api.institutions.listMyOwned);
+		const institution = myInstitutions.find((item) => item._id === ins1._id);
+
+		expect(institution?.adoptedPattern).toEqual({
+			_id: pattern._id,
+			name: pattern.name,
+			templateKey: pattern.templateKey,
+		});
 	});
 });
 

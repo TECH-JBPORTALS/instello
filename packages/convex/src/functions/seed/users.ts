@@ -21,6 +21,8 @@ import { env, internalMutation } from "../_generated/server";
 import { authComponent, createAuth } from "../auth";
 import type { Doc as BetterAuthDoc } from "../betterAuth/_generated/dataModel";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
+import * as AcademicPattern from "../model/academicPattern";
+import * as InstitutionAcademicPattern from "../model/institutionAcademicPattern";
 import * as OwnerOrganization from "../model/ownerOrganization";
 
 const ownersList: Owner[] = [
@@ -195,7 +197,50 @@ export const institutions = internalMutation({
 					},
 				});
 
-				console.info(` ✅ ${name} created`);
+				const institution = await ctx.runQuery(
+					components.betterAuth.institutions.getBySlug,
+					{ slug },
+				);
+
+				if (!institution) {
+					console.warn(` ⚠️ Could not find institution ${slug} after creation`);
+					continue;
+				}
+
+				const ownerOrg = await OwnerOrganization.getByUserId(ctx, {
+					userId: owner._id,
+				});
+
+				if (!ownerOrg) {
+					console.warn(
+						` ⚠️ No owner organization for user ${owner._id}, skipping pattern adoption`,
+					);
+					continue;
+				}
+
+				const patterns = await AcademicPattern.listByOwnerOrg(
+					ctx,
+					ownerOrg._id,
+				);
+
+				if (patterns.length === 0) {
+					console.warn(
+						` ⚠️ No academic patterns for owner org ${ownerOrg._id}, skipping adoption`,
+					);
+					continue;
+				}
+
+				const pattern = patterns[i % patterns.length];
+
+				if (!pattern) continue;
+
+				await InstitutionAcademicPattern.adopt(ctx, {
+					institutionId: institution._id,
+					academicPatternId: pattern._id,
+					ownerOrganizationId: ownerOrg._id,
+				});
+
+				console.info(` ✅ ${name} created (pattern: ${pattern.name})`);
 			}
 		}
 	},

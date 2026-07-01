@@ -1,7 +1,19 @@
+import type { Infer } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
+import { vv } from "../schema";
 import * as AcademicPattern from "./academicPattern";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
+
+export const AdoptedPatternSummarySchema = vv.object({
+	_id: vv.id("academicPatterns"),
+	name: vv.string(),
+	templateKey: vv.optional(
+		vv.union(vv.literal("engineering"), vv.literal("diploma")),
+	),
+});
+
+export type AdoptedPatternSummary = Infer<typeof AdoptedPatternSummarySchema>;
 
 /** Returns the adoption row for an institution, if one exists. */
 export async function getByInstitution(
@@ -12,6 +24,29 @@ export async function getByInstitution(
 		.query("institutionAcademicPatterns")
 		.withIndex("by_institution", (q) => q.eq("institutionId", institutionId))
 		.first();
+}
+
+/** Returns a compact summary of the pattern adopted by an institution, if any. */
+export async function getAdoptedPatternSummary(
+	ctx: AppQueryCtx,
+	institutionId: string,
+): Promise<AdoptedPatternSummary | null> {
+	const adoption = await getByInstitution(ctx, institutionId);
+
+	if (!adoption) return null;
+
+	const pattern = await ctx.db.get(
+		"academicPatterns",
+		adoption.academicPatternId,
+	);
+
+	if (!pattern) return null;
+
+	return {
+		_id: pattern._id,
+		name: pattern.name,
+		templateKey: pattern.templateKey,
+	};
 }
 
 /** Lists all institution adoptions for a pattern. */
