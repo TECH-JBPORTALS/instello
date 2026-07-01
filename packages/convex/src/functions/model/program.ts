@@ -1,6 +1,7 @@
 import type { Infer } from "convex/values";
 import { components } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
+import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import { vv } from "../schema";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 
@@ -75,12 +76,33 @@ export function toListItem(
 	};
 }
 
+export async function findByAlias(
+	ctx: AppQueryCtx | AppMutationCtx,
+	institutionId: string,
+	alias: string,
+) {
+	return await ctx.db
+		.query("programs")
+		.withIndex("by_institution_and_alias", (q) =>
+			q.eq("institutionId", institutionId).eq("alias", alias),
+		)
+		.unique();
+}
+
 export async function create(
 	ctx: AppMutationCtx,
 	args: Infer<typeof CreateSchema>,
 ) {
+	const alias = args.alias.trim();
+	const existing = await findByAlias(ctx, args.institutionId, alias);
+
+	if (existing) {
+		throwAppError(ERROR_CODES.PROGRAM.ALIAS_ALREADY_EXISTS);
+	}
+
 	return await ctx.db.insert("programs", {
 		...args,
+		alias,
 		createdAt: Date.now(),
 		updatedAt: Date.now(),
 		status: "active",
@@ -140,5 +162,22 @@ export async function patch(
 	id: Id<"programs">,
 	body: { name?: string; alias?: string },
 ) {
+	if (body.alias !== undefined) {
+		const program = await ctx.db.get("programs", id);
+
+		if (!program) {
+			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
+		}
+
+		const alias = body.alias.trim();
+		const existing = await findByAlias(ctx, program.institutionId, alias);
+
+		if (existing && existing._id !== id) {
+			throwAppError(ERROR_CODES.PROGRAM.ALIAS_ALREADY_EXISTS);
+		}
+
+		body = { ...body, alias };
+	}
+
 	return await ctx.db.patch("programs", id, { ...body, updatedAt: Date.now() });
 }

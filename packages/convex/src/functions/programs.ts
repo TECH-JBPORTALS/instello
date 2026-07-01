@@ -19,6 +19,21 @@ export const create = insMutation({
 	},
 });
 
+/** Check if a program alias is available in the current institution */
+export const checkAlias = insQuery({
+	permissions: ["program:create"],
+	args: { alias: vv.string() },
+	returns: vv.object({ available: vv.boolean() }),
+	handler: async (ctx, args) => {
+		const alias = args.alias.trim();
+		if (!alias) return { available: false };
+
+		const existing = await Program.findByAlias(ctx, ctx.institution._id, alias);
+
+		return { available: existing === null };
+	},
+});
+
 /** Lists program in the current institution
  * @returns programs
  */

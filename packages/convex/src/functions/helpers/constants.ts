@@ -35,6 +35,10 @@ export const ERROR_CODES = {
 			code: "PROGRAM_NOT_FOUND",
 			message: "Program not found",
 		},
+		ALIAS_ALREADY_EXISTS: {
+			code: "PROGRAM_ALIAS_ALREADY_EXISTS",
+			message: "Program alias already exists in this institution",
+		},
 	},
 	CLASS: {
 		NOT_FOUND: {

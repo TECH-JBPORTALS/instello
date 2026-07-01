@@ -43,6 +43,76 @@ describe("programs.create", () => {
 			{ name: PROGRAM_CS.name, alias: PROGRAM_CS.alias },
 		]);
 	});
+
+	test("rejects duplicate alias within the same institution", async ({
+		t,
+		user1,
+		ins1,
+		asOwner,
+	}) => {
+		await asOwner(user1, ins1).mutation(
+			api.programs.create,
+			withSlug(ins1, createProgramInput()),
+		);
+
+		await expectAppError(
+			asOwner(user1, ins1).mutation(
+				api.programs.create,
+				withSlug(
+					ins1,
+					createProgramInput({
+						name: "Another Computer Science",
+					}),
+				),
+			),
+			ERROR_CODES.PROGRAM.ALIAS_ALREADY_EXISTS,
+		);
+
+		const insertedPrograms = await t.run((ctx) =>
+			ctx.db.query("programs").collect(),
+		);
+
+		expect(insertedPrograms).toHaveLength(1);
+	});
+});
+
+describe("programs.checkAlias", () => {
+	const test = programTest();
+
+	test("rejects unthencticated user", async ({ t, ins1 }) => {
+		await expectAppError(
+			t.query(api.programs.checkAlias, withSlug(ins1, { alias: "CS" })),
+			ERROR_CODES.BASE.UNAUTHORIZED,
+		);
+	});
+
+	test("returns available when alias is not taken", async ({
+		user1,
+		ins1,
+		asOwner,
+		programs: _programs,
+	}) => {
+		const result = await asOwner(user1, ins1).query(
+			api.programs.checkAlias,
+			withSlug(ins1, { alias: "unique-alias" }),
+		);
+
+		expect(result).toEqual({ available: true });
+	});
+
+	test("returns unavailable when alias already exists", async ({
+		user1,
+		ins1,
+		asOwner,
+		programs,
+	}) => {
+		const result = await asOwner(user1, ins1).query(
+			api.programs.checkAlias,
+			withSlug(ins1, { alias: programs.cs.alias }),
+		);
+
+		expect(result).toEqual({ available: false });
+	});
 });
 
 describe("programs.list", () => {
@@ -290,6 +360,24 @@ describe("programs.updateAlias", () => {
 				}),
 			),
 			ERROR_CODES.PROGRAM.NOT_FOUND,
+		);
+	});
+
+	test("rejects duplicate alias on update", async ({
+		user1,
+		ins1,
+		programs,
+		asOwner,
+	}) => {
+		await expectAppError(
+			asOwner(user1, ins1).mutation(
+				api.programs.updateAlias,
+				withSlug(ins1, {
+					id: programs.cs._id,
+					body: { alias: programs.me.alias },
+				}),
+			),
+			ERROR_CODES.PROGRAM.ALIAS_ALREADY_EXISTS,
 		);
 	});
 });

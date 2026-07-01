@@ -52,6 +52,7 @@ const tables = {
 		updatedAt: v.number(),
 	})
 		.index("by_institution_name", ["institutionId", "name"])
+		.index("by_institution_and_alias", ["institutionId", "alias"])
 		.searchIndex("search_by_name", {
 			searchField: "name",
 			filterFields: ["institutionId"],

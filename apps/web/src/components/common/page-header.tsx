@@ -30,7 +30,7 @@ export function PageHeaderTitle({
 	className,
 	...props
 }: React.ComponentProps<"h3">) {
-	return <h3 className={cn("text-lg font-semibold", className)} {...props} />;
+	return <h3 className={cn("text-2xl font-semibold", className)} {...props} />;
 }
 
 export function PageHeaderDescription({
