@@ -15,22 +15,16 @@ export const PROGRAM_CE = { name: "Civil Engineering", alias: "CE" } as const;
 export const CLASS_1 = {
 	name: "Class 1",
 	description: "Class 1 description",
-	academicYear: 2026,
-	semester: 1,
 } as const;
 
 export const CLASS_2 = {
 	name: "Class 2",
 	description: "Class 2 description",
-	academicYear: 2026,
-	semester: 2,
 } as const;
 
 export const CLASS_3 = {
 	name: "Class 3",
 	description: "Class 3 description",
-	academicYear: 2026,
-	semester: 3,
 } as const;
 
 export const FACULTY_EMAIL = "jane.doe@example.com";

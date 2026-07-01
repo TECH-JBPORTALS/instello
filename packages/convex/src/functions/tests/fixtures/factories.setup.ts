@@ -1,3 +1,4 @@
+import type { Id } from "../../../_generated/dataModel";
 import {
 	CLASS_1,
 	FACULTY_EMAIL,
@@ -63,16 +64,15 @@ export const createSubjectInput = (
 export type CreateSubjectInput = ReturnType<typeof createSubjectInput>;
 
 export const createClassBody = (
+	currentHeadStageId: Id<"academicStages">,
 	overrides?: Partial<{
 		name: string;
 		description: string;
-		academicYear: number;
-		semester: number;
+		currentHeadStageId: Id<"academicStages">;
 	}>,
 ) => ({
 	name: CLASS_1.name,
 	description: CLASS_1.description,
-	academicYear: CLASS_1.academicYear,
-	semester: CLASS_1.semester,
+	currentHeadStageId,
 	...overrides,
 });

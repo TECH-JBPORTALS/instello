@@ -17,6 +17,9 @@ export async function seedClasses(
 	args: {
 		program1Id: Id<"programs">;
 		program2Id: Id<"programs">;
+		program1FirstStageId: Id<"academicStages">;
+		program1SecondStageId: Id<"academicStages">;
+		program2FirstStageId: Id<"academicStages">;
 	},
 ): Promise<SeededClasses> {
 	const now = Date.now();
@@ -25,8 +28,7 @@ export async function seedClasses(
 		programId: args.program1Id,
 		name: CLASS_1.name,
 		description: CLASS_1.description,
-		academicYear: CLASS_1.academicYear,
-		semester: CLASS_1.semester,
+		currentHeadStageId: args.program1FirstStageId,
 		createdAt: now,
 		updatedAt: now,
 		status: "active",
@@ -37,8 +39,7 @@ export async function seedClasses(
 		programId: args.program1Id,
 		name: CLASS_2.name,
 		description: CLASS_2.description,
-		academicYear: CLASS_2.academicYear,
-		semester: CLASS_2.semester,
+		currentHeadStageId: args.program1SecondStageId,
 		createdAt: now,
 		updatedAt: now,
 		status: "active",
@@ -49,8 +50,7 @@ export async function seedClasses(
 		programId: args.program2Id,
 		name: CLASS_3.name,
 		description: CLASS_3.description,
-		academicYear: CLASS_3.academicYear,
-		semester: CLASS_3.semester,
+		currentHeadStageId: args.program2FirstStageId,
 		createdAt: now,
 		updatedAt: now,
 		status: "active",

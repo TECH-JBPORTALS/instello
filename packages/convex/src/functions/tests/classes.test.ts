@@ -12,13 +12,18 @@ import {
 describe("classes.create", () => {
 	const test = programTest();
 
-	test("rejects unthencticated user", async ({ t, ins1, programs }) => {
+	test("rejects unthencticated user", async ({
+		t,
+		ins1,
+		programs,
+		academicAdoptions,
+	}) => {
 		await expectAppError(
 			t.mutation(
 				api.classes.create,
 				withSlug(ins1, {
 					programId: programs.me._id,
-					body: createClassBody(),
+					body: createClassBody(academicAdoptions.ins1FirstStage._id),
 				}),
 			),
 			ERROR_CODES.BASE.UNAUTHORIZED,
@@ -30,13 +35,14 @@ describe("classes.create", () => {
 		ins1,
 		ins2,
 		programs,
+		academicAdoptions,
 		asOwner,
 	}) => {
 		const firstClassId = await asOwner({ _id: ins1.userId }, ins1).mutation(
 			api.classes.create,
 			withSlug(ins1, {
 				programId: programs.me._id,
-				body: createClassBody(),
+				body: createClassBody(academicAdoptions.ins1FirstStage._id),
 			}),
 		);
 
@@ -44,10 +50,10 @@ describe("classes.create", () => {
 			api.classes.create,
 			withSlug(ins2, {
 				programId: programs.ce._id,
-				body: createClassBody({
+				body: createClassBody(academicAdoptions.ins2FirstStage._id, {
 					name: "Class 2",
 					description: "Class 2 description",
-					semester: 4,
+					currentHeadStageId: academicAdoptions.ins2FirstStage._id,
 				}),
 			}),
 		);
@@ -62,14 +68,12 @@ describe("classes.create", () => {
 				{
 					name: "Class 1",
 					description: "Class 1 description",
-					academicYear: 2026,
-					semester: 1,
+					currentHeadStageId: academicAdoptions.ins1FirstStage._id,
 				},
 				{
 					name: "Class 2",
 					description: "Class 2 description",
-					academicYear: 2026,
-					semester: 4,
+					currentHeadStageId: academicAdoptions.ins2FirstStage._id,
 				},
 			]);
 		});
@@ -79,6 +83,7 @@ describe("classes.create", () => {
 		user1,
 		ins1,
 		programs,
+		academicAdoptions,
 		asOwner,
 	}) => {
 		await expectAppError(
@@ -86,10 +91,59 @@ describe("classes.create", () => {
 				api.classes.create,
 				withSlug(ins1, {
 					programId: programs.ce._id,
-					body: createClassBody(),
+					body: createClassBody(academicAdoptions.ins1FirstStage._id),
 				}),
 			),
 			ERROR_CODES.PROGRAM.NOT_FOUND,
+		);
+	});
+
+	test("rejects when institution has no adopted pattern", async ({
+		t,
+		user1,
+		ins1,
+		programs,
+		academicAdoptions,
+		asOwner,
+	}) => {
+		await t.run(async (ctx) => {
+			const adoption = await ctx.db
+				.query("institutionAcademicPatterns")
+				.withIndex("by_institution", (q) => q.eq("institutionId", ins1._id))
+				.first();
+			if (adoption) {
+				await ctx.db.delete("institutionAcademicPatterns", adoption._id);
+			}
+		});
+
+		await expectAppError(
+			asOwner(user1, ins1).mutation(
+				api.classes.create,
+				withSlug(ins1, {
+					programId: programs.me._id,
+					body: createClassBody(academicAdoptions.ins1FirstStage._id),
+				}),
+			),
+			ERROR_CODES.INSTITUTION_ACADEMIC_PATTERN.NOT_FOUND,
+		);
+	});
+
+	test("rejects stage from another pattern", async ({
+		user1,
+		ins1,
+		programs,
+		academicAdoptions,
+		asOwner,
+	}) => {
+		await expectAppError(
+			asOwner(user1, ins1).mutation(
+				api.classes.create,
+				withSlug(ins1, {
+					programId: programs.me._id,
+					body: createClassBody(academicAdoptions.ins2FirstStage._id),
+				}),
+			),
+			ERROR_CODES.ACADEMIC_STAGE.NOT_FOUND,
 		);
 	});
 });
@@ -99,7 +153,13 @@ describe("classes.list", () => {
 
 	test("rejects unthencticated user", async ({ t, ins1, programs }) => {
 		await expectAppError(
-			t.query(api.classes.list, withSlug(ins1, { programId: programs.me._id })),
+			t.query(
+				api.classes.list,
+				withSlug(ins1, {
+					programId: programs.me._id,
+					paginationOpts: { numItems: 10, cursor: null },
+				}),
+			),
 			ERROR_CODES.BASE.UNAUTHORIZED,
 		);
 	});
@@ -109,43 +169,61 @@ describe("classes.list", () => {
 		ins2,
 		programs,
 		classes,
+		academicAdoptions,
 		asOwner,
 	}) => {
 		const classesList = await asOwner({ _id: ins1.userId }, ins1).query(
 			api.classes.list,
-			withSlug(ins1, { programId: programs.me._id }),
+			withSlug(ins1, {
+				programId: programs.me._id,
+				paginationOpts: { numItems: 10, cursor: null },
+			}),
 		);
 
-		expect(classesList).toHaveLength(classes.program1Classes.length);
-		expect(classesList).toMatchObject(
+		expect(classesList.page).toHaveLength(classes.program1Classes.length);
+		expect(classesList.page).toMatchObject(
 			classes.program1Classes.map((cls) => ({
 				_id: cls._id,
 				name: cls.name,
 				description: cls.description,
-				isGroupsEnabled: cls.isGroupsEnabled,
-				academicYear: cls.academicYear,
-				semester: cls.semester,
 				status: cls.status,
+				currentHeadStage: {
+					_id: cls.currentHeadStageId,
+				},
 			})),
 		);
 
 		const classesList2 = await asOwner({ _id: ins2.userId }, ins2).query(
 			api.classes.list,
-			withSlug(ins2, { programId: programs.ce._id }),
+			withSlug(ins2, {
+				programId: programs.ce._id,
+				paginationOpts: { numItems: 10, cursor: null },
+			}),
 		);
 
-		expect(classesList2).toHaveLength(classes.program2Classes.length);
-		expect(classesList2).toMatchObject(
+		expect(classesList2.page).toHaveLength(classes.program2Classes.length);
+		expect(classesList2.page).toMatchObject(
 			classes.program2Classes.map((cls) => ({
 				_id: cls._id,
 				name: cls.name,
 				description: cls.description,
-				isGroupsEnabled: cls.isGroupsEnabled,
-				academicYear: cls.academicYear,
-				semester: cls.semester,
 				status: cls.status,
 			})),
 		);
+
+		expect(classesList.page[0]?.currentHeadStage._id).toBe(
+			academicAdoptions.ins1FirstStage._id,
+		);
+
+		const searchResult = await asOwner({ _id: ins1.userId }, ins1).query(
+			api.classes.list,
+			withSlug(ins1, {
+				programId: programs.me._id,
+				paginationOpts: { numItems: 10, cursor: null },
+				searchQuery: "Class",
+			}),
+		);
+		expect(searchResult.page.length).toBeGreaterThanOrEqual(1);
 	});
 });
 
@@ -164,6 +242,7 @@ describe("classes.getById", () => {
 		user1,
 		ins1,
 		programs,
+		academicAdoptions,
 		asOwner,
 	}) => {
 		const classId = await t.run(async (ctx) => {
@@ -172,8 +251,7 @@ describe("classes.getById", () => {
 				name: "Class 1",
 				description: "Class 1 description",
 				isGroupsEnabled: false,
-				academicYear: 2026,
-				semester: 1,
+				currentHeadStageId: academicAdoptions.ins1FirstStage._id,
 				status: "active",
 				createdAt: Date.now(),
 				updatedAt: Date.now(),
@@ -191,7 +269,13 @@ describe("classes.getById", () => {
 		);
 	});
 
-	test("gets class by id", async ({ user1, ins1, classes, asOwner }) => {
+	test("gets class by id", async ({
+		user1,
+		ins1,
+		classes,
+		academicAdoptions,
+		asOwner,
+	}) => {
 		const cls = await asOwner(user1, ins1).query(
 			api.classes.getById,
 			withSlug(ins1, { id: classes.class1._id }),
@@ -201,9 +285,12 @@ describe("classes.getById", () => {
 			name: classes.class1.name,
 			description: classes.class1.description,
 			isGroupsEnabled: false,
-			academicYear: classes.class1.academicYear,
-			semester: classes.class1.semester,
 			status: "active",
+			currentHeadStage: {
+				_id: academicAdoptions.ins1FirstStage._id,
+				name: academicAdoptions.ins1FirstStage.name,
+				alias: academicAdoptions.ins1FirstStage.alias,
+			},
 		});
 	});
 
@@ -244,6 +331,7 @@ describe("classes.updateBasicInfo", () => {
 		user1,
 		ins1,
 		programs,
+		academicAdoptions,
 		asOwner,
 	}) => {
 		const classId = await t.run(async (ctx) => {
@@ -252,8 +340,7 @@ describe("classes.updateBasicInfo", () => {
 				name: "Class 1",
 				description: "Class 1 description",
 				isGroupsEnabled: false,
-				academicYear: 2026,
-				semester: 1,
+				currentHeadStageId: academicAdoptions.ins1FirstStage._id,
 				status: "active",
 				createdAt: Date.now(),
 				updatedAt: Date.now(),

@@ -12,6 +12,7 @@ import {
 	PageHeaderStart,
 	PageHeaderTitle,
 } from "@/components/common/page-header";
+import ClassesView from "@/features/classes/classes-view";
 import { useInsQuery, useInstitutionSlug } from "@/hooks/convex-react";
 import { useProgramAlias } from "@/hooks/use-program-alias";
 
@@ -58,7 +59,7 @@ function ProgramSectionPage({
 }
 
 export function ClassesPage() {
-	return <ProgramSectionPage title="Classes" description="Manage classes" />;
+	return <ClassesView />;
 }
 
 export function SubjectsPage() {

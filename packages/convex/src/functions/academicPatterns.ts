@@ -1,6 +1,6 @@
 import { components } from "./_generated/api";
 import { ERROR_CODES, throwAppError } from "./helpers/constants";
-import { userMutation, userQuery } from "./helpers/customFunctions";
+import { insQuery, userMutation, userQuery } from "./helpers/customFunctions";
 import * as AcademicPattern from "./model/academicPattern";
 import * as InstitutionAcademicPattern from "./model/institutionAcademicPattern";
 import * as OwnerOrganization from "./model/ownerOrganization";
@@ -231,6 +231,31 @@ export const getByInstitution = userQuery({
 			ctx,
 			adoption.academicPatternId,
 			ownerOrg._id,
+		);
+
+		if (!pattern) return null;
+
+		return await AcademicPattern.toDetailDto(ctx, pattern);
+	},
+});
+
+
+/** Returns the academic pattern adopted by the active institution, if any. */
+export const getAdoptedForActiveInstitution = insQuery({
+	permissions: ["class:view"],
+	args: {},
+	returns: vv.nullable(AcademicPattern.AcademicPatternDetailDtoSchema),
+	handler: async (ctx) => {
+		const adoption = await InstitutionAcademicPattern.getByInstitution(
+			ctx,
+			ctx.institution._id,
+		);
+
+		if (!adoption) return null;
+
+		const pattern = await ctx.db.get(
+			"academicPatterns",
+			adoption.academicPatternId,
 		);
 
 		if (!pattern) return null;

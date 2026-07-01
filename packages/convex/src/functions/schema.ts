@@ -115,12 +115,16 @@ const tables = {
 		name: v.string(),
 		description: v.optional(v.string()),
 		isGroupsEnabled: v.boolean(),
-		academicYear: v.number(),
-		semester: v.number(),
+		currentHeadStageId: v.id("academicStages"),
 		status: v.union(v.literal("inactive"), v.literal("active")),
 		createdAt: v.number(),
 		updatedAt: v.optional(v.number()),
-	}).index("by_program", ["programId"]),
+	})
+		.index("by_program", ["programId"])
+		.searchIndex("search_by_name", {
+			searchField: "name",
+			filterFields: ["programId"],
+		}),
 
 	/** Users can enable groups inside classes to divide students into smaller groups known as sections and batches */
 	classGroups: defineTable({

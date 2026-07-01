@@ -6,6 +6,7 @@ import {
 	SidebarGroup,
 	SidebarGroupContent,
 	SidebarGroupLabel,
+	SidebarHeader,
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
@@ -29,8 +30,10 @@ export function ProgramSidebar() {
 	return (
 		<Sidebar>
 			<AppSidebarHeader />
-			<ProgramSwitcher />
-			<ClassSwitcher />
+			<SidebarHeader>
+				<ProgramSwitcher />
+				<ClassSwitcher />
+			</SidebarHeader>
 			<SidebarAnimatedContent dir="right">
 				<SidebarContent>
 					<SidebarGroup>

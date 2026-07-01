@@ -1,3 +1,4 @@
+import { paginationOptsValidator } from "convex/server";
 import type { Id } from "./_generated/dataModel";
 import { ERROR_CODES, throwAppError } from "./helpers/constants";
 import { insMutation, insQuery } from "./helpers/customFunctions";
@@ -23,6 +24,11 @@ export const create = insMutation({
 			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
 		}
 
+		await Class.validateHeadStage(ctx, {
+			institutionId: ctx.institution._id,
+			stageId: args.body.currentHeadStageId,
+		});
+
 		return await Class.create(ctx, {
 			programId: args.programId,
 			body: args.body,
@@ -30,15 +36,17 @@ export const create = insMutation({
 	},
 });
 
-/** List classes in the current program
- * @returns classes
+/** List classes in the current program (paginated, searchable)
+ * @returns paginated classes
  */
 export const list = insQuery({
 	permissions: ["class:view"],
 	args: {
 		programId: vv.id("programs"),
+		paginationOpts: paginationOptsValidator,
+		searchQuery: vv.optional(vv.nullable(vv.string())),
 	},
-	returns: vv.array(Class.ClassDtoSchema),
+	returns: Class.PaginatedClassListSchema,
 	handler: async (ctx, args) => {
 		const program = await Program.getById(
 			ctx,
@@ -51,6 +59,32 @@ export const list = insQuery({
 		}
 
 		return await Class.list(ctx, {
+			programId: args.programId,
+			query: args.searchQuery,
+			paginationOpts: args.paginationOpts,
+		});
+	},
+});
+
+/** List classes for switcher dropdowns (non-paginated, up to 50) */
+export const listForSwitcher = insQuery({
+	permissions: ["class:view"],
+	args: {
+		programId: vv.id("programs"),
+	},
+	returns: vv.array(Class.ClassListItemSchema),
+	handler: async (ctx, args) => {
+		const program = await Program.getById(
+			ctx,
+			args.programId,
+			ctx.institution._id,
+		);
+
+		if (!program) {
+			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
+		}
+
+		return await Class.listForSwitcher(ctx, {
 			programId: args.programId,
 		});
 	},
@@ -82,7 +116,7 @@ export const getById = insQuery({
 			throwAppError(ERROR_CODES.CLASS.NOT_FOUND);
 		}
 
-		return Class.toDto(cls);
+		return await Class.toDto(ctx, cls);
 	},
 });
 
