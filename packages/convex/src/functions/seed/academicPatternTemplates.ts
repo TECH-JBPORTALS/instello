@@ -19,6 +19,7 @@ export const backfillDefaults = internalMutation({
 
 		for (const ownerOrg of ownerOrgs) {
 			await AcademicPattern.seedDefaults(ctx, ownerOrg._id);
+			await AcademicPattern.normalizeTemplateStages(ctx, ownerOrg._id);
 		}
 
 		console.info(

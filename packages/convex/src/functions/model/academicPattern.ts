@@ -15,7 +15,6 @@ export const CreateInputSchema = {
 		vv.object({
 			name: vv.string(),
 			alias: vv.string(),
-			description: vv.optional(vv.string()),
 			sequenceNumber: vv.number(),
 			yearNumber: vv.number(),
 		}),
@@ -152,7 +151,6 @@ export async function create(
 		stages: Array<{
 			name: string;
 			alias: string;
-			description?: string;
 			sequenceNumber: number;
 			yearNumber: number;
 		}>;
@@ -172,11 +170,10 @@ export async function create(
 	});
 
 	for (const stage of args.stages) {
-		await AcademicStage.create(ctx, {
+		await AcademicStage.insertForPattern(ctx, {
 			academicPatternId: patternId,
 			name: stage.name,
 			alias: stage.alias.trim(),
-			description: stage.description,
 			sequenceNumber: stage.sequenceNumber,
 			yearNumber: stage.yearNumber,
 		});
@@ -287,5 +284,46 @@ export async function seedDefaults(
 			templateKey: template.templateKey,
 			stages: template.stages,
 		});
+	}
+}
+
+export async function normalizeTemplateStages(
+	ctx: AppMutationCtx,
+	ownerOrganizationId: Id<"ownerOrganizations">,
+) {
+	for (const template of DEFAULT_PATTERN_TEMPLATES) {
+		const pattern = await ctx.db
+			.query("academicPatterns")
+			.withIndex("by_ownerOrganization_and_templateKey", (q) =>
+				q
+					.eq("ownerOrganizationId", ownerOrganizationId)
+					.eq("templateKey", template.templateKey),
+			)
+			.first();
+
+		if (!pattern?.canBeEdited || !pattern.templateKey) continue;
+
+		const stages = await AcademicStage.listByPattern(ctx, pattern._id);
+
+		for (const stageTemplate of template.stages) {
+			const stage = stages.find(
+				(entry) => entry.sequenceNumber === stageTemplate.sequenceNumber,
+			);
+
+			if (!stage) continue;
+
+			if (
+				stage.name === stageTemplate.name &&
+				stage.alias === stageTemplate.alias
+			) {
+				continue;
+			}
+
+			await ctx.db.patch("academicStages", stage._id, {
+				name: stageTemplate.name,
+				alias: stageTemplate.alias,
+				updatedAt: Date.now(),
+			});
+		}
 	}
 }

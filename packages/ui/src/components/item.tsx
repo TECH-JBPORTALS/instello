@@ -5,12 +5,18 @@ import { cn } from "@instello/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
 
-function ItemGroup({ className, ...props }: React.ComponentProps<"ul">) {
+function ItemGroup({
+	className,
+	variant = "default",
+	...props
+}: React.ComponentProps<"ul"> & { variant?: "default" | "stack" }) {
 	return (
 		<ul
 			data-slot="item-group"
 			className={cn(
 				"group/item-group flex w-full rounded-lg border shadow-xs overflow-hidden flex-col has-data-[size=sm]:gap-2.5 has-data-[size=xs]:gap-2",
+				variant === "stack" &&
+					"[&>div]:border-t-0! [&>div]:last:border-b-0! [&>div]:border-x-0! [&>div]:rounded-none",
 				className,
 			)}
 			{...props}

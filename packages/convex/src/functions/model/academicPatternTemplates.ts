@@ -26,8 +26,8 @@ function buildSemesterStages(
 	for (let year = 1; year <= years; year++) {
 		for (let semester = 1; semester <= semestersPerYear; semester++) {
 			stages.push({
-				name: `Year ${year} Semester ${semester}`,
-				alias: `y${year}s${semester}`,
+				name: `Semester ${sequenceNumber}`,
+				alias: `s${sequenceNumber}`,
 				sequenceNumber,
 				yearNumber: year,
 			});
