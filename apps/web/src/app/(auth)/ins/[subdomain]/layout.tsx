@@ -1,6 +1,7 @@
 import { ConvexBetterAuthGuard } from "@instello/convex/better-auth/provider";
 import { SidebarInset, SidebarProvider } from "@instello/ui/components/sidebar";
 import type { Metadata } from "next";
+import { MainAreaTopLoader } from "@/components/common/main-area-top-loader";
 import { WorkspaceLoading } from "@/components/common/workspace-loading";
 import { SyncActiveInstitution } from "@/components/sidebars/institution-sidebar/sync-active-institution";
 import { SidebarLayoutClient } from "@/components/sidebars/sidebar-layout-client";
@@ -30,6 +31,7 @@ export default function Layout({
 }) {
 	return (
 		<ConvexBetterAuthGuard loadingComponent={<WorkspaceLoading />}>
+			<MainAreaTopLoader />
 			<SidebarProvider>
 				<SyncActiveInstitution />
 				<SidebarLayoutClient sidebar={sidebar} />

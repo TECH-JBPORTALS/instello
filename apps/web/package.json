@@ -24,6 +24,7 @@
 		"framer-motion": "^12.42.0",
 		"lodash": "^4.18.1",
 		"next": "^16.2.4",
+		"nextjs-toploader": "^3.9.17",
 		"papaparse": "^5.5.4",
 		"react": "catalog:",
 		"react-dom": "catalog:",
