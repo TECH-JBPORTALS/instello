@@ -122,6 +122,7 @@ export function toInstitutionListDto(institution: SeededInstitution) {
 		zipCode: institution.zipCode,
 		slug: institution.slug,
 		createdAt: institution.createdAt,
+		adoptedPattern: null,
 	};
 }
 

@@ -1,6 +1,11 @@
 import type { Infer } from "convex/values";
 import { vv } from "../schema";
+import * as AcademicPattern from "./academicPattern";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
+
+export const OwnerOrgCreateSchema = vv
+	.doc("ownerOrganizations")
+	.omit("_creationTime", "_id", "createdAt", "updatedAt", "ownerId");
 
 export const OwnerOrgSchema = vv
 	.doc("ownerOrganizations")
@@ -9,13 +14,17 @@ export const OwnerOrgSchema = vv
 /** Create organization for owner */
 export async function create(
 	ctx: AppMutationCtx,
-	args: Infer<typeof OwnerOrgSchema>,
+	args: Infer<typeof OwnerOrgCreateSchema> & { ownerId: string },
 ) {
-	return await ctx.db.insert("ownerOrganizations", {
+	const orgId = await ctx.db.insert("ownerOrganizations", {
 		...args,
 		createdAt: Date.now(),
 		updatedAt: Date.now(),
 	});
+
+	await AcademicPattern.seedDefaults(ctx, orgId);
+
+	return orgId;
 }
 
 /** Get owner organization by current user */

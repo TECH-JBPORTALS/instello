@@ -44,7 +44,7 @@ export const AddressForm = withForm({
 					onDynamic: AddressSchema,
 				}}
 				onGroupSubmit={() => {
-					form.handleSubmit();
+					setStep(step + 1);
 				}}
 				children={(formGroup) => {
 					return (
@@ -213,7 +213,7 @@ export const AddressForm = withForm({
 										>
 											Back
 										</Button>
-										<form.SubscribeButton label="Create institution" />
+										<form.SubscribeButton label="Next" />
 									</Field>
 								</form.AppForm>
 							</CardFooter>

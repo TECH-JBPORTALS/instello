@@ -1,6 +1,8 @@
 "use client";
 
+import { api } from "@instello/convex/api";
 import { authClient } from "@instello/convex/better-auth/client";
+import type { Id } from "@instello/convex/dataModel";
 import {
 	Alert,
 	AlertDescription,
@@ -13,6 +15,8 @@ import {
 } from "@instello/ui/components/browser-mockup";
 import { IconAlertCircle } from "@tabler/icons-react";
 import { revalidateLogic } from "@tanstack/react-form-nextjs";
+import { useConvex, useMutation } from "convex/react";
+import { ConvexError } from "convex/values";
 import { useState } from "react";
 import * as v from "valibot";
 import { useAppForm } from "@/hooks/form";
@@ -23,15 +27,19 @@ import {
 	getInstitutionPreviewUrl,
 	InstitutionPreview,
 } from "./institution-preview";
+import { PatternForm } from "./pattern-form";
 import {
 	AddressSchema,
 	BasicInfoSchema,
 	newInstitutionFormOpt,
+	PatternSchema,
 } from "./shared-form";
 
 export function NewInstitutionForm() {
 	const [step, setStep] = useState(0);
 	const [globalError, setGlobalError] = useState<string | null>(null);
+	const convex = useConvex();
+	const adoptPattern = useMutation(api.academicPatterns.adopt);
 
 	const form = useAppForm({
 		...newInstitutionFormOpt,
@@ -40,16 +48,18 @@ export function NewInstitutionForm() {
 			onDynamic: v.object({
 				basicInfo: BasicInfoSchema,
 				address: AddressSchema,
+				pattern: PatternSchema,
 			}),
 		},
 		asyncDebounceMs: 2000,
 		onSubmit: async ({ value }) => {
 			setGlobalError(null);
-			const { basicInfo, address } = value;
+			const { basicInfo, address, pattern } = value;
+			const slug = basicInfo.slug.trim();
 
-			const { error } = await authClient.organization.create({
+			const { data, error } = await authClient.organization.create({
 				name: basicInfo.name,
-				slug: basicInfo.slug,
+				slug,
 				logo: basicInfo.logo || undefined,
 				code: basicInfo.code,
 				addressLine: address.addressLine,
@@ -63,7 +73,30 @@ export function NewInstitutionForm() {
 				return;
 			}
 
-			window.location.href = `${protocol}://${basicInfo.slug.trim()}.${rootDomain}`;
+			const institutionId =
+				data?.id ??
+				(
+					await convex.query(api.institutions.getBySlug, {
+						slug,
+					})
+				)._id;
+
+			try {
+				await adoptPattern({
+					institutionId,
+					academicPatternId:
+						pattern.academicPatternId as Id<"academicPatterns">,
+				});
+			} catch (adoptError) {
+				setGlobalError(
+					adoptError instanceof ConvexError
+						? `Institution created, but pattern adoption failed: ${adoptError.data.message}`
+						: "Institution created, but pattern adoption failed. Try again from institution settings.",
+				);
+				return;
+			}
+
+			window.location.href = `${protocol}://${slug}.${rootDomain}`;
 		},
 	});
 
@@ -82,6 +115,9 @@ export function NewInstitutionForm() {
 				)}
 				{step === 1 && (
 					<AddressForm form={form} setStep={setStep} step={step} />
+				)}
+				{step === 2 && (
+					<PatternForm form={form} setStep={setStep} step={step} />
 				)}
 			</div>
 

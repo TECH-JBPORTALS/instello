@@ -2,6 +2,7 @@ import { components } from "./_generated/api";
 import { ERROR_CODES, throwAppError } from "./helpers/constants";
 import { userQuery } from "./helpers/customFunctions";
 import * as Institution from "./model/institution";
+import { AdoptedPatternSummarySchema } from "./model/institutionAcademicPattern";
 import { vv } from "./schema";
 
 /**
@@ -22,6 +23,7 @@ export const listMyOwned = userQuery({
 			country: vv.string(),
 			zipCode: vv.string(),
 			createdAt: vv.number(),
+			adoptedPattern: vv.nullable(AdoptedPatternSummarySchema),
 		}),
 	),
 	handler: async (ctx) => {

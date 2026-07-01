@@ -6,6 +6,7 @@ import {
 	AvatarFallback,
 	AvatarImage,
 } from "@instello/ui/components/avatar";
+import { Badge } from "@instello/ui/components/badge";
 import { Button } from "@instello/ui/components/button";
 import { ButtonGroup } from "@instello/ui/components/button-group";
 import {
@@ -93,7 +94,10 @@ export function InstitutionsList() {
 							{ins.addressLine}, {ins.district}, {ins.state} - {ins.zipCode}
 						</ItemDescription>
 					</ItemContent>
-					<ItemActions>
+					<ItemActions className="flex items-center gap-2">
+						{ins.adoptedPattern && (
+							<Badge variant="secondary">{ins.adoptedPattern.name}</Badge>
+						)}
 						<InstitutionListActions slug={ins.slug} />
 					</ItemActions>
 				</Item>
