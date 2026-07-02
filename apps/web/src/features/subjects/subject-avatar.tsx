@@ -1,6 +1,7 @@
 "use client";
 
 import { Avatar, AvatarFallback } from "@instello/ui/components/avatar";
+import { cn } from "@/lib/utils";
 import { getSubjectInitials, subjectColorStyles } from "./constants";
 
 export function SubjectAvatar({
@@ -17,7 +18,10 @@ export function SubjectAvatar({
 	return (
 		<Avatar size={size} className="after:rounded-lg">
 			<AvatarFallback
-				className="rounded-lg font-semibold text-white"
+				className={cn(
+					"rounded-lg font-semibold text-white",
+					size === "xl" && "text-4xl",
+				)}
 				style={subjectColorStyles(color)}
 			>
 				{initials}

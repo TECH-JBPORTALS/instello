@@ -175,3 +175,49 @@ export const updateAlias = insMutation({
 		return null;
 	},
 });
+
+/** Update subject color
+ * @param id - subject id to be updated
+ * @param body - subject color mentioned in the body
+ */
+export const updateColor = insMutation({
+	permissions: ["subject:update"],
+	args: {
+		id: vv.id("subjects"),
+		body: Subject.PatchColorSchema,
+	},
+	returns: vv.null(),
+	handler: async (ctx, args) => {
+		const subject = await Subject.getById(ctx, args.id, ctx.institution._id);
+
+		if (!subject) {
+			throwAppError(ERROR_CODES.SUBJECT.NOT_FOUND);
+		}
+
+		await Subject.patch(ctx, args.id, args.body);
+		return null;
+	},
+});
+
+/** Update subject description
+ * @param id - subject id to be updated
+ * @param body - subject description mentioned in the body
+ */
+export const updateDescription = insMutation({
+	permissions: ["subject:update"],
+	args: {
+		id: vv.id("subjects"),
+		body: Subject.PatchDescriptionSchema,
+	},
+	returns: vv.null(),
+	handler: async (ctx, args) => {
+		const subject = await Subject.getById(ctx, args.id, ctx.institution._id);
+
+		if (!subject) {
+			throwAppError(ERROR_CODES.SUBJECT.NOT_FOUND);
+		}
+
+		await Subject.patch(ctx, args.id, args.body);
+		return null;
+	},
+});

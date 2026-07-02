@@ -172,6 +172,11 @@ const tables = {
 			"staffId",
 		]),
 
+	/**
+	 * Subjects are the academic disciplines that are taught in the institution.
+	 * Currently we store all subjects under the institution. Later we allocate subjects under programs and classes.
+	 * with it's type (`theory`, `practical`, etc... ).
+	 * */
 	subjects: defineTable({
 		name: v.string(),
 		color: v.string(),

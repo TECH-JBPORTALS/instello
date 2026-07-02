@@ -570,3 +570,89 @@ describe("subjects.updateAlias", () => {
 		);
 	});
 });
+
+describe("subjects.updateColor", () => {
+	const test = subjectTest();
+
+	test("updates subject color", async ({
+		t,
+		user1,
+		ins1,
+		subjects,
+		asOwner,
+	}) => {
+		await asOwner(user1, ins1).mutation(
+			api.subjects.updateColor,
+			withSlug(ins1, {
+				id: subjects.math._id,
+				body: { color: "#EF4444" },
+			}),
+		);
+
+		const patchedSubject = await t.run((ctx) =>
+			ctx.db.get("subjects", subjects.math._id),
+		);
+
+		expect(patchedSubject).toMatchObject({
+			color: "#EF4444",
+		});
+	});
+});
+
+describe("subjects.updateDescription", () => {
+	const test = subjectTest();
+
+	test("updates subject description", async ({
+		t,
+		user1,
+		ins1,
+		subjects,
+		asOwner,
+	}) => {
+		await asOwner(user1, ins1).mutation(
+			api.subjects.updateDescription,
+			withSlug(ins1, {
+				id: subjects.math._id,
+				body: { description: "Core mathematics course" },
+			}),
+		);
+
+		const patchedSubject = await t.run((ctx) =>
+			ctx.db.get("subjects", subjects.math._id),
+		);
+
+		expect(patchedSubject).toMatchObject({
+			description: "Core mathematics course",
+		});
+	});
+
+	test("clears subject description", async ({
+		t,
+		user1,
+		ins1,
+		subjects,
+		asOwner,
+	}) => {
+		await asOwner(user1, ins1).mutation(
+			api.subjects.updateDescription,
+			withSlug(ins1, {
+				id: subjects.math._id,
+				body: { description: "Temporary description" },
+			}),
+		);
+
+		await asOwner(user1, ins1).mutation(
+			api.subjects.updateDescription,
+			withSlug(ins1, {
+				id: subjects.math._id,
+				body: { description: "" },
+			}),
+		);
+
+		const patchedSubject = await t.run((ctx) =>
+			ctx.db.get("subjects", subjects.math._id),
+		);
+
+		expect(patchedSubject?.description).toBeUndefined();
+	});
+});

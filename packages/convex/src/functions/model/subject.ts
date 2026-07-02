@@ -51,6 +51,14 @@ export const PatchAliasSchema = vv.object({
 	alias: vv.string(),
 });
 
+export const PatchColorSchema = vv.object({
+	color: vv.string(),
+});
+
+export const PatchDescriptionSchema = vv.object({
+	description: vv.optional(vv.string()),
+});
+
 export const SubjectDtoSchema = vv.object({
 	_id: vv.id("subjects"),
 	name: vv.string(),
@@ -232,7 +240,13 @@ export async function getById(
 export async function patch(
 	ctx: AppMutationCtx,
 	id: Id<"subjects">,
-	body: { name?: string; code?: string; alias?: string; description?: string },
+	body: {
+		name?: string;
+		code?: string;
+		alias?: string;
+		description?: string;
+		color?: string;
+	},
 ) {
 	const subject = await ctx.db.get("subjects", id);
 
@@ -245,6 +259,7 @@ export async function patch(
 		code?: string;
 		alias?: string;
 		description?: string;
+		color?: string;
 		updatedAt: number;
 	} = {
 		updatedAt: Date.now(),
@@ -277,7 +292,12 @@ export async function patch(
 	}
 
 	if (body.description !== undefined) {
-		updates.description = body.description;
+		const trimmed = body.description.trim();
+		updates.description = trimmed.length > 0 ? trimmed : undefined;
+	}
+
+	if (body.color !== undefined) {
+		updates.color = body.color;
 	}
 
 	return await ctx.db.patch("subjects", id, updates);

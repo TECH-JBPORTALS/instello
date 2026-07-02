@@ -21,12 +21,14 @@ import {
 import { Skeleton } from "@instello/ui/components/skeleton";
 import { IconCopy, IconPlus } from "@tabler/icons-react";
 import { isEmpty } from "lodash";
+import Link from "next/link";
 import { useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useInsPaginatedQuery } from "@/hooks/convex-react";
 import { SUBJECT_LIST_PAGE_SIZE } from "./constants";
 import { NewSubjectDialog } from "./new-subject-dialog";
 import { SubjectAvatar } from "./subject-avatar";
+import { subjectPath } from "./subject-path";
 
 function SubjectsListEmpty({ searchQuery }: { searchQuery: string }) {
 	const [open, setOpen] = useState(false);
@@ -108,6 +110,7 @@ export function SubjectsList({ searchQuery }: { searchQuery: string }) {
 					<Item
 						key={subject._id}
 						className="border-x-0 border-t-0 hover:bg-accent/30 last:border-b-0 relative rounded-none border-border!"
+						render={<Link href={subjectPath(subject.alias)} />}
 					>
 						<ItemMedia variant={"image"}>
 							<SubjectAvatar name={subject.name} color={subject.color} />
