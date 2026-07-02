@@ -65,25 +65,26 @@ export function FacultyDetailPage() {
 							size="xl"
 						/>
 						<div className="min-w-0 space-y-1.5">
-							<h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-								{displayName}
-							</h1>
-							<p className="text-sm text-muted-foreground">{faculty.email}</p>
-							<p className="text-sm text-muted-foreground">
-								{faculty.designation} · {faculty.staffId}
-							</p>
-							<div className="flex flex-wrap items-center gap-2 pt-0.5">
+							<div className="flex flex-row flex-wrap items-center	 gap-1.5">
+								<h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+									{displayName}
+								</h1>
 								<Badge
 									variant="secondary"
 									className={cn(
+										"uppercase",
 										faculty.status === "active"
-											? "bg-primary/10 text-primary"
-											: "bg-muted text-muted-foreground",
+											? "bg-success/20 text-success"
+											: "bg-warning/20 text-warning",
 									)}
 								>
 									{faculty.status}
 								</Badge>
 							</div>
+							<p className="text-sm text-muted-foreground">{faculty.email}</p>
+							<p className="text-sm text-muted-foreground">
+								{faculty.designation} · {faculty.staffId}
+							</p>
 						</div>
 					</div>
 				</div>

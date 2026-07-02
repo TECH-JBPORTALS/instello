@@ -312,16 +312,19 @@ export function ImportStudentsDialog({
 										Template
 									</Button>
 								</div>
-								<Button
+								<button
 									type="button"
-									variant="outline"
-									className="w-full"
+									className="flex min-h-32 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-6 text-center transition-colors hover:bg-muted/50"
 									onClick={() => inputRef.current?.click()}
-									disabled={categoryNames.length === 0}
 								>
-									<IconTableImport className="size-4" />
-									Upload file
-								</Button>
+									<IconTableImport className="size-8 text-muted-foreground" />
+									<span className="text-sm font-medium">
+										Choose a CSV or Excel file
+									</span>
+									<span className="text-xs text-muted-foreground">
+										.csv, .xlsx, or .xls
+									</span>
+								</button>
 							</motion.div>
 						)}
 

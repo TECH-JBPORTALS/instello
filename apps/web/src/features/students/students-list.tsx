@@ -29,7 +29,6 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { useInsPaginatedQuery } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
-import { AddStudentButton } from "./add-student-button";
 import { STUDENT_LIST_PAGE_SIZE } from "./constants";
 import { NewStudentDialog } from "./dialogs/new-student-dialog";
 import { getStudentDisplayName } from "./forms/shared-form";

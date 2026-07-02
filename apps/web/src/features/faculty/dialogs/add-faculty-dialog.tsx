@@ -18,11 +18,12 @@ import { IconAlertCircle } from "@tabler/icons-react";
 import { revalidateLogic } from "@tanstack/react-form-nextjs";
 import { useEffect, useState } from "react";
 import * as v from "valibot";
+import { MultiStepIndicator } from "@/components/common/multi-step-indicator";
 import { useInsMutation } from "@/hooks/convex-react";
 import { useAppForm } from "@/hooks/form";
 import { getConvexErrorMessage } from "@/lib/convex-error";
 import { formatIndianPhoneNumberForStorage } from "@/lib/phone";
-import { AddFacultyStepIndicator } from "../forms/add-faculty-step-indicator";
+import { ADD_FACULTY_STEPS } from "../constants";
 import { ContactStep } from "../forms/contact-step";
 import { EmploymentStep } from "../forms/employment-step";
 import { PersonalInfoStep } from "../forms/personal-info-step";
@@ -117,7 +118,7 @@ export function AddFacultyDialog({
 					</DialogDescription>
 				</DialogHeader>
 
-				<AddFacultyStepIndicator step={step} />
+				<MultiStepIndicator step={step} steps={ADD_FACULTY_STEPS} />
 
 				{globalError && (
 					<Alert variant="destructive">

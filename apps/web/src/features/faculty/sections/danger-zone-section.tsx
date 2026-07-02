@@ -5,7 +5,6 @@ import type { Id } from "@instello/convex/dataModel";
 import { Button } from "@instello/ui/components/button";
 import {
 	Card,
-	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
@@ -18,6 +17,14 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@instello/ui/components/dialog";
+import {
+	Item,
+	ItemActions,
+	ItemContent,
+	ItemDescription,
+	ItemGroup,
+	ItemTitle,
+} from "@instello/ui/components/item";
 import { useState } from "react";
 import { useInsMutation } from "@/hooks/convex-react";
 import { getConvexErrorMessage } from "@/lib/convex-error";
@@ -66,20 +73,35 @@ export function DangerZoneSection({
 
 	return (
 		<>
-			<Card className="border-destructive/30">
-				<CardHeader>
+			<Card className="ring-0! bg-transparent">
+				<CardHeader className="px-0">
 					<CardTitle className="text-destructive">Danger zone</CardTitle>
 					<CardDescription>
-						{isActive
-							? "Deactivate this faculty member to revoke their active status."
-							: "Reactivate this faculty member to restore their active status."}
+						All desctructive actions in one place. Use with caution.
 					</CardDescription>
 				</CardHeader>
-				<CardContent>
-					<Button variant="destructive" onClick={() => setConfirmOpen(true)}>
-						{isActive ? "Deactivate faculty" : "Activate faculty"}
-					</Button>
-				</CardContent>
+
+				<ItemGroup variant="stack">
+					<Item variant="outline">
+						<ItemContent>
+							<ItemTitle>{isActive ? "Deactivate" : "Reactivate"}</ItemTitle>
+							<ItemDescription className="pr-8">
+								{isActive ? "Deactivate" : "Reactivate"} <b>{displayName}</b> ?
+								He will be moved to the inactive list and lose active faculty
+								status. This faculty member can't be assigned to any classes or
+								subjects further until they reactivated.
+							</ItemDescription>
+						</ItemContent>
+						<ItemActions>
+							<Button
+								variant="destructive"
+								onClick={() => setConfirmOpen(true)}
+							>
+								{isActive ? "Deactivate faculty" : "Activate faculty"}
+							</Button>
+						</ItemActions>
+					</Item>
+				</ItemGroup>
 			</Card>
 
 			<Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>

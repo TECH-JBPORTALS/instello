@@ -225,16 +225,16 @@ export async function list(
 	const query = status
 		? ctx.db
 				.query("faculty")
-				.withIndex("by_institution_and_status", (q) =>
+				.withIndex("by_institution_and_status_and_staff_id", (q) =>
 					q.eq("institutionId", institutionId).eq("status", status),
 				)
 		: ctx.db
 				.query("faculty")
-				.withIndex("by_institution", (q) =>
+				.withIndex("by_institution_and_staff_id", (q) =>
 					q.eq("institutionId", institutionId),
 				);
 
-	const result = await query.order("desc").paginate(paginationOpts);
+	const result = await query.order("asc").paginate(paginationOpts);
 
 	return {
 		page: await Promise.all(result.page.map((f) => toDto(ctx, f))),

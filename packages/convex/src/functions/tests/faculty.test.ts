@@ -226,6 +226,10 @@ describe("faculty.list", () => {
 
 		expect(firstPage.page).toHaveLength(2);
 		expect(firstPage.isDone).toBe(false);
+		expect(firstPage.page.map((f) => f.staffId)).toEqual([
+			"STAFF-0",
+			"STAFF-1",
+		]);
 
 		const secondPage = await asOwner(user1, ins1).query(
 			api.faculty.list,
@@ -236,6 +240,7 @@ describe("faculty.list", () => {
 
 		expect(secondPage.page).toHaveLength(1);
 		expect(secondPage.isDone).toBe(true);
+		expect(secondPage.page[0]?.staffId).toBe("STAFF-2");
 	});
 });
 

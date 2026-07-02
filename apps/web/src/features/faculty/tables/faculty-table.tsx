@@ -39,6 +39,7 @@ import { IconDots, IconUser, IconUserOff } from "@tabler/icons-react";
 import { isEmpty } from "lodash";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import InfiniteScroll from "react-infinite-scroll-component";
 import { useInsMutation, useInsPaginatedQuery } from "@/hooks/convex-react";
 import { FACULTY_LIST_PAGE_SIZE } from "../constants";
 import { FacultyAvatar } from "../faculty-avatar";
@@ -54,6 +55,7 @@ export function FacultyTable({ status, searchQuery }: FacultyTableProps) {
 		results,
 		status: paginationStatus,
 		loadMore,
+		isLoading,
 	} = useInsPaginatedQuery(
 		api.faculty.list,
 		{ status },
@@ -112,31 +114,21 @@ export function FacultyTable({ status, searchQuery }: FacultyTableProps) {
 	return (
 		<Card className="gap-0! py-0">
 			<CardContent className="p-0!">
-				{filteredResults.map((faculty) => (
-					<FacultyListItem
-						key={faculty._id}
-						faculty={faculty}
-						showDeactivate={status === "active"}
-					/>
-				))}
-
-				{paginationStatus === "CanLoadMore" && (
-					<div className="border-t p-4">
-						<Button
-							variant="outline"
-							className="w-full"
-							onClick={() => loadMore(FACULTY_LIST_PAGE_SIZE)}
-						>
-							Load more
-						</Button>
-					</div>
-				)}
-
-				{paginationStatus === "LoadingMore" && (
-					<div className="border-t p-4">
-						<Skeleton className="h-9 w-full" />
-					</div>
-				)}
+				<InfiniteScroll
+					dataLength={filteredResults.length}
+					next={() => loadMore(FACULTY_LIST_PAGE_SIZE)}
+					hasMore={paginationStatus === "CanLoadMore"}
+					loader={<FacultyListSkeleton count={3} />}
+				>
+					{filteredResults.map((faculty) => (
+						<FacultyListItem
+							key={faculty._id}
+							faculty={faculty}
+							showDeactivate={status === "active"}
+						/>
+					))}
+					{isLoading && <FacultyListSkeleton count={3} />}
+				</InfiniteScroll>
 			</CardContent>
 		</Card>
 	);

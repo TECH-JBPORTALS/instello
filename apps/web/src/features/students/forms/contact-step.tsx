@@ -8,9 +8,9 @@ import {
 	FieldLabel,
 } from "@instello/ui/components/field";
 import { Input } from "@instello/ui/components/input";
+import * as v from "valibot";
 import { withForm } from "@/hooks/form";
 import { indianPhoneNumberInputSchema } from "@/lib/phone";
-import * as v from "valibot";
 import { addStudentFormOpt, ContactSchema } from "./shared-form";
 
 const emailSchema = v.pipe(

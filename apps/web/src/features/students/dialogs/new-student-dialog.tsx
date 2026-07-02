@@ -17,12 +17,13 @@ import {
 import { IconAlertCircle } from "@tabler/icons-react";
 import { revalidateLogic } from "@tanstack/react-form-nextjs";
 import { useEffect, useState } from "react";
+import { MultiStepIndicator } from "@/components/common/multi-step-indicator";
 import { useInsMutation, useInsQuery } from "@/hooks/convex-react";
 import { useAppForm } from "@/hooks/form";
 import { getConvexErrorMessage } from "@/lib/convex-error";
 import { formatIndianPhoneNumberForStorage } from "@/lib/phone";
+import { ADD_STUDENT_STEPS } from "../constants";
 import { AcademicStep } from "../forms/academic-step";
-import { AddStudentStepIndicator } from "../forms/add-student-step-indicator";
 import { ContactStep } from "../forms/contact-step";
 import { PersonalInfoStep } from "../forms/personal-info-step";
 import { addStudentFormOpt, CreateStudentSchema } from "../forms/shared-form";
@@ -111,7 +112,7 @@ export function NewStudentDialog({
 					</DialogDescription>
 				</DialogHeader>
 
-				<AddStudentStepIndicator step={step} />
+				<MultiStepIndicator step={step} steps={ADD_STUDENT_STEPS} />
 
 				{globalError && (
 					<Alert variant="destructive">
