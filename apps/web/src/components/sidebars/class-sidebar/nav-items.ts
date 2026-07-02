@@ -1,9 +1,4 @@
-import {
-	IconBook,
-	IconCalendarCheck,
-	IconTable,
-	IconUsers,
-} from "@tabler/icons-react";
+import { IconCalendarCheck, IconTable, IconUsers } from "@tabler/icons-react";
 
 export type ClassNavItem = {
 	id: string;
@@ -19,12 +14,12 @@ export const classNavItems: ClassNavItem[] = [
 		icon: IconUsers,
 		label: "Students",
 	},
-	{
-		id: "subjects",
-		segment: "subjects",
-		icon: IconBook,
-		label: "Subjects",
-	},
+	// {
+	// 	id: "subjects",
+	// 	segment: "subjects",
+	// 	icon: IconBook,
+	// 	label: "Subjects",
+	// },
 	{
 		id: "timetables",
 		segment: "timetables",

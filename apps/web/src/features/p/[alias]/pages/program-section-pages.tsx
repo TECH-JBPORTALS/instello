@@ -12,16 +12,24 @@ import {
 	PageHeaderStart,
 	PageHeaderTitle,
 } from "@/components/common/page-header";
+import { UpcomingFeaturePreview } from "@/components/common/upcoming-feature-preview/upcoming-feature-preview";
 import ClassesView from "@/features/classes/classes-view";
 import { useInsQuery, useInstitutionSlug } from "@/hooks/convex-react";
 import { useProgramAlias } from "@/hooks/use-program-alias";
+import {
+	type FeaturePreviewKey,
+	getFeaturePreview,
+	getFeaturePreviewTitle,
+} from "@/lib/feature-previews";
 
 function ProgramSectionPage({
 	title,
 	description,
+	featurePreview,
 }: {
 	title: string;
 	description: string;
+	featurePreview?: { key: FeaturePreviewKey; scope: "program" };
 }) {
 	const convex = useConvex();
 	const institutionSlug = useInstitutionSlug();
@@ -44,8 +52,12 @@ function ProgramSectionPage({
 			});
 	}, [alias, convex, institutionSlug]);
 
+	const previewConfig = featurePreview
+		? getFeaturePreview(featurePreview.key, featurePreview.scope)
+		: null;
+
 	return (
-		<Container>
+		<Container className="relative flex min-h-0 flex-1 flex-col">
 			<PageHeader>
 				<PageHeaderStart>
 					<PageHeaderTitle>{title}</PageHeaderTitle>
@@ -54,6 +66,14 @@ function ProgramSectionPage({
 					</PageHeaderDescription>
 				</PageHeaderStart>
 			</PageHeader>
+			{featurePreview ? (
+				<UpcomingFeaturePreview
+					featureKey={featurePreview.key}
+					featureTitle={getFeaturePreviewTitle(featurePreview.key)}
+					scope={featurePreview.scope}
+					slides={previewConfig?.slides ?? []}
+				/>
+			) : null}
 		</Container>
 	);
 }
@@ -77,12 +97,20 @@ export function FacultyPage() {
 
 export function TimetablesPage() {
 	return (
-		<ProgramSectionPage title="Timetables" description="Manage timetables" />
+		<ProgramSectionPage
+			description="Manage timetables"
+			featurePreview={{ key: "timetable", scope: "program" }}
+			title="Timetables"
+		/>
 	);
 }
 
 export function AttendancePage() {
 	return (
-		<ProgramSectionPage title="Attendance" description="Manage attendance" />
+		<ProgramSectionPage
+			description="Manage attendance"
+			featurePreview={{ key: "attendance", scope: "program" }}
+			title="Attendance"
+		/>
 	);
 }

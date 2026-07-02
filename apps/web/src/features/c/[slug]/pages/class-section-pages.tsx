@@ -13,6 +13,8 @@ import {
 	PageHeaderStart,
 	PageHeaderTitle,
 } from "@/components/common/page-header";
+import { AttendanceView } from "@/features/c/[slug]/attendance/attendance-view";
+import { TimetableView } from "@/features/c/[slug]/timetable/timetable-view";
 import { StudentsView } from "@/features/students/students-view";
 import { useInsQuery, useInstitutionSlug } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
@@ -97,47 +99,9 @@ export function SubjectsPage() {
 }
 
 export function TimetablesPage() {
-	const programAlias = useProgramAlias();
-	const classSlug = useClassSlug();
-	const program = useInsQuery(api.programs.getByAlias, { alias: programAlias });
-	const cls = useInsQuery(
-		api.classes.getBySlug,
-		program && classSlug ? { programId: program._id, classSlug } : "skip",
-	);
-
-	return (
-		<ClassSectionPage
-			title="Timetables"
-			description={
-				<>
-					Manage timetables for{" "}
-					<i className="text-foreground">{cls?.name ?? "this class"}</i> in{" "}
-					<i className="text-foreground">{program?.name}</i>
-				</>
-			}
-		/>
-	);
+	return <TimetableView />;
 }
 
 export function AttendancePage() {
-	const programAlias = useProgramAlias();
-	const classSlug = useClassSlug();
-	const program = useInsQuery(api.programs.getByAlias, { alias: programAlias });
-	const cls = useInsQuery(
-		api.classes.getBySlug,
-		program && classSlug ? { programId: program._id, classSlug } : "skip",
-	);
-
-	return (
-		<ClassSectionPage
-			title="Attendance"
-			description={
-				<>
-					Manage attendance for{" "}
-					<i className="text-foreground">{cls?.name ?? "this class"}</i> in{" "}
-					<i className="text-foreground">{program?.name}</i>
-				</>
-			}
-		/>
-	);
+	return <AttendanceView />;
 }

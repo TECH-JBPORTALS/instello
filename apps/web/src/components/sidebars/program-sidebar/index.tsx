@@ -4,6 +4,7 @@ import {
 	SidebarGroup,
 	SidebarGroupContent,
 	SidebarGroupLabel,
+	SidebarHeader,
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
@@ -21,7 +22,7 @@ export function ProgramSidebarContent() {
 
 	return (
 		<>
-			<SidebarGroup>
+			<SidebarHeader>
 				<SidebarMenu>
 					<SidebarMenuItem>
 						<SidebarMenuButton render={<Link href={"/programs"} />}>
@@ -29,7 +30,7 @@ export function ProgramSidebarContent() {
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				</SidebarMenu>
-			</SidebarGroup>
+			</SidebarHeader>
 			<SidebarGroup>
 				<SidebarGroupLabel>PROGRAM</SidebarGroupLabel>
 				<SidebarGroupContent>

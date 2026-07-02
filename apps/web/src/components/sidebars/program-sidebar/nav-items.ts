@@ -1,13 +1,7 @@
 "use client";
 
 import type { Icon } from "@tabler/icons-react";
-import {
-	IconBook,
-	IconCalendarCheck,
-	IconSchool,
-	IconTable,
-	IconUser,
-} from "@tabler/icons-react";
+import { IconCalendarCheck, IconSchool, IconTable } from "@tabler/icons-react";
 
 export type ProgramNavItem = {
 	id: string;
@@ -18,13 +12,13 @@ export type ProgramNavItem = {
 
 export const programNavItems: ProgramNavItem[] = [
 	{ id: "classes", segment: "classes", icon: IconSchool, label: "Classes" },
-	{
-		id: "subjects",
-		segment: "subjects",
-		icon: IconBook,
-		label: "Alloted Subjects",
-	},
-	{ id: "faculty", segment: "faculty", icon: IconUser, label: "Faculty" },
+	// {
+	// 	id: "subjects",
+	// 	segment: "subjects",
+	// 	icon: IconBook,
+	// 	label: "Alloted Subjects",
+	// },
+	// { id: "faculty", segment: "faculty", icon: IconUser, label: "Faculty" },
 	{
 		id: "timetables",
 		segment: "timetables",

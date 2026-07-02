@@ -4,6 +4,7 @@ import {
 	SidebarGroup,
 	SidebarGroupContent,
 	SidebarGroupLabel,
+	SidebarHeader,
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
@@ -24,7 +25,7 @@ export function ClassSidebarContent() {
 
 	return (
 		<>
-			<SidebarGroup>
+			<SidebarHeader>
 				<SidebarMenu>
 					<SidebarMenuItem>
 						<SidebarMenuButton
@@ -34,7 +35,7 @@ export function ClassSidebarContent() {
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				</SidebarMenu>
-			</SidebarGroup>
+			</SidebarHeader>
 			<SidebarGroup>
 				<SidebarGroupLabel>CLASS</SidebarGroupLabel>
 				<SidebarGroupContent>
