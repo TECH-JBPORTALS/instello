@@ -78,3 +78,35 @@ export const createClassBody = (
 	currentHeadStageId,
 	...overrides,
 });
+
+export const STUDENT_USN = "1MS21CS001";
+export const STUDENT_EMAIL = "student@example.com";
+export const STUDENT_PHONE = "9876543210";
+
+export const createStudentInput = (
+	classId: Id<"classes">,
+	categoryId: Id<"institutionStudentCategories">,
+	overrides?: Partial<{
+		classId: Id<"classes">;
+		firstName: string;
+		lastName: string;
+		usn: string;
+		email: string;
+		gender: "male" | "female" | "others";
+		categoryId: Id<"institutionStudentCategories">;
+		phoneNumber: string;
+		apaarId: string;
+	}>,
+) => ({
+	classId,
+	firstName: "Rahul",
+	lastName: "Kumar",
+	usn: STUDENT_USN,
+	email: STUDENT_EMAIL,
+	gender: "male" as const,
+	categoryId,
+	phoneNumber: STUDENT_PHONE,
+	...overrides,
+});
+
+export type CreateStudentInput = ReturnType<typeof createStudentInput>;

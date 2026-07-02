@@ -13,6 +13,7 @@ import {
 	PageHeaderStart,
 	PageHeaderTitle,
 } from "@/components/common/page-header";
+import { StudentsView } from "@/features/students/students-view";
 import { useInsQuery, useInstitutionSlug } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
@@ -62,26 +63,7 @@ function ClassSectionPage({
 }
 
 export function StudentsPage() {
-	const programAlias = useProgramAlias();
-	const classSlug = useClassSlug();
-	const program = useInsQuery(api.programs.getByAlias, { alias: programAlias });
-	const cls = useInsQuery(
-		api.classes.getBySlug,
-		program && classSlug ? { programId: program._id, classSlug } : "skip",
-	);
-
-	return (
-		<ClassSectionPage
-			title="Students"
-			description={
-				<>
-					Manage students for{" "}
-					<i className="text-foreground">{cls?.name ?? "this class"}</i> in{" "}
-					<i className="text-foreground">{program?.name}</i>
-				</>
-			}
-		/>
-	);
+	return <StudentsView />;
 }
 
 export function SubjectsPage() {

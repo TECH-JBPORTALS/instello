@@ -187,6 +187,39 @@ const tables = {
 			filterFields: ["institutionId"],
 		}),
 
+	/** Reservation / admission categories configured per institution (e.g. GM, Cat-1, SC) */
+	institutionStudentCategories: defineTable({
+		institutionId: v.string(),
+		name: v.string(),
+		createdAt: v.number(),
+		updatedAt: v.number(),
+	}).index("by_institution", ["institutionId"]),
+
+	/** Students enrolled in a class within an institution */
+	students: defineTable({
+		institutionId: v.string(),
+		classId: v.id("classes"),
+		firstName: v.string(),
+		lastName: v.string(),
+		usn: v.string(),
+		email: v.string(),
+		gender: v.union(
+			v.literal("male"),
+			v.literal("female"),
+			v.literal("others"),
+		),
+		categoryId: v.id("institutionStudentCategories"),
+		phoneNumber: v.string(),
+		apaarId: v.optional(v.string()),
+		image: v.optional(v.id("_storage")),
+		createdBy: v.string(),
+		createdAt: v.number(),
+		updatedAt: v.number(),
+	})
+		.index("by_class", ["classId"])
+		.index("by_institution_and_email", ["institutionId", "email"])
+		.index("by_usn", ["usn"]),
+
 	// programSubjects: defineTable({
 	// 	programId: v.string(),
 	// 	subjectId: v.string(),

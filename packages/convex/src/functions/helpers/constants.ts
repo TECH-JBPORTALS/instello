@@ -86,6 +86,34 @@ export const ERROR_CODES = {
 			message: "Subject code already exists in this institution",
 		},
 	},
+	STUDENT: {
+		NOT_FOUND: {
+			code: "STUDENT_NOT_FOUND",
+			message: "Student not found",
+		},
+		USN_ALREADY_EXISTS: {
+			code: "STUDENT_USN_ALREADY_EXISTS",
+			message: "Student USN already exists",
+		},
+		EMAIL_ALREADY_EXISTS: {
+			code: "STUDENT_EMAIL_ALREADY_EXISTS",
+			message: "Student email already exists in this institution",
+		},
+		INVALID_APAAR_ID: {
+			code: "STUDENT_INVALID_APAAR_ID",
+			message: "APAAR ID must be exactly 12 digits",
+		},
+		CATEGORY_NOT_FOUND: {
+			code: "STUDENT_CATEGORY_NOT_FOUND",
+			message: "Student category not found in this institution",
+		},
+	},
+	INSTITUTION_STUDENT_CATEGORY: {
+		NOT_FOUND: {
+			code: "INSTITUTION_STUDENT_CATEGORY_NOT_FOUND",
+			message: "Institution student category not found",
+		},
+	},
 	SEED: {
 		NOT_ALLOWED_IN_PRODUCTION: {
 			code: "SEED_NOT_ALLOWED_IN_PRODUCTION",

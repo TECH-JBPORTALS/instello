@@ -3,6 +3,7 @@ import { ERROR_CODES, throwAppError } from "./helpers/constants";
 import { insQuery, userMutation, userQuery } from "./helpers/customFunctions";
 import * as AcademicPattern from "./model/academicPattern";
 import * as InstitutionAcademicPattern from "./model/institutionAcademicPattern";
+import * as InstitutionStudentCategory from "./model/institutionStudentCategory";
 import * as OwnerOrganization from "./model/ownerOrganization";
 import { vv } from "./schema";
 
@@ -153,11 +154,15 @@ export const adopt = userMutation({
 			throwAppError(ERROR_CODES.BASE.ACCESS_DENIED);
 		}
 
-		return await InstitutionAcademicPattern.adopt(ctx, {
+		const adoptionId = await InstitutionAcademicPattern.adopt(ctx, {
 			institutionId: args.institutionId,
 			academicPatternId: args.academicPatternId,
 			ownerOrganizationId: ownerOrg._id,
 		});
+
+		await InstitutionStudentCategory.seedDefaults(ctx, args.institutionId);
+
+		return adoptionId;
 	},
 });
 
