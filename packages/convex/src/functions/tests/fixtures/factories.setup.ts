@@ -15,7 +15,6 @@ export const createFacultyInput = (
 		lastName: string;
 		dateOfBirth: string;
 		email: string;
-		profilePicUrl: string;
 		designation: string;
 		qualification: string;
 		specialization: string;
@@ -27,7 +26,6 @@ export const createFacultyInput = (
 	lastName: "Doe",
 	dateOfBirth: "1990-05-15",
 	email: FACULTY_EMAIL,
-	profilePicUrl: "https://example.com/pic.jpg",
 	designation: "Professor",
 	qualification: "Ph.D.",
 	specialization: "Computer Science",

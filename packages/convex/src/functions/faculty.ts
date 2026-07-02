@@ -53,7 +53,17 @@ export const getById = insQuery({
 			throwAppError(ERROR_CODES.FACULTY.NOT_FOUND);
 		}
 
-		return Faculty.toDto(faculty);
+		return await Faculty.toDto(ctx, faculty);
+	},
+});
+
+/** Returns a short-lived URL for uploading a faculty profile image */
+export const generateImageUploadUrl = insMutation({
+	permissions: ["faculty:update"],
+	args: {},
+	returns: vv.string(),
+	handler: async (ctx) => {
+		return await ctx.storage.generateUploadUrl();
 	},
 });
 

@@ -2,24 +2,21 @@
 
 import { api } from "@instello/convex/api";
 import type { Id } from "@instello/convex/dataModel";
-import {
-	Avatar,
-	AvatarFallback,
-	AvatarImage,
-} from "@instello/ui/components/avatar";
+import { Badge } from "@instello/ui/components/badge";
 import { Button } from "@instello/ui/components/button";
+import { Item, ItemContent, ItemGroup } from "@instello/ui/components/item";
 import { Skeleton } from "@instello/ui/components/skeleton";
-import { IconArrowLeft } from "@tabler/icons-react";
+import { IconChevronLeft } from "@tabler/icons-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Container from "@/components/common/container";
+import { PageHeader, PageHeaderStart } from "@/components/common/page-header";
 import { useInsQuery } from "@/hooks/convex-react";
 import { cn } from "@/lib/utils";
-import { getFacultyDisplayName, getFacultyInitials } from "./forms/shared-form";
+import { FacultyAvatar } from "./faculty-avatar";
+import { getFacultyDisplayName } from "./forms/shared-form";
 import { DangerZoneSection } from "./sections/danger-zone-section";
-import { EmploymentSection } from "./sections/employment-section";
-import { PersonalInfoSection } from "./sections/personal-info-section";
-import { PhoneSection } from "./sections/phone-section";
+import { FacultySettingsSection } from "./sections/faculty-settings-section";
 
 export function FacultyDetailPage() {
 	const { facultyId } = useParams<{ facultyId: string }>();
@@ -43,59 +40,63 @@ export function FacultyDetailPage() {
 
 	return (
 		<Container>
-			<div className="space-y-8">
-				<div className="space-y-4">
+			<PageHeader>
+				<PageHeaderStart>
 					<Button
 						nativeButton={false}
 						variant="ghost"
-						className="-ml-2"
+						size="sm"
+						className="-ml-2 h-8 rounded-full px-2 text-muted-foreground"
 						render={<Link href="/faculty" />}
 					>
-						<IconArrowLeft />
-						Back to faculty
+						<IconChevronLeft className="size-4" />
+						Faculty
 					</Button>
+				</PageHeaderStart>
+			</PageHeader>
 
-					<div className="flex items-center gap-4">
-						<Avatar size="xl">
-							{faculty.profilePicUrl && (
-								<AvatarImage src={faculty.profilePicUrl} alt={displayName} />
-							)}
-							<AvatarFallback>
-								{getFacultyInitials(faculty.firstName, faculty.lastName)}
-							</AvatarFallback>
-						</Avatar>
-						<div className="space-y-1">
-							<h1 className="text-2xl font-semibold">{displayName}</h1>
+			<div className="mx-auto max-w-3xl space-y-4">
+				<div className="space-y-6">
+					<div className="flex items-start gap-4">
+						<FacultyAvatar
+							firstName={faculty.firstName}
+							lastName={faculty.lastName}
+							image={faculty.image}
+							size="xl"
+						/>
+						<div className="min-w-0 space-y-1.5">
+							<h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+								{displayName}
+							</h1>
 							<p className="text-sm text-muted-foreground">{faculty.email}</p>
 							<p className="text-sm text-muted-foreground">
 								{faculty.designation} · {faculty.staffId}
 							</p>
-							<span
-								className={cn(
-									"inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium capitalize",
-									faculty.status === "active"
-										? "bg-primary/10 text-primary"
-										: "bg-muted text-muted-foreground",
-								)}
-							>
-								{faculty.status}
-							</span>
+							<div className="flex flex-wrap items-center gap-2 pt-0.5">
+								<Badge
+									variant="secondary"
+									className={cn(
+										faculty.status === "active"
+											? "bg-primary/10 text-primary"
+											: "bg-muted text-muted-foreground",
+									)}
+								>
+									{faculty.status}
+								</Badge>
+							</div>
 						</div>
 					</div>
 				</div>
 
-				<div className="mx-auto flex max-w-2xl flex-col gap-6">
-					<PersonalInfoSection
-						key={`personal-${faculty.updatedAt}`}
-						faculty={faculty}
-					/>
-					<EmploymentSection
-						key={`employment-${faculty.updatedAt}`}
-						faculty={faculty}
-					/>
-					<PhoneSection key={`phone-${faculty.updatedAt}`} faculty={faculty} />
-					<DangerZoneSection faculty={faculty} />
-				</div>
+				<FacultySettingsSection
+					key={`settings-${faculty._id}-${faculty.updatedAt}`}
+					faculty={faculty}
+				/>
+
+				<DangerZoneSection
+					key={`danger-${faculty.updatedAt}`}
+					faculty={faculty}
+				/>
 			</div>
 		</Container>
 	);
@@ -103,21 +104,39 @@ export function FacultyDetailPage() {
 
 function FacultyDetailSkeleton() {
 	return (
-		<div className="space-y-8">
-			<div className="space-y-4">
-				<Skeleton className="h-9 w-36" />
-				<div className="flex items-center gap-4">
-					<Skeleton className="size-14 rounded-full" />
+		<div className="mx-auto max-w-3xl space-y-10">
+			<div className="space-y-6">
+				<Skeleton className="h-8 w-28" />
+				<div className="flex items-start gap-4">
+					<Skeleton className="size-14 rounded-lg" />
 					<div className="space-y-2">
-						<Skeleton className="h-7 w-48" />
-						<Skeleton className="h-4 w-56" />
-						<Skeleton className="h-5 w-16 rounded-full" />
+						<Skeleton className="h-8 w-56" />
+						<Skeleton className="h-4 w-40" />
+						<Skeleton className="h-5 w-24 rounded-full" />
 					</div>
 				</div>
 			</div>
-			<div className="mx-auto flex max-w-2xl flex-col gap-6">
-				{Array.from({ length: 3 }).map((_, index) => (
-					<Skeleton key={index} className="h-64 w-full rounded-xl" />
+			<div className="space-y-8">
+				{Array.from({ length: 3 }).map((_, sectionIndex) => (
+					<div key={sectionIndex} className="space-y-2">
+						<Skeleton className="ml-1 h-4 w-16" />
+						<ItemGroup className="bg-card">
+							{Array.from({ length: 2 }).map((_, index) => (
+								<Item
+									key={index}
+									className="rounded-none border-x-0 border-t-0 border-border! last:border-b-0"
+								>
+									<ItemContent className="flex-row items-center justify-between gap-4 py-1">
+										<div className="space-y-2">
+											<Skeleton className="h-4 w-24" />
+											<Skeleton className="h-3 w-48" />
+										</div>
+										<Skeleton className="h-8 w-36" />
+									</ItemContent>
+								</Item>
+							))}
+						</ItemGroup>
+					</div>
 				))}
 			</div>
 		</div>

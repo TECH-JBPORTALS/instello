@@ -2,11 +2,6 @@
 
 import { api } from "@instello/convex/api";
 import type { Id } from "@instello/convex/dataModel";
-import {
-	Avatar,
-	AvatarFallback,
-	AvatarImage,
-} from "@instello/ui/components/avatar";
 import { Button } from "@instello/ui/components/button";
 import { Card, CardContent, CardHeader } from "@instello/ui/components/card";
 import {
@@ -46,10 +41,8 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useInsMutation, useInsPaginatedQuery } from "@/hooks/convex-react";
 import { FACULTY_LIST_PAGE_SIZE } from "../constants";
-import {
-	getFacultyDisplayName,
-	getFacultyInitials,
-} from "../forms/shared-form";
+import { FacultyAvatar } from "../faculty-avatar";
+import { getFacultyDisplayName } from "../forms/shared-form";
 
 type FacultyTableProps = {
 	status: "active" | "inactive";
@@ -157,7 +150,7 @@ type FacultyListItemProps = {
 		email: string;
 		staffId: string;
 		designation: string;
-		profilePicUrl?: string;
+		image?: string;
 	};
 	showDeactivate: boolean;
 };
@@ -187,14 +180,12 @@ function FacultyListItem({ faculty, showDeactivate }: FacultyListItemProps) {
 			<Item className="relative rounded-none! border-x-0! border-t-0! border-border! last:border-b-0! hover:bg-accent/50!">
 				<Link className="absolute inset-0" href={`/faculty/${faculty._id}`} />
 				<ItemMedia variant="image">
-					<Avatar size="lg">
-						{faculty.profilePicUrl && (
-							<AvatarImage src={faculty.profilePicUrl} alt={displayName} />
-						)}
-						<AvatarFallback>
-							{getFacultyInitials(faculty.firstName, faculty.lastName)}
-						</AvatarFallback>
-					</Avatar>
+					<FacultyAvatar
+						firstName={faculty.firstName}
+						lastName={faculty.lastName}
+						image={faculty.image}
+						size="lg"
+					/>
 				</ItemMedia>
 				<ItemContent>
 					<ItemTitle>{displayName}</ItemTitle>

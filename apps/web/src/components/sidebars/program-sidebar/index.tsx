@@ -31,7 +31,7 @@ export function ProgramSidebarContent() {
 				</SidebarMenu>
 			</SidebarGroup>
 			<SidebarGroup>
-				<SidebarGroupLabel>ACADEMICS</SidebarGroupLabel>
+				<SidebarGroupLabel>PROGRAM</SidebarGroupLabel>
 				<SidebarGroupContent>
 					<SidebarMenu>
 						{programNavItems.map((item) => (

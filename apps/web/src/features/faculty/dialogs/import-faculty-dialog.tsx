@@ -129,11 +129,6 @@ const facultyImportSchema = {
 		possibleNames: ["phone_number", "phoneNumber"],
 		validator: indianPhoneNumberSchema,
 	},
-	profilePicUrl: {
-		possibleNames: ["profile_pic_url", "profilePicUrl"],
-		required: false,
-		validator: trimmedString,
-	},
 } satisfies ImportSchema;
 
 function phaseDescription(phase: ImportPhase, fileName: string | null) {
@@ -189,7 +184,6 @@ export function ImportFacultyDialog({
 					lastName: row.lastName,
 					dateOfBirth: row.dateOfBirth,
 					email: row.email,
-					profilePicUrl: row.profilePicUrl || undefined,
 					designation: row.designation,
 					joinedDate: parseOptionalJoinedDate(row.joinedDate ?? ""),
 					qualification: row.qualification,

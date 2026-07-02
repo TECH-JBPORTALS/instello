@@ -3,11 +3,11 @@ import * as v from "valibot";
 import { indianPhoneNumberInputSchema } from "@/lib/phone";
 
 export const PersonalInfoSchema = v.object({
+	imageFile: v.nullable(v.instance(File)),
 	firstName: v.pipe(v.string(), v.nonEmpty("First name is required")),
 	lastName: v.pipe(v.string(), v.nonEmpty("Last name is required")),
 	dateOfBirth: v.pipe(v.string(), v.nonEmpty("Date of birth is required")),
 	email: v.pipe(v.string(), v.email("Invalid email address")),
-	profilePicUrl: v.pipe(v.string()),
 });
 
 export const EmploymentSchema = v.object({
@@ -35,7 +35,6 @@ export const PatchPersonalInfoSchema = v.object({
 	lastName: v.pipe(v.string(), v.nonEmpty("Last name is required")),
 	dateOfBirth: v.pipe(v.string(), v.nonEmpty("Date of birth is required")),
 	email: v.pipe(v.string(), v.email("Invalid email address")),
-	profilePicUrl: v.pipe(v.string()),
 });
 
 export const PatchPhoneSchema = v.object({
@@ -45,11 +44,11 @@ export const PatchPhoneSchema = v.object({
 export const addFacultyFormOpt = formOptions({
 	defaultValues: {
 		personalInfo: {
+			imageFile: null as File | null,
 			firstName: "",
 			lastName: "",
 			dateOfBirth: "",
 			email: "",
-			profilePicUrl: "",
 		},
 		employment: {
 			staffId: "",

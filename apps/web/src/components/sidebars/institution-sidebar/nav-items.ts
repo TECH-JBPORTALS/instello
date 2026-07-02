@@ -1,12 +1,5 @@
 import type { Icon } from "@tabler/icons-react";
-import {
-	IconBox,
-	IconCalendar,
-	IconCalendarCheck,
-	IconCopy,
-	IconSchool,
-	IconUser,
-} from "@tabler/icons-react";
+import { IconBox, IconCopy, IconUser } from "@tabler/icons-react";
 
 export type NavItem = {
 	id: string;
@@ -22,38 +15,11 @@ export type NavSection = {
 
 export const mainNavSections: NavSection[] = [
 	{
+		label: "INSTITUTION",
 		items: [
 			{ id: "programs", href: "/programs", icon: IconBox, label: "Programs" },
 			{ id: "subjects", href: "/subjects", icon: IconCopy, label: "Subjects" },
-			{
-				id: "timetables",
-				href: "/timetables",
-				icon: IconCalendar,
-				label: "Timetables",
-			},
-		],
-	},
-	{
-		label: "People",
-		items: [
-			{
-				id: "students",
-				href: "/students",
-				icon: IconSchool,
-				label: "Students",
-			},
 			{ id: "faculty", href: "/faculty", icon: IconUser, label: "Faculty" },
-		],
-	},
-	{
-		label: "Operations",
-		items: [
-			{
-				id: "attendance",
-				href: "/attendance",
-				icon: IconCalendarCheck,
-				label: "Attendance",
-			},
 		],
 	},
 ];

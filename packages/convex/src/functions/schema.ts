@@ -147,7 +147,7 @@ const tables = {
 		lastName: v.string(),
 		dateOfBirth: v.string(),
 		email: v.string(),
-		profilePicUrl: v.optional(v.string()),
+		image: v.optional(v.id("_storage")),
 		designation: v.string(),
 		joinedDate: v.optional(v.number()),
 		qualification: v.string(),

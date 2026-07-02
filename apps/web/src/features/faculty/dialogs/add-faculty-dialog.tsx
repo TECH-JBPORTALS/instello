@@ -1,6 +1,7 @@
 "use client";
 
 import { api } from "@instello/convex/api";
+import type { Doc } from "@instello/convex/dataModel";
 import {
 	Alert,
 	AlertDescription,
@@ -31,6 +32,7 @@ import {
 	EmploymentSchema,
 	PersonalInfoSchema,
 } from "../forms/shared-form";
+import { uploadFacultyImage } from "../lib/upload-faculty-image";
 
 type AddFacultyDialogProps = {
 	open: boolean;
@@ -44,6 +46,9 @@ export function AddFacultyDialog({
 	const [step, setStep] = useState(0);
 	const [globalError, setGlobalError] = useState<string | null>(null);
 	const createFaculty = useInsMutation(api.faculty.create);
+	const generateImageUploadUrl = useInsMutation(
+		api.faculty.generateImageUploadUrl,
+	);
 
 	const form = useAppForm({
 		...addFacultyFormOpt,
@@ -59,13 +64,22 @@ export function AddFacultyDialog({
 			setGlobalError(null);
 
 			try {
+				let image: Doc<"faculty">["image"];
+
+				if (value.personalInfo.imageFile) {
+					image = await uploadFacultyImage(
+						() => generateImageUploadUrl({}),
+						value.personalInfo.imageFile,
+					);
+				}
+
 				await createFaculty({
 					staffId: value.employment.staffId,
 					firstName: value.personalInfo.firstName,
 					lastName: value.personalInfo.lastName,
 					dateOfBirth: value.personalInfo.dateOfBirth,
 					email: value.personalInfo.email,
-					profilePicUrl: value.personalInfo.profilePicUrl || undefined,
+					image,
 					designation: value.employment.designation,
 					joinedDate: value.employment.joinedDate
 						? new Date(value.employment.joinedDate).getTime()

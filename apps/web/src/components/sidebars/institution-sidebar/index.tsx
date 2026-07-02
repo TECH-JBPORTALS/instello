@@ -30,6 +30,7 @@ export function InstitutionSidebarContent() {
 							{section.items.map((item) => (
 								<SidebarMenuItem key={item.id}>
 									<SidebarMenuButton
+										size={"sm"}
 										isActive={isNavActive(pathname, item.href)}
 										render={<Link href={item.href} />}
 									>

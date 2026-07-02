@@ -1,5 +1,5 @@
 import type { PaginationOptions } from "convex/server";
-import type { Infer } from "convex/values";
+import { type Infer, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import { validateIndianPhoneNumber } from "../helpers/phone";
@@ -14,7 +14,7 @@ export const CreateSchema = vv
 		"lastName",
 		"dateOfBirth",
 		"email",
-		"profilePicUrl",
+		"image",
 		"designation",
 		"joinedDate",
 		"qualification",
@@ -29,7 +29,7 @@ export const CreateInputSchema = {
 	lastName: vv.string(),
 	dateOfBirth: vv.string(),
 	email: vv.string(),
-	profilePicUrl: vv.optional(vv.string()),
+	image: v.optional(v.id("_storage")),
 	designation: vv.string(),
 	joinedDate: vv.optional(vv.number()),
 	qualification: vv.string(),
@@ -44,7 +44,7 @@ export const PatchPersonalInfoSchema = vv.object({
 	lastName: vv.optional(vv.string()),
 	dateOfBirth: vv.optional(vv.string()),
 	email: vv.optional(vv.string()),
-	profilePicUrl: vv.optional(vv.string()),
+	image: v.optional(v.union(v.id("_storage"), v.null())),
 });
 
 export const PatchEmploymentSchema = vv.object({
@@ -66,7 +66,7 @@ export const FacultyDtoSchema = vv.object({
 	lastName: vv.string(),
 	dateOfBirth: vv.string(),
 	email: vv.string(),
-	profilePicUrl: vv.optional(vv.string()),
+	image: vv.optional(vv.string()),
 	designation: vv.string(),
 	joinedDate: vv.optional(vv.number()),
 	qualification: vv.string(),
@@ -92,7 +92,22 @@ export type PaginatedFacultyList = Infer<typeof PaginatedFacultyListSchema>;
 
 export type CreateInput = Infer<typeof CreateInputObjectSchema>;
 
-export function toDto(faculty: Doc<"faculty">): FacultyDto {
+async function deleteStoredImage(
+	ctx: AppMutationCtx,
+	imageId: Doc<"faculty">["image"],
+) {
+	if (!imageId) return;
+	await ctx.storage.delete(imageId);
+}
+
+export async function toDto(
+	ctx: AppQueryCtx,
+	faculty: Doc<"faculty">,
+): Promise<FacultyDto> {
+	const imageUrl = faculty.image
+		? await ctx.storage.getUrl(faculty.image)
+		: null;
+
 	return {
 		_id: faculty._id,
 		staffId: faculty.staffId,
@@ -100,7 +115,7 @@ export function toDto(faculty: Doc<"faculty">): FacultyDto {
 		lastName: faculty.lastName,
 		dateOfBirth: faculty.dateOfBirth,
 		email: faculty.email,
-		profilePicUrl: faculty.profilePicUrl,
+		image: imageUrl ?? undefined,
 		designation: faculty.designation,
 		joinedDate: faculty.joinedDate,
 		qualification: faculty.qualification,
@@ -179,7 +194,7 @@ export async function create(
 		lastName: args.lastName,
 		dateOfBirth: args.dateOfBirth,
 		email: args.email,
-		profilePicUrl: args.profilePicUrl,
+		image: args.image,
 		designation: args.designation,
 		joinedDate: args.joinedDate,
 		qualification: args.qualification,
@@ -222,7 +237,7 @@ export async function list(
 	const result = await query.order("desc").paginate(paginationOpts);
 
 	return {
-		page: result.page.map(toDto),
+		page: await Promise.all(result.page.map((f) => toDto(ctx, f))),
 		isDone: result.isDone,
 		continueCursor: result.continueCursor,
 	};
@@ -261,10 +276,26 @@ export async function patchPersonalInfo(
 		}
 	}
 
-	await ctx.db.patch("faculty", faculty._id, {
-		...body,
+	const updates: Partial<Doc<"faculty">> = {
 		updatedAt: Date.now(),
-	});
+	};
+
+	if (body.firstName !== undefined) updates.firstName = body.firstName.trim();
+	if (body.lastName !== undefined) updates.lastName = body.lastName.trim();
+	if (body.dateOfBirth !== undefined) updates.dateOfBirth = body.dateOfBirth;
+	if (body.email !== undefined) updates.email = body.email.trim();
+
+	if (body.image !== undefined) {
+		const nextImage = body.image === null ? undefined : body.image;
+
+		if (faculty.image && faculty.image !== nextImage) {
+			await deleteStoredImage(ctx, faculty.image);
+		}
+
+		updates.image = nextImage;
+	}
+
+	await ctx.db.patch("faculty", faculty._id, updates);
 }
 
 /**

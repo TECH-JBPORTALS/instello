@@ -36,7 +36,7 @@ export function ClassSidebarContent() {
 				</SidebarMenu>
 			</SidebarGroup>
 			<SidebarGroup>
-				<SidebarGroupLabel>ACADEMICS</SidebarGroupLabel>
+				<SidebarGroupLabel>CLASS</SidebarGroupLabel>
 				<SidebarGroupContent>
 					<SidebarMenu>
 						{classNavItems.map((item) => (

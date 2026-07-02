@@ -21,7 +21,6 @@ export const FACULTY_IMPORT_COLUMNS = [
 	"specialization",
 	"joined_date",
 	"phone_number",
-	"profile_pic_url",
 ] as const;
 
 export const FACULTY_IMPORT_TEMPLATE_CSV = [
@@ -37,7 +36,6 @@ export const FACULTY_IMPORT_TEMPLATE_CSV = [
 		"Computer Science",
 		"2020-01-15",
 		"+919876543210",
-		"",
 	].join(","),
 ].join("\n");
 

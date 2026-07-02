@@ -25,7 +25,6 @@ export async function seedFaculty(
 		lastName: input.lastName,
 		dateOfBirth: input.dateOfBirth,
 		email: input.email,
-		profilePicUrl: input.profilePicUrl,
 		designation: input.designation,
 		qualification: input.qualification,
 		specialization: input.specialization,
