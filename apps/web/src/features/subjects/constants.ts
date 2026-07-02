@@ -1,15 +1,22 @@
 export const SUBJECT_LIST_PAGE_SIZE = 20;
 
 export const SUBJECT_COLOR_PALETTE = [
-	{ value: "#F97316", label: "Orange" },
 	{ value: "#22C55E", label: "Green" },
 	{ value: "#3B82F6", label: "Blue" },
 	{ value: "#A855F7", label: "Purple" },
 	{ value: "#EC4899", label: "Pink" },
 	{ value: "#14B8A6", label: "Teal" },
-	{ value: "#EAB308", label: "Yellow" },
-	{ value: "#6366F1", label: "Indigo" },
+	{ value: "#EF4444", label: "Red" },
+	{ value: "#F43F5E", label: "Rose" },
+	{ value: "#06B6D4", label: "Cyan" },
+	{ value: "#F59E0B", label: "Amber" },
 ] as const;
+
+export function isPresetSubjectColor(color: string): boolean {
+	return SUBJECT_COLOR_PALETTE.some(
+		(option) => option.value.toLowerCase() === color.toLowerCase(),
+	);
+}
 
 export function getSubjectInitials(name: string): string {
 	const words = name.trim().split(/\s+/).filter(Boolean);

@@ -10,7 +10,7 @@ export function SubjectAvatar({
 }: {
 	name: string;
 	color: string;
-	size?: "sm" | "lg" | "default";
+	size?: "sm" | "default" | "lg" | "xl";
 }) {
 	const initials = getSubjectInitials(name);
 

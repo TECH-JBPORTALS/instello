@@ -26,8 +26,8 @@ import {
 	FieldLabel,
 } from "@instello/ui/components/field";
 import { Input } from "@instello/ui/components/input";
+import { Separator } from "@instello/ui/components/separator";
 import { Textarea } from "@instello/ui/components/textarea";
-import { cn } from "@instello/ui/lib/utils";
 import { IconAlertCircle, IconCircleCheckFilled } from "@tabler/icons-react";
 import { revalidateLogic, useForm } from "@tanstack/react-form-nextjs";
 import { useConvex } from "convex/react";
@@ -36,6 +36,8 @@ import { useEffect, useState } from "react";
 import * as v from "valibot";
 import { useInsMutation, useInstitutionSlug } from "@/hooks/convex-react";
 import { SUBJECT_COLOR_PALETTE } from "./constants";
+import { SubjectColorField } from "./forms/subject-color-field";
+import { SubjectAvatar } from "./subject-avatar";
 
 const AliasSchema = v.pipe(
 	v.string(),
@@ -52,11 +54,17 @@ const CodeSchema = v.pipe(
 	),
 );
 
+const ColorSchema = v.pipe(
+	v.string(),
+	v.nonEmpty("Color is required"),
+	v.regex(/^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/, "Enter a valid hex color"),
+);
+
 const NewSubjectSchema = v.object({
 	name: v.pipe(v.string(), v.nonEmpty("Subject name is required")),
 	code: CodeSchema,
 	alias: AliasSchema,
-	color: v.pipe(v.string(), v.nonEmpty("Color is required")),
+	color: ColorSchema,
 	description: v.string(),
 });
 
@@ -85,7 +93,7 @@ export function NewSubjectDialog({
 		},
 		validationLogic: revalidateLogic(),
 		validators: {
-			onChange: NewSubjectSchema,
+			onSubmit: NewSubjectSchema,
 		},
 		onSubmit: async ({ value }) => {
 			setGlobalError(null);
@@ -148,6 +156,45 @@ export function NewSubjectDialog({
 					}}
 				>
 					<FieldGroup>
+						<div className="grid grid-flow-row grid-cols-4 gap-4">
+							<form.Subscribe
+								selector={(state) => ({
+									name: state.values.name,
+									color: state.values.color,
+								})}
+							>
+								{({ name, color }) => (
+									<div className="col-span-1">
+										<SubjectAvatar size="xl" name={name} color={color} />
+									</div>
+								)}
+							</form.Subscribe>
+
+							<form.Field
+								name="color"
+								children={(field) => {
+									const showErrors =
+										field.state.meta.isTouched ||
+										field.state.meta.errors.length > 0;
+									const isInvalid = showErrors && !field.state.meta.isValid;
+
+									return (
+										<Field data-invalid={isInvalid} className="col-span-3">
+											<SubjectColorField
+												value={field.state.value}
+												onChange={field.handleChange}
+											/>
+											{isInvalid && (
+												<FieldError errors={field.state.meta.errors} />
+											)}
+										</Field>
+									);
+								}}
+							/>
+						</div>
+
+						<Separator />
+
 						<form.Field
 							name="name"
 							children={(field) => {
@@ -322,42 +369,6 @@ export function NewSubjectDialog({
 												<IconCircleCheckFilled className="size-4" />
 												<span>This alias is available</span>
 											</FieldDescription>
-										)}
-									</Field>
-								);
-							}}
-						/>
-
-						<form.Field
-							name="color"
-							children={(field) => {
-								const showErrors =
-									field.state.meta.isTouched ||
-									field.state.meta.errors.length > 0;
-								const isInvalid = showErrors && !field.state.meta.isValid;
-
-								return (
-									<Field data-invalid={isInvalid}>
-										<FieldLabel>Color</FieldLabel>
-										<div className="flex flex-wrap gap-2">
-											{SUBJECT_COLOR_PALETTE.map((option) => (
-												<button
-													key={option.value}
-													type="button"
-													aria-label={option.label}
-													className={cn(
-														"size-8 rounded-lg border-2 transition-transform hover:scale-105",
-														field.state.value === option.value
-															? "border-foreground scale-105"
-															: "border-transparent",
-													)}
-													style={{ backgroundColor: option.value }}
-													onClick={() => field.handleChange(option.value)}
-												/>
-											))}
-										</div>
-										{isInvalid && (
-											<FieldError errors={field.state.meta.errors} />
 										)}
 									</Field>
 								);

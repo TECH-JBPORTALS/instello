@@ -14,6 +14,10 @@ export const SUBJECT_COLOR_PALETTE = [
 	"#14B8A6",
 	"#EAB308",
 	"#6366F1",
+	"#EF4444",
+	"#F43F5E",
+	"#06B6D4",
+	"#F59E0B",
 ] as const;
 
 export const CreateSchema = vv.object({

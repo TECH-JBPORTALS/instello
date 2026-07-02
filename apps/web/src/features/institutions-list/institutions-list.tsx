@@ -81,7 +81,11 @@ export function InstitutionsList() {
 					<ItemMedia variant={"image"}>
 						<Avatar size="lg" className={"after:rounded-lg"}>
 							{ins.logo && (
-								<AvatarImage src={ins.logo} alt={`${ins.name}'s logo`} />
+								<AvatarImage
+									src={ins.logo}
+									alt={`${ins.name}'s logo`}
+									className={"rounded-lg"}
+								/>
 							)}
 							<AvatarFallback className={"rounded-lg"}>
 								{ins.name.charAt(0).toUpperCase()}
