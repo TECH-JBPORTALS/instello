@@ -20,6 +20,7 @@ import { useEffect, useState } from "react";
 import { useInsMutation, useInsQuery } from "@/hooks/convex-react";
 import { useAppForm } from "@/hooks/form";
 import { getConvexErrorMessage } from "@/lib/convex-error";
+import { formatIndianPhoneNumberForStorage } from "@/lib/phone";
 import { AcademicStep } from "../forms/academic-step";
 import { AddStudentStepIndicator } from "../forms/add-student-step-indicator";
 import { ContactStep } from "../forms/contact-step";
@@ -77,7 +78,9 @@ export function NewStudentDialog({
 					gender: value.personalInfo.gender,
 					categoryId: value.academic
 						.categoryId as Id<"institutionStudentCategories">,
-					phoneNumber: value.contact.phoneNumber.trim(),
+					phoneNumber: formatIndianPhoneNumberForStorage(
+						value.contact.phoneNumber,
+					),
 					apaarId: value.academic.apaarId?.trim() || undefined,
 					image,
 				});

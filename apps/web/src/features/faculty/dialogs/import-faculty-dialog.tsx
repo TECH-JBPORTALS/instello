@@ -26,6 +26,7 @@ import { useEffect, useRef } from "react";
 import * as v from "valibot";
 import { useInsMutation } from "@/hooks/convex-react";
 import { getConvexErrorMessage } from "@/lib/convex-error";
+import { indianPhoneNumberSchema } from "@/lib/phone";
 import {
 	type ImportPhase,
 	type ImportSchema,
@@ -126,7 +127,7 @@ const facultyImportSchema = {
 	},
 	phoneNumber: {
 		possibleNames: ["phone_number", "phoneNumber"],
-		validator: v.pipe(trimmedString, v.nonEmpty("Phone number is required")),
+		validator: indianPhoneNumberSchema,
 	},
 	profilePicUrl: {
 		possibleNames: ["profile_pic_url", "profilePicUrl"],

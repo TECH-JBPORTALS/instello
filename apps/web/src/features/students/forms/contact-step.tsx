@@ -9,7 +9,15 @@ import {
 } from "@instello/ui/components/field";
 import { Input } from "@instello/ui/components/input";
 import { withForm } from "@/hooks/form";
+import { indianPhoneNumberInputSchema } from "@/lib/phone";
+import * as v from "valibot";
 import { addStudentFormOpt, ContactSchema } from "./shared-form";
+
+const emailSchema = v.pipe(
+	v.string(),
+	v.nonEmpty("Email is required"),
+	v.email("Invalid email address"),
+);
 
 export const ContactStep = withForm({
 	...addStudentFormOpt,
@@ -39,6 +47,10 @@ export const ContactStep = withForm({
 						<FieldGroup>
 							<form.AppField
 								name="contact.email"
+								validators={{
+									onChange: emailSchema,
+									onBlur: emailSchema,
+								}}
 								children={(field) => {
 									const showErrors =
 										field.state.meta.isTouched ||
@@ -70,6 +82,10 @@ export const ContactStep = withForm({
 
 							<form.AppField
 								name="contact.phoneNumber"
+								validators={{
+									onChange: indianPhoneNumberInputSchema,
+									onBlur: indianPhoneNumberInputSchema,
+								}}
 								children={(field) => {
 									const showErrors =
 										field.state.meta.isTouched ||

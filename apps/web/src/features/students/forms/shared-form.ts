@@ -1,5 +1,6 @@
 import { formOptions } from "@tanstack/react-form-nextjs";
 import * as v from "valibot";
+import { indianPhoneNumberInputSchema } from "@/lib/phone";
 import { GENDER_OPTIONS } from "../constants";
 
 const GenderSchema = v.picklist(GENDER_OPTIONS, "Select a valid gender");
@@ -21,7 +22,7 @@ export const PersonalInfoSchema = v.object({
 
 export const ContactSchema = v.object({
 	email: v.pipe(v.string(), v.email("Invalid email address")),
-	phoneNumber: v.pipe(v.string(), v.nonEmpty("Phone number is required")),
+	phoneNumber: indianPhoneNumberInputSchema,
 });
 
 export const AcademicSchema = v.object({

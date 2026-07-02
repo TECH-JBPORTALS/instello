@@ -20,6 +20,7 @@ import * as v from "valibot";
 import { useInsMutation } from "@/hooks/convex-react";
 import { useAppForm } from "@/hooks/form";
 import { getConvexErrorMessage } from "@/lib/convex-error";
+import { formatIndianPhoneNumberForStorage } from "@/lib/phone";
 import { AddFacultyStepIndicator } from "../forms/add-faculty-step-indicator";
 import { ContactStep } from "../forms/contact-step";
 import { EmploymentStep } from "../forms/employment-step";
@@ -71,7 +72,9 @@ export function AddFacultyDialog({
 						: undefined,
 					qualification: value.employment.qualification,
 					specialization: value.employment.specialization,
-					phoneNumber: value.contact.phoneNumber,
+					phoneNumber: formatIndianPhoneNumberForStorage(
+						value.contact.phoneNumber,
+					),
 				});
 				onOpenChange(false);
 			} catch (error) {

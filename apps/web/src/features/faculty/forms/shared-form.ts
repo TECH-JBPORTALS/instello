@@ -1,5 +1,6 @@
 import { formOptions } from "@tanstack/react-form-nextjs";
 import * as v from "valibot";
+import { indianPhoneNumberInputSchema } from "@/lib/phone";
 
 export const PersonalInfoSchema = v.object({
 	firstName: v.pipe(v.string(), v.nonEmpty("First name is required")),
@@ -26,7 +27,7 @@ export const PatchEmploymentSchema = v.object({
 });
 
 export const ContactSchema = v.object({
-	phoneNumber: v.pipe(v.string(), v.nonEmpty("Phone number is required")),
+	phoneNumber: indianPhoneNumberInputSchema,
 });
 
 export const PatchPersonalInfoSchema = v.object({
@@ -38,7 +39,7 @@ export const PatchPersonalInfoSchema = v.object({
 });
 
 export const PatchPhoneSchema = v.object({
-	number: v.pipe(v.string(), v.nonEmpty("Phone number is required")),
+	number: indianPhoneNumberInputSchema,
 });
 
 export const addFacultyFormOpt = formOptions({

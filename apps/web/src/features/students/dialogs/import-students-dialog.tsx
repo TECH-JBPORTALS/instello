@@ -28,6 +28,7 @@ import * as v from "valibot";
 import { ImportProgressHeader } from "@/features/faculty/components/import-progress-header";
 import { useInsMutation, useInsQuery } from "@/hooks/convex-react";
 import { getConvexErrorMessage } from "@/lib/convex-error";
+import { indianPhoneNumberSchema } from "@/lib/phone";
 import {
 	type ImportPhase,
 	type ImportSchema,
@@ -104,7 +105,7 @@ function buildStudentImportSchema(categoryNames: string[]): ImportSchema {
 		},
 		phoneNumber: {
 			possibleNames: ["phone_number", "phoneNumber"],
-			validator: v.pipe(trimmedString, v.nonEmpty("Phone number is required")),
+			validator: indianPhoneNumberSchema,
 		},
 		apaarId: {
 			possibleNames: ["apaar_id", "apaarId"],

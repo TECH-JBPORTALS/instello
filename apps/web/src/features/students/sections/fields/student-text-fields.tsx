@@ -3,6 +3,10 @@
 import { api } from "@instello/convex/api";
 import * as v from "valibot";
 import { useInsMutation } from "@/hooks/convex-react";
+import {
+	formatIndianPhoneNumberForStorage,
+	indianPhoneNumberInputSchema,
+} from "@/lib/phone";
 import { InlineTextField, type StudentFieldProps } from "./inline-text-field";
 
 export function FirstNameField({ studentId, savedValue }: StudentFieldProps) {
@@ -81,10 +85,15 @@ export function PhoneField({ studentId, savedValue }: StudentFieldProps) {
 			fieldName="phoneNumber"
 			savedValue={savedValue}
 			validator={v.object({
-				phoneNumber: v.pipe(v.string(), v.nonEmpty("Phone number is required")),
+				phoneNumber: indianPhoneNumberInputSchema,
 			})}
 			onSave={async (phoneNumber) => {
-				await update({ id: studentId, body: { phoneNumber } });
+				await update({
+					id: studentId,
+					body: {
+						phoneNumber: formatIndianPhoneNumberForStorage(phoneNumber),
+					},
+				});
 			}}
 		/>
 	);

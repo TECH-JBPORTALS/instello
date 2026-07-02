@@ -21,6 +21,10 @@ export const ERROR_CODES = {
 		...BASE_ERROR_CODES,
 		UNAUTHORIZED: { code: "UNAUTHORIZED", message: "Unauthorized access" },
 		ACCESS_DENIED: { code: "ACCESS_DENIED", message: "Access denied" },
+		INVALID_PHONE: {
+			code: "INVALID_PHONE",
+			message: "Enter a valid 10-digit Indian mobile number",
+		},
 		INSITUTION_CODE_ALREADY_EXISTS: {
 			code: "INSITUTION_CODE_ALREADY_EXISTS",
 			message: "Institution code already exists",

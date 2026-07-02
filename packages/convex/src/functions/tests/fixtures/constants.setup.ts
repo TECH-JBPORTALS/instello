@@ -31,7 +31,7 @@ export const CLASS_3 = {
 } as const;
 
 export const FACULTY_EMAIL = "jane.doe@example.com";
-export const FACULTY_PHONE = "+919876543210";
+export const FACULTY_PHONE = "9876543210";
 export const FACULTY_STAFF_ID = "STAFF-001";
 
 /** faker.seed(123) — user1 primary institution static fields */

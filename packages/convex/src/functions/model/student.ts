@@ -2,6 +2,7 @@ import type { PaginationOptions } from "convex/server";
 import { type Infer, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
+import { validateIndianPhoneNumber } from "../helpers/phone";
 import { vv } from "../schema";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 import * as InstitutionStudentCategory from "./institutionStudentCategory";
@@ -183,6 +184,8 @@ export async function create(
 
 	await assertCategoryInInstitution(ctx, args.categoryId, args.institutionId);
 
+	const phoneNumber = validateIndianPhoneNumber(args.phoneNumber);
+
 	const now = Date.now();
 
 	return await ctx.db.insert("students", {
@@ -194,7 +197,7 @@ export async function create(
 		email,
 		gender: args.gender,
 		categoryId: args.categoryId,
-		phoneNumber: args.phoneNumber.trim(),
+		phoneNumber,
 		apaarId: args.apaarId?.trim() || undefined,
 		image: args.image,
 		createdBy: args.createdBy,
@@ -289,7 +292,7 @@ export async function patchContactInfo(
 
 	if (body.email !== undefined) updates.email = body.email.trim();
 	if (body.phoneNumber !== undefined) {
-		updates.phoneNumber = body.phoneNumber.trim();
+		updates.phoneNumber = validateIndianPhoneNumber(body.phoneNumber);
 	}
 
 	await ctx.db.patch("students", student._id, updates);

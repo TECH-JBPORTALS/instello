@@ -10,6 +10,7 @@ import {
 } from "@instello/ui/components/field";
 import { Input } from "@instello/ui/components/input";
 import { withForm } from "@/hooks/form";
+import { indianPhoneNumberInputSchema } from "@/lib/phone";
 import { addFacultyFormOpt, ContactSchema } from "./shared-form";
 
 export const ContactStep = withForm({
@@ -40,6 +41,10 @@ export const ContactStep = withForm({
 						<FieldGroup>
 							<form.AppField
 								name="contact.phoneNumber"
+								validators={{
+									onChange: indianPhoneNumberInputSchema,
+									onBlur: indianPhoneNumberInputSchema,
+								}}
 								children={(field) => {
 									const showErrors =
 										field.state.meta.isTouched ||

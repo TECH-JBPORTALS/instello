@@ -24,6 +24,10 @@ import { useState } from "react";
 import { useInsMutation } from "@/hooks/convex-react";
 import { useAppForm } from "@/hooks/form";
 import { getConvexErrorMessage } from "@/lib/convex-error";
+import {
+	formatIndianPhoneNumberForStorage,
+	indianPhoneNumberInputSchema,
+} from "@/lib/phone";
 import { cn } from "@/lib/utils";
 import { PatchPhoneSchema } from "../forms/shared-form";
 
@@ -55,7 +59,9 @@ export function PhoneSection({ faculty, disabled }: PhoneSectionProps) {
 			try {
 				await updatePhoneNumber({
 					id: faculty._id,
-					body: value,
+					body: {
+						number: formatIndianPhoneNumberForStorage(value.number),
+					},
 				});
 			} catch (submitError) {
 				setError(
@@ -83,9 +89,15 @@ export function PhoneSection({ faculty, disabled }: PhoneSectionProps) {
 					<FieldGroup>
 						<form.Field
 							name="number"
+							validators={{
+								onChange: indianPhoneNumberInputSchema,
+								onBlur: indianPhoneNumberInputSchema,
+							}}
 							children={(field) => {
-								const isInvalid =
-									field.state.meta.isTouched && !field.state.meta.isValid;
+								const showErrors =
+									field.state.meta.isTouched ||
+									form.state.submissionAttempts > 0;
+								const isInvalid = showErrors && !field.state.meta.isValid;
 								return (
 									<Field data-invalid={isInvalid}>
 										<FieldLabel htmlFor={field.name}>Phone number</FieldLabel>

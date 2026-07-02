@@ -2,6 +2,7 @@ import type { PaginationOptions } from "convex/server";
 import type { Infer } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
+import { validateIndianPhoneNumber } from "../helpers/phone";
 import { vv } from "../schema";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 
@@ -170,6 +171,7 @@ export async function create(
 	}
 
 	const now = Date.now();
+	const phoneNumber = validateIndianPhoneNumber(args.phoneNumber);
 
 	return await ctx.db.insert("faculty", {
 		staffId: args.staffId,
@@ -184,7 +186,7 @@ export async function create(
 		specialization: args.specialization,
 		institutionId: args.institutionId,
 		createdBy: args.createdBy,
-		phone: { number: args.phoneNumber, verified: false },
+		phone: { number: phoneNumber, verified: false },
 		status: "active",
 		createdAt: now,
 		updatedAt: now,
@@ -300,7 +302,7 @@ export async function patchPhone(
 	body: Infer<typeof PatchPhoneSchema>,
 ) {
 	await ctx.db.patch("faculty", faculty._id, {
-		phone: { number: body.number, verified: false },
+		phone: { number: validateIndianPhoneNumber(body.number), verified: false },
 		updatedAt: Date.now(),
 	});
 }

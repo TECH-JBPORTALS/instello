@@ -399,14 +399,14 @@ describe("faculty.updatePhoneNumber", () => {
 			api.faculty.updatePhoneNumber,
 			withSlug(ins1, {
 				id: facultyId,
-				body: { number: "+919999999999" },
+				body: { number: "9999999999" },
 			}),
 		);
 
 		const updated = await t.run((ctx) => ctx.db.get("faculty", facultyId));
 
 		expect(updated?.phone).toEqual({
-			number: "+919999999999",
+			number: "9999999999",
 			verified: false,
 		});
 	});
