@@ -225,10 +225,18 @@ const tables = {
 		createdBy: v.string(),
 		createdAt: v.number(),
 		updatedAt: v.number(),
+
+		// This is used for search index on selected column values
+		searchString: v.optional(v.string()),
 	})
 		.index("by_class", ["classId"])
 		.index("by_institution_and_email", ["institutionId", "email"])
-		.index("by_usn", ["usn"]),
+		.index("by_usn", ["usn"])
+		.searchIndex("search_by_searchString", {
+			searchField: "searchString",
+			filterFields: ["institutionId", "classId", "usn", "email"],
+			staged: true,
+		}),
 
 	// programSubjects: defineTable({
 	// 	programId: v.string(),
