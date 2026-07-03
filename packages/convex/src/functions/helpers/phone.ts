@@ -20,7 +20,7 @@ export function formatIndianPhoneNumberForStorage(value: string): string {
 		throwAppError(ERROR_CODES.BASE.INVALID_PHONE);
 	}
 
-	return normalized.replace(/^(\+91|91)/, "");
+	return normalized.replace(/^(\+91)/, "");
 }
 
 export function validateIndianPhoneNumber(value: string): string {
