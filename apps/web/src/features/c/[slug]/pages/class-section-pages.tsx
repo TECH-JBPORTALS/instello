@@ -13,6 +13,7 @@ import {
 	PageHeaderStart,
 	PageHeaderTitle,
 } from "@/components/common/page-header";
+import { AttendanceRegisterView } from "@/features/c/[slug]/attendance/attendance-register-view";
 import { AttendanceView } from "@/features/c/[slug]/attendance/attendance-view";
 import { TimetableHistoryView } from "@/features/c/[slug]/timetable/timetable-history-view";
 import { TimetableView } from "@/features/c/[slug]/timetable/timetable-view";
@@ -120,4 +121,8 @@ export function TimetableHistoryPage() {
 
 export function AttendancePage() {
 	return <AttendanceView />;
+}
+
+export function AttendanceRegisterDetailPage() {
+	return <AttendanceRegisterView />;
 }

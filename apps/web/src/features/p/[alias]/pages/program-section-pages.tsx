@@ -1,8 +1,11 @@
 "use client";
 
 import { api } from "@instello/convex/api";
+import { Button } from "@instello/ui/components/button";
+import { IconArrowLeft } from "@tabler/icons-react";
 import { useConvex } from "convex/react";
 import { ConvexError } from "convex/values";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { useEffect } from "react";
 import Container from "@/components/common/container";
@@ -27,9 +30,6 @@ import {
 	getFeaturePreviewTitle,
 } from "@/lib/feature-previews";
 import { programPath } from "@/lib/program-path";
-import { Button } from "@instello/ui/components/button";
-import { IconArrowLeft } from "@tabler/icons-react";
-import Link from "next/link";
 
 function ProgramSectionPage({
 	title,
