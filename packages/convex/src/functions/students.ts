@@ -142,6 +142,26 @@ export const updateAcademicInfo = insMutation({
 	},
 });
 
+/** Update student family and address info */
+export const updateFamilyInfo = insMutation({
+	permissions: ["student:update"],
+	args: {
+		id: vv.id("students"),
+		body: Student.PatchFamilyInfoSchema,
+	},
+	returns: vv.null(),
+	handler: async (ctx, args) => {
+		const student = await Student.getById(ctx, args.id, ctx.institution._id);
+
+		if (!student) {
+			throwAppError(ERROR_CODES.STUDENT.NOT_FOUND);
+		}
+
+		await Student.patchFamilyInfo(ctx, student, args.body);
+		return null;
+	},
+});
+
 /** Lists student categories for the institution */
 export const listCategories = insQuery({
 	permissions: ["student:view"],

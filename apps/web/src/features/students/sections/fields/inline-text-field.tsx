@@ -74,7 +74,7 @@ export function InlineTextField({
 
 							return (
 								<>
-									<InputGroup>
+									<InputGroup className="min-w-3xs">
 										{isSubmitting && (
 											<InputGroupAddon align="inline-start">
 												<Spinner className="size-4 text-muted-foreground" />

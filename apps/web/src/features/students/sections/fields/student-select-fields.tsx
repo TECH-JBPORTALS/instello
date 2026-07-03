@@ -14,6 +14,7 @@ import { useForm } from "@tanstack/react-form-nextjs";
 import { useEffect, useState } from "react";
 import { useInsMutation, useInsQuery } from "@/hooks/convex-react";
 import { getConvexErrorMessage } from "@/lib/convex-error";
+import { INDIAN_STATES } from "@/lib/indian-states";
 import {
 	GENDER_LABELS,
 	GENDER_OPTIONS,
@@ -75,8 +76,8 @@ export function GenderField({
 									}}
 									disabled={isSubmitting}
 								>
-									<SelectTrigger className="h-8 w-auto min-w-28 bg-transparent shadow-none hover:bg-accent/50">
-										<SelectValue />
+									<SelectTrigger className="h-8 w-auto min-w-3xs bg-transparent shadow-none hover:bg-accent/50">
+										<SelectValue className={"capitalize"} />
 									</SelectTrigger>
 									<SelectContent align="center">
 										{GENDER_OPTIONS.map((option) => (
@@ -161,13 +162,102 @@ export function CategoryField({
 									}}
 									disabled={isSubmitting}
 								>
-									<SelectTrigger className="h-8 w-auto min-w-28 bg-transparent shadow-none hover:bg-accent/50">
-										<SelectValue />
+									<SelectTrigger className="h-8 w-auto min-w-3xs bg-transparent shadow-none hover:bg-accent/50">
+										<SelectValue>
+											{(categories ?? []).find(
+												(category) => category._id === field.state.value,
+											)?.name || "Select category"}
+										</SelectValue>
 									</SelectTrigger>
 									<SelectContent align="center">
 										{(categories ?? []).map((category) => (
 											<SelectItem key={category._id} value={category._id}>
 												{category.name}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</div>
+						)}
+					</form.Field>
+				)}
+			</form.Subscribe>
+			{submitError && (
+				<p className="mt-1 text-xs text-destructive" role="alert">
+					{submitError}
+				</p>
+			)}
+		</form>
+	);
+}
+
+export function StateField({
+	studentId,
+	savedValue,
+}: {
+	studentId: Id<"students">;
+	savedValue: string;
+}) {
+	const update = useInsMutation(api.students.updateFamilyInfo);
+	const [submitError, setSubmitError] = useState<string | null>(null);
+
+	const form = useForm({
+		defaultValues: { state: savedValue },
+		onSubmit: async ({ value }) => {
+			setSubmitError(null);
+			if (value.state === savedValue) return;
+
+			try {
+				await update({
+					id: studentId,
+					body: { state: value.state },
+				});
+				form.reset({ state: value.state });
+			} catch (error) {
+				form.reset({ state: savedValue });
+				setSubmitError(getConvexErrorMessage(error, "Failed to save category"));
+			}
+		},
+	});
+
+	useEffect(() => {
+		form.reset({ state: savedValue });
+	}, [savedValue, form]);
+
+	return (
+		<form
+			onSubmit={(event) => {
+				event.preventDefault();
+				event.stopPropagation();
+				void form.handleSubmit();
+			}}
+		>
+			<form.Subscribe selector={(state) => state.isSubmitting}>
+				{(isSubmitting) => (
+					<form.Field name="state">
+						{(field) => (
+							<div className="flex items-center gap-2">
+								{isSubmitting && (
+									<Spinner className="size-4 shrink-0 text-muted-foreground" />
+								)}
+								<Select
+									value={field.state.value}
+									onValueChange={(next) => {
+										if (!next) return;
+										field.handleChange(next as string);
+										void form.handleSubmit();
+									}}
+									disabled={isSubmitting}
+								>
+									<SelectTrigger className="h-8 w-auto min-w-3xs bg-transparent shadow-none hover:bg-accent/50">
+										<SelectValue>
+											{field.state.value || "Select state"}
+										</SelectValue>
+									</SelectTrigger>
+									<SelectContent align="center">
+										{INDIAN_STATES.map((state) => (
+											<SelectItem key={state} value={state}>
+												{state}
 											</SelectItem>
 										))}
 									</SelectContent>

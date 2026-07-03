@@ -2,7 +2,10 @@ import type { PaginationOptions } from "convex/server";
 import { type Infer, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
-import { validateIndianPhoneNumber } from "../helpers/phone";
+import {
+	validateIndianPhoneNumber,
+	validateOptionalIndianPhoneNumber,
+} from "../helpers/phone";
 import { vv } from "../schema";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 import * as InstitutionStudentCategory from "./institutionStudentCategory";
@@ -24,6 +27,14 @@ export const CreateInputSchema = {
 	phoneNumber: vv.string(),
 	apaarId: vv.optional(vv.string()),
 	image: v.optional(v.id("_storage")),
+	fatherName: vv.optional(vv.string()),
+	fatherPhoneNumber: vv.optional(vv.string()),
+	motherName: vv.optional(vv.string()),
+	motherPhoneNumber: vv.optional(vv.string()),
+	addressLine: vv.optional(vv.string()),
+	city: vv.optional(vv.string()),
+	state: vv.optional(vv.string()),
+	postalCode: vv.optional(vv.string()),
 };
 
 export const CreateInputObjectSchema = vv.object(CreateInputSchema);
@@ -46,6 +57,17 @@ export const PatchAcademicInfoSchema = vv.object({
 	apaarId: vv.optional(vv.string()),
 });
 
+export const PatchFamilyInfoSchema = vv.object({
+	fatherName: vv.optional(vv.string()),
+	fatherPhoneNumber: vv.optional(vv.string()),
+	motherName: vv.optional(vv.string()),
+	motherPhoneNumber: vv.optional(vv.string()),
+	addressLine: vv.optional(vv.string()),
+	city: vv.optional(vv.string()),
+	state: vv.optional(vv.string()),
+	postalCode: vv.optional(vv.string()),
+});
+
 export const StudentDtoSchema = vv.object({
 	_id: vv.id("students"),
 	classId: vv.id("classes"),
@@ -59,6 +81,15 @@ export const StudentDtoSchema = vv.object({
 	phoneNumber: vv.string(),
 	apaarId: vv.optional(vv.string()),
 	image: vv.optional(vv.string()),
+	fatherName: vv.optional(vv.string()),
+	fatherPhoneNumber: vv.optional(vv.string()),
+	motherName: vv.optional(vv.string()),
+	motherPhoneNumber: vv.optional(vv.string()),
+	addressLine: vv.optional(vv.string()),
+	city: vv.optional(vv.string()),
+	state: vv.optional(vv.string()),
+	postalCode: vv.optional(vv.string()),
+	country: vv.optional(vv.string()),
 	createdAt: vv.number(),
 	updatedAt: vv.number(),
 });
@@ -116,6 +147,15 @@ export async function toDto(
 		phoneNumber: student.phoneNumber,
 		apaarId: student.apaarId,
 		image: imageUrl ?? undefined,
+		fatherName: student.fatherName,
+		fatherPhoneNumber: student.fatherPhoneNumber,
+		motherName: student.motherName,
+		motherPhoneNumber: student.motherPhoneNumber,
+		addressLine: student.addressLine,
+		city: student.city,
+		state: student.state,
+		postalCode: student.postalCode,
+		country: student.country,
 		createdAt: student.createdAt,
 		updatedAt: student.updatedAt,
 	};
@@ -185,6 +225,12 @@ export async function create(
 	await assertCategoryInInstitution(ctx, args.categoryId, args.institutionId);
 
 	const phoneNumber = validateIndianPhoneNumber(args.phoneNumber);
+	const fatherPhoneNumber = validateOptionalIndianPhoneNumber(
+		args.fatherPhoneNumber,
+	);
+	const motherPhoneNumber = validateOptionalIndianPhoneNumber(
+		args.motherPhoneNumber,
+	);
 
 	const now = Date.now();
 
@@ -200,6 +246,15 @@ export async function create(
 		phoneNumber,
 		apaarId: args.apaarId?.trim() || undefined,
 		image: args.image,
+		fatherName: args.fatherName?.trim() || undefined,
+		fatherPhoneNumber,
+		motherName: args.motherName?.trim() || undefined,
+		motherPhoneNumber,
+		addressLine: args.addressLine?.trim() || undefined,
+		city: args.city?.trim() || undefined,
+		state: args.state?.trim() || undefined,
+		postalCode: args.postalCode?.trim() || undefined,
+		country: "India",
 		createdBy: args.createdBy,
 		createdAt: now,
 		updatedAt: now,
@@ -331,6 +386,47 @@ export async function patchAcademicInfo(
 	if (body.categoryId !== undefined) updates.categoryId = body.categoryId;
 	if (body.apaarId !== undefined) {
 		updates.apaarId = body.apaarId.trim() || undefined;
+	}
+
+	await ctx.db.patch("students", student._id, updates);
+}
+
+export async function patchFamilyInfo(
+	ctx: AppMutationCtx,
+	student: Doc<"students">,
+	body: Infer<typeof PatchFamilyInfoSchema>,
+) {
+	const updates: Partial<Doc<"students">> = {
+		updatedAt: Date.now(),
+	};
+
+	if (body.fatherName !== undefined) {
+		updates.fatherName = body.fatherName.trim() || undefined;
+	}
+	if (body.fatherPhoneNumber !== undefined) {
+		updates.fatherPhoneNumber = validateOptionalIndianPhoneNumber(
+			body.fatherPhoneNumber,
+		);
+	}
+	if (body.motherName !== undefined) {
+		updates.motherName = body.motherName.trim() || undefined;
+	}
+	if (body.motherPhoneNumber !== undefined) {
+		updates.motherPhoneNumber = validateOptionalIndianPhoneNumber(
+			body.motherPhoneNumber,
+		);
+	}
+	if (body.addressLine !== undefined) {
+		updates.addressLine = body.addressLine.trim() || undefined;
+	}
+	if (body.city !== undefined) {
+		updates.city = body.city.trim() || undefined;
+	}
+	if (body.state !== undefined) {
+		updates.state = body.state.trim() || undefined;
+	}
+	if (body.postalCode !== undefined) {
+		updates.postalCode = body.postalCode.trim() || undefined;
 	}
 
 	await ctx.db.patch("students", student._id, updates);

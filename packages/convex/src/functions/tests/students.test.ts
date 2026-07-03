@@ -200,6 +200,77 @@ describe("students.create", () => {
 		);
 	});
 
+	test("creates a student with family and address info", async ({
+		user1,
+		ins1,
+		classes,
+		asOwner,
+	}) => {
+		const categories = await asOwner(user1, ins1).mutation(
+			api.students.ensureCategories,
+			withSlug(ins1, {}),
+		);
+
+		const studentId = await asOwner(user1, ins1).mutation(
+			api.students.create,
+			withSlug(
+				ins1,
+				createStudentInput(classes.class1._id, categories[0]._id, {
+					fatherName: "Suresh Kumar",
+					fatherPhoneNumber: "9876543211",
+					motherName: "Lakshmi Kumar",
+					motherPhoneNumber: "9876543212",
+					addressLine: "123 MG Road",
+					city: "Bengaluru",
+					state: "Karnataka",
+					postalCode: "560001",
+				}),
+			),
+		);
+
+		const student = await asOwner(user1, ins1).query(
+			api.students.getById,
+			withSlug(ins1, { id: studentId }),
+		);
+
+		expect(student).toMatchObject({
+			fatherName: "Suresh Kumar",
+			fatherPhoneNumber: "9876543211",
+			motherName: "Lakshmi Kumar",
+			motherPhoneNumber: "9876543212",
+			addressLine: "123 MG Road",
+			city: "Bengaluru",
+			state: "Karnataka",
+			postalCode: "560001",
+			country: "India",
+		});
+	});
+
+	test("rejects invalid father phone number", async ({
+		user1,
+		ins1,
+		classes,
+		asOwner,
+	}) => {
+		const categories = await asOwner(user1, ins1).mutation(
+			api.students.ensureCategories,
+			withSlug(ins1, {}),
+		);
+
+		await expectAppError(
+			asOwner(user1, ins1).mutation(
+				api.students.create,
+				withSlug(
+					ins1,
+					createStudentInput(classes.class1._id, categories[0]._id, {
+						fatherPhoneNumber: "12345",
+					}),
+				),
+			),
+			ERROR_CODES.BASE.INVALID_PHONE,
+		);
+	});
+
 	test("allows same email in different institutions", async ({
 		user1,
 		user2,
@@ -344,5 +415,84 @@ describe("students.updatePersonalInfo", () => {
 
 		expect(student.firstName).toBe("Updated");
 		expect(student.gender).toBe("female");
+	});
+});
+
+describe("students.updateFamilyInfo", () => {
+	test("updates family and address info", async ({
+		user1,
+		ins1,
+		classes,
+		asOwner,
+	}) => {
+		const authed = asOwner(user1, ins1);
+		const categories = await authed.mutation(
+			api.students.ensureCategories,
+			withSlug(ins1, {}),
+		);
+
+		const studentId = await authed.mutation(
+			api.students.create,
+			withSlug(ins1, createStudentInput(classes.class1._id, categories[0]._id)),
+		);
+
+		await authed.mutation(
+			api.students.updateFamilyInfo,
+			withSlug(ins1, {
+				id: studentId,
+				body: {
+					fatherName: "Suresh Kumar",
+					motherName: "Lakshmi Kumar",
+					addressLine: "123 MG Road",
+					city: "Bengaluru",
+					state: "Karnataka",
+					postalCode: "560001",
+				},
+			}),
+		);
+
+		const student = await authed.query(
+			api.students.getById,
+			withSlug(ins1, { id: studentId }),
+		);
+
+		expect(student).toMatchObject({
+			fatherName: "Suresh Kumar",
+			motherName: "Lakshmi Kumar",
+			addressLine: "123 MG Road",
+			city: "Bengaluru",
+			state: "Karnataka",
+			postalCode: "560001",
+			country: "India",
+		});
+	});
+
+	test("rejects invalid mother phone number", async ({
+		user1,
+		ins1,
+		classes,
+		asOwner,
+	}) => {
+		const authed = asOwner(user1, ins1);
+		const categories = await authed.mutation(
+			api.students.ensureCategories,
+			withSlug(ins1, {}),
+		);
+
+		const studentId = await authed.mutation(
+			api.students.create,
+			withSlug(ins1, createStudentInput(classes.class1._id, categories[0]._id)),
+		);
+
+		await expectAppError(
+			authed.mutation(
+				api.students.updateFamilyInfo,
+				withSlug(ins1, {
+					id: studentId,
+					body: { motherPhoneNumber: "12345" },
+				}),
+			),
+			ERROR_CODES.BASE.INVALID_PHONE,
+		);
 	});
 });

@@ -25,6 +25,7 @@ import { formatIndianPhoneNumberForStorage } from "@/lib/phone";
 import { ADD_STUDENT_STEPS } from "../constants";
 import { AcademicStep } from "../forms/academic-step";
 import { ContactStep } from "../forms/contact-step";
+import { FamilyStep } from "../forms/family-step";
 import { PersonalInfoStep } from "../forms/personal-info-step";
 import { addStudentFormOpt, CreateStudentSchema } from "../forms/shared-form";
 import { uploadStudentImage } from "../lib/upload-student-image";
@@ -84,6 +85,18 @@ export function NewStudentDialog({
 					),
 					apaarId: value.academic.apaarId?.trim() || undefined,
 					image,
+					fatherName: value.family.fatherName.trim() || undefined,
+					fatherPhoneNumber: value.family.fatherPhoneNumber.trim()
+						? formatIndianPhoneNumberForStorage(value.family.fatherPhoneNumber)
+						: undefined,
+					motherName: value.family.motherName.trim() || undefined,
+					motherPhoneNumber: value.family.motherPhoneNumber.trim()
+						? formatIndianPhoneNumberForStorage(value.family.motherPhoneNumber)
+						: undefined,
+					addressLine: value.family.addressLine.trim() || undefined,
+					city: value.family.city.trim() || undefined,
+					state: value.family.state.trim() || undefined,
+					postalCode: value.family.postalCode.trim() || undefined,
 				});
 				onOpenChange(false);
 			} catch (error) {
@@ -126,9 +139,6 @@ export function NewStudentDialog({
 					<PersonalInfoStep form={form} setStep={setStep} step={step} />
 				)}
 				{step === 1 && (
-					<ContactStep form={form} setStep={setStep} step={step} />
-				)}
-				{step === 2 && (
 					<AcademicStep
 						form={form}
 						setStep={setStep}
@@ -136,6 +146,12 @@ export function NewStudentDialog({
 						categories={categories ?? []}
 					/>
 				)}
+
+				{step === 2 && (
+					<ContactStep form={form} setStep={setStep} step={step} />
+				)}
+
+				{step === 3 && <FamilyStep form={form} setStep={setStep} step={step} />}
 			</DialogContent>
 		</Dialog>
 	);

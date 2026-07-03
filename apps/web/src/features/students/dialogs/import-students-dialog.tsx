@@ -28,7 +28,12 @@ import * as v from "valibot";
 import { ImportProgressHeader } from "@/features/faculty/components/import-progress-header";
 import { useInsMutation, useInsQuery } from "@/hooks/convex-react";
 import { getConvexErrorMessage } from "@/lib/convex-error";
-import { indianPhoneNumberSchema } from "@/lib/phone";
+import {
+	formatIndianPhoneNumberForStorage,
+	INDIAN_PHONE_ERROR_MESSAGE,
+	indianPhoneNumberSchema,
+	isValidIndianPhoneNumber,
+} from "@/lib/phone";
 import {
 	type ImportPhase,
 	type ImportSchema,
@@ -55,6 +60,17 @@ const LIST_MAX_HEIGHT = "max-h-[min(55vh,28rem)]";
 const trimmedString = v.pipe(
 	v.string(),
 	v.transform((value) => value.trim()),
+);
+
+const optionalPhoneSchema = v.pipe(
+	trimmedString,
+	v.check(
+		(value) => value === "" || isValidIndianPhoneNumber(value),
+		INDIAN_PHONE_ERROR_MESSAGE,
+	),
+	v.transform((value) =>
+		value === "" ? "" : formatIndianPhoneNumberForStorage(value),
+	),
 );
 
 function buildStudentImportSchema(categoryNames: string[]): ImportSchema {
@@ -117,6 +133,46 @@ function buildStudentImportSchema(categoryNames: string[]): ImportSchema {
 					"APAAR ID must be exactly 12 digits",
 				),
 			),
+		},
+		fatherName: {
+			possibleNames: ["father_name", "fatherName"],
+			required: false,
+			validator: trimmedString,
+		},
+		fatherPhoneNumber: {
+			possibleNames: ["father_phone_number", "fatherPhoneNumber"],
+			required: false,
+			validator: optionalPhoneSchema,
+		},
+		motherName: {
+			possibleNames: ["mother_name", "motherName"],
+			required: false,
+			validator: trimmedString,
+		},
+		motherPhoneNumber: {
+			possibleNames: ["mother_phone_number", "motherPhoneNumber"],
+			required: false,
+			validator: optionalPhoneSchema,
+		},
+		addressLine: {
+			possibleNames: ["address_line", "addressLine"],
+			required: false,
+			validator: trimmedString,
+		},
+		city: {
+			possibleNames: ["city"],
+			required: false,
+			validator: trimmedString,
+		},
+		state: {
+			possibleNames: ["state"],
+			required: false,
+			validator: trimmedString,
+		},
+		postalCode: {
+			possibleNames: ["postal_code", "postalCode"],
+			required: false,
+			validator: trimmedString,
 		},
 	};
 }
@@ -216,6 +272,14 @@ export function ImportStudentsDialog({
 					categoryId,
 					phoneNumber: row.phoneNumber,
 					apaarId: row.apaarId || undefined,
+					fatherName: row.fatherName || undefined,
+					fatherPhoneNumber: row.fatherPhoneNumber || undefined,
+					motherName: row.motherName || undefined,
+					motherPhoneNumber: row.motherPhoneNumber || undefined,
+					addressLine: row.addressLine || undefined,
+					city: row.city || undefined,
+					state: row.state || undefined,
+					postalCode: row.postalCode || undefined,
 				});
 
 				return { ok: true };

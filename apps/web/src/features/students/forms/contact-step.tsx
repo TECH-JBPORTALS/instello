@@ -22,7 +22,7 @@ const emailSchema = v.pipe(
 export const ContactStep = withForm({
 	...addStudentFormOpt,
 	props: {
-		step: 1,
+		step: 2,
 		setStep: (_step: number) => {},
 	},
 	render: function Render({ form, step, setStep }) {
