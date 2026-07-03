@@ -1,51 +1,90 @@
 "use client";
 
 import { api } from "@instello/convex/api";
+import { Button } from "@instello/ui/components/button";
+import { IconPlus } from "@tabler/icons-react";
+import { useSearchParams } from "next/navigation";
 import Container from "@/components/common/container";
 import {
 	PageHeader,
 	PageHeaderDescription,
+	PageHeaderEnd,
 	PageHeaderStart,
 	PageHeaderTitle,
 } from "@/components/common/page-header";
-import { UpcomingFeaturePreview } from "@/components/common/upcoming-feature-preview/upcoming-feature-preview";
-import { useInsQuery } from "@/hooks/convex-react";
-import { useClassSlug } from "@/hooks/use-class-slug";
-import { useProgramAlias } from "@/hooks/use-program-alias";
+import { Timetable } from "@/components/timetable/timetable";
 import {
-	getFeaturePreview,
-	getFeaturePreviewTitle,
-} from "@/lib/feature-previews";
+	TimetablePublishInfo,
+	type TimetablePublishInfoProps,
+} from "@/components/timetable/timetable-publish-info";
+import {
+	CLASS_TIMETABLE_DUMMY_ITEMS,
+	CLASS_TIMETABLE_PUBLISH_INFO,
+	CLASS_TIMETABLE_VERSION_HISTORY,
+	type TimetableVersionEntry,
+} from "@/features/timetable/dummy-timetable-data";
+import { useInsQuery } from "@/hooks/convex-react";
+import { useProgramAlias } from "@/hooks/use-program-alias";
 
-export function TimetableView() {
+export function TimetableView({
+	basePath,
+	publishInfo: defaultPublishInfo = CLASS_TIMETABLE_PUBLISH_INFO,
+	versionHistory = CLASS_TIMETABLE_VERSION_HISTORY,
+}: {
+	basePath: string;
+	publishInfo?: TimetablePublishInfoProps;
+	versionHistory?: TimetableVersionEntry[];
+}) {
 	const programAlias = useProgramAlias();
-	const classSlug = useClassSlug();
 	const program = useInsQuery(api.programs.getByAlias, { alias: programAlias });
-	const cls = useInsQuery(
-		api.classes.getBySlug,
-		program && classSlug ? { programId: program._id, classSlug } : "skip",
-	);
-	const preview = getFeaturePreview("timetable", "class");
+
+	const searchParams = useSearchParams();
+
+	const versionParam = searchParams.get("v");
+	const requestedVersion = versionParam ? Number(versionParam) : null;
+	const latestVersion = defaultPublishInfo.currentVersion;
+	const viewedEntry =
+		requestedVersion && requestedVersion !== latestVersion
+			? versionHistory.find((entry) => entry.version === requestedVersion)
+			: undefined;
+	const isLatest = !viewedEntry;
+	const publishInfo = viewedEntry
+		? {
+				publisher: viewedEntry.publisher,
+				message: viewedEntry.message,
+				publishedAt: viewedEntry.publishedAt,
+				currentVersion: viewedEntry.version,
+				totalVersions: defaultPublishInfo.totalVersions,
+			}
+		: defaultPublishInfo;
 
 	return (
-		<Container className="flex min-h-0 flex-1 flex-col">
+		<Container className="relative flex min-h-0 flex-1 flex-col">
 			<PageHeader>
 				<PageHeaderStart>
-					<PageHeaderTitle>Timetables</PageHeaderTitle>
+					<PageHeaderTitle>Timetable</PageHeaderTitle>
 					<PageHeaderDescription>
-						Manage timetables for{" "}
-						<i className="text-foreground">{cls?.name ?? "this class"}</i> in{" "}
+						Manage the timetable for{" "}
+						<i className="text-foreground">{"this class"}</i> in{" "}
 						<i className="text-foreground">{program?.name}</i>
 					</PageHeaderDescription>
 				</PageHeaderStart>
+
+				<PageHeaderEnd>
+					<Button>
+						<IconPlus /> New version
+					</Button>
+				</PageHeaderEnd>
 			</PageHeader>
 
-			<UpcomingFeaturePreview
-				featureKey="timetable"
-				featureTitle={getFeaturePreviewTitle("timetable")}
-				scope="class"
-				slides={preview.slides}
+			<TimetablePublishInfo
+				{...publishInfo}
+				historyHref={`${basePath}/versions`}
+				isLatest={isLatest}
+				latestHref={basePath}
 			/>
+
+			<Timetable items={CLASS_TIMETABLE_DUMMY_ITEMS} />
 		</Container>
 	);
 }

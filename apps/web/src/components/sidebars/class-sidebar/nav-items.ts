@@ -21,10 +21,10 @@ export const classNavItems: ClassNavItem[] = [
 	// 	label: "Subjects",
 	// },
 	{
-		id: "timetables",
-		segment: "timetables",
+		id: "timetable",
+		segment: "timetable",
 		icon: IconTable,
-		label: "Timetables",
+		label: "Timetable",
 	},
 	{
 		id: "attendance",

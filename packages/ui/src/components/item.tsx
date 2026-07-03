@@ -16,7 +16,7 @@ function ItemGroup({
 			className={cn(
 				"group/item-group flex w-full rounded-lg border shadow-xs overflow-hidden flex-col has-data-[size=sm]:gap-2.5 has-data-[size=xs]:gap-2",
 				variant === "stack" &&
-					"[&>div]:border-t-0! [&>div]:last:border-b-0! [&>div]:border-x-0! [&>div]:rounded-none",
+					"[&>div]:border-t-0! [&>div]:last:border-b-0! [&>div]:border-x-0! [&>div]:rounded-none! [&>div]:border-border! gap-0!",
 				className,
 			)}
 			{...props}
