@@ -166,6 +166,8 @@ const tables = {
 		categoryId: v.id("institutionStudentCategories"),
 		phoneNumber: v.string(),
 		apaarId: v.optional(v.string()),
+		/** Denormalized copy of the student's current batch assignment (kept in sync with `batchStudents`), enabling pagination scoped to a single batch. */
+		batchId: v.optional(v.id("classBatches")),
 		image: v.optional(v.id("_storage")),
 		fatherName: v.optional(v.string()),
 		fatherPhoneNumber: v.optional(v.string()),
@@ -184,6 +186,7 @@ const tables = {
 		searchString: v.optional(v.string()),
 	})
 		.index("by_class", ["classId"])
+		.index("by_class_and_batch", ["classId", "batchId"])
 		.index("by_institution_and_email", ["institutionId", "email"])
 		.index("by_usn", ["usn"])
 		.searchIndex("search_by_searchString", {

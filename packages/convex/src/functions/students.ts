@@ -51,19 +51,29 @@ export const create = insMutation({
 	},
 });
 
-/** Lists students in a class (paginated) */
+/** Lists students in a class (paginated), optionally scoped to a single batch */
 export const list = insQuery({
 	permissions: ["student:view"],
 	args: {
 		classId: vv.id("classes"),
+		batchId: vv.optional(vv.id("classBatches")),
 		paginationOpts: paginationOptsValidator,
 	},
 	returns: Student.PaginatedStudentListSchema,
 	handler: async (ctx, args) => {
-		await Class.ensureInInstitution(ctx, args.classId, ctx.institution._id);
+		const cls = await Class.ensureInInstitution(
+			ctx,
+			args.classId,
+			ctx.institution._id,
+		);
+
+		if (args.batchId) {
+			await ClassBatch.ensureInClass(ctx, args.batchId, cls._id);
+		}
 
 		return await Student.list(ctx, {
 			classId: args.classId,
+			batchId: args.batchId,
 			paginationOpts: args.paginationOpts,
 		});
 	},

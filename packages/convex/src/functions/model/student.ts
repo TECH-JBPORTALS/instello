@@ -138,16 +138,12 @@ export async function toDto(
 		? await ctx.storage.getUrl(student.image)
 		: null;
 
-	let batchId: Doc<"batchStudents">["batchId"] | undefined;
 	let batchLabel: string | undefined;
 
-	const assignment = await ClassBatch.getAssignmentForStudent(ctx, student._id);
-
-	if (assignment) {
-		const batch = await ClassBatch.getById(ctx, assignment.batchId);
+	if (student.batchId) {
+		const batch = await ClassBatch.getById(ctx, student.batchId);
 		if (batch) {
 			const cls = await ctx.db.get("classes", student.classId);
-			batchId = batch._id;
 			batchLabel = ClassBatch.getBatchLabel(
 				batch.numIdx,
 				cls?.batchNamingConvention,
@@ -167,7 +163,7 @@ export async function toDto(
 		categoryName: category?.name ?? "Unknown",
 		phoneNumber: student.phoneNumber,
 		apaarId: student.apaarId,
-		batchId,
+		batchId: student.batchId,
 		batchLabel,
 		image: imageUrl ?? undefined,
 		fatherName: student.fatherName,
@@ -288,14 +284,23 @@ export async function list(
 	ctx: AppQueryCtx,
 	args: {
 		classId: Id<"classes">;
+		batchId?: Id<"classBatches">;
 		paginationOpts: PaginationOptions;
 	},
 ): Promise<PaginatedStudentList> {
-	const result = await ctx.db
-		.query("students")
-		.withIndex("by_class", (q) => q.eq("classId", args.classId))
-		.order("desc")
-		.paginate(args.paginationOpts);
+	const result = args.batchId
+		? await ctx.db
+				.query("students")
+				.withIndex("by_class_and_batch", (q) =>
+					q.eq("classId", args.classId).eq("batchId", args.batchId),
+				)
+				.order("desc")
+				.paginate(args.paginationOpts)
+		: await ctx.db
+				.query("students")
+				.withIndex("by_class", (q) => q.eq("classId", args.classId))
+				.order("desc")
+				.paginate(args.paginationOpts);
 
 	const page = await Promise.all(
 		result.page.map((student) => toDto(ctx, student)),

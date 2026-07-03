@@ -23,6 +23,7 @@ import type * as helpers_slug from "../helpers/slug.js";
 import type * as helpers_utils from "../helpers/utils.js";
 import type * as http from "../http.js";
 import type * as institutions from "../institutions.js";
+import type * as migrations_backfillStudentBatchIds from "../migrations/backfillStudentBatchIds.js";
 import type * as model_academicPattern from "../model/academicPattern.js";
 import type * as model_academicStage from "../model/academicStage.js";
 import type * as model_class from "../model/class.js";
@@ -67,6 +68,7 @@ declare const fullApi: ApiFromModules<{
   "helpers/utils": typeof helpers_utils;
   http: typeof http;
   institutions: typeof institutions;
+  "migrations/backfillStudentBatchIds": typeof migrations_backfillStudentBatchIds;
   "model/academicPattern": typeof model_academicPattern;
   "model/academicStage": typeof model_academicStage;
   "model/class": typeof model_class;

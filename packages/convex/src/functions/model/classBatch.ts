@@ -129,6 +129,10 @@ export async function assignStudent(
 		createdAt: now,
 		updatedAt: now,
 	});
+	await ctx.db.patch("students", args.studentId, {
+		batchId: args.batchId,
+		updatedAt: now,
+	});
 }
 
 export async function getAssignmentForStudent(
@@ -192,6 +196,8 @@ export async function disableForClass(
 		.withIndex("by_class", (q) => q.eq("classId", classId))
 		.collect();
 
+	const now = Date.now();
+
 	for (const batch of batches) {
 		const assignments = await ctx.db
 			.query("batchStudents")
@@ -199,6 +205,10 @@ export async function disableForClass(
 			.collect();
 
 		for (const assignment of assignments) {
+			await ctx.db.patch("students", assignment.studentId, {
+				batchId: undefined,
+				updatedAt: now,
+			});
 			await ctx.db.delete("batchStudents", assignment._id);
 		}
 
@@ -220,4 +230,28 @@ export async function updateNamingConvention(
 		batchNamingConvention: convention,
 		updatedAt: Date.now(),
 	});
+}
+
+/**
+ * One-off backfill for `students.batchId`: copies the existing `batchStudents`
+ * assignments (made before that field existed) onto the student documents.
+ * Safe to run multiple times; already-synced students are left untouched.
+ */
+export async function backfillStudentBatchIds(ctx: AppMutationCtx) {
+	const assignments = await ctx.db.query("batchStudents").collect();
+	const now = Date.now();
+	let patched = 0;
+
+	for (const assignment of assignments) {
+		const student = await ctx.db.get("students", assignment.studentId);
+		if (!student || student.batchId === assignment.batchId) continue;
+
+		await ctx.db.patch("students", assignment.studentId, {
+			batchId: assignment.batchId,
+			updatedAt: now,
+		});
+		patched += 1;
+	}
+
+	return patched;
 }
