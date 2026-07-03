@@ -1,6 +1,9 @@
 import { formOptions } from "@tanstack/react-form-nextjs";
 import * as v from "valibot";
-import { indianPhoneNumberInputSchema } from "@/lib/phone";
+import {
+	indianPhoneNumberInputSchema,
+	optionalIndianPhoneNumberInputSchema,
+} from "@/lib/phone";
 import { GENDER_OPTIONS } from "../constants";
 
 const GenderSchema = v.picklist(GENDER_OPTIONS, "Select a valid gender");
@@ -31,9 +34,21 @@ export const AcademicSchema = v.object({
 	apaarId: ApaarIdSchema,
 });
 
+export const FamilySchema = v.object({
+	fatherName: v.string(),
+	fatherPhoneNumber: optionalIndianPhoneNumberInputSchema,
+	motherName: v.string(),
+	motherPhoneNumber: optionalIndianPhoneNumberInputSchema,
+	addressLine: v.string(),
+	city: v.string(),
+	state: v.string(),
+	postalCode: v.string(),
+});
+
 export const CreateStudentSchema = v.object({
 	personalInfo: PersonalInfoSchema,
 	contact: ContactSchema,
+	family: FamilySchema,
 	academic: AcademicSchema,
 });
 
@@ -45,14 +60,25 @@ export const addStudentFormOpt = formOptions({
 			lastName: "",
 			gender: "male" as (typeof GENDER_OPTIONS)[number],
 		},
-		contact: {
-			email: "",
-			phoneNumber: "",
-		},
 		academic: {
 			usn: "",
 			categoryId: "",
 			apaarId: "",
+		},
+
+		contact: {
+			email: "",
+			phoneNumber: "",
+		},
+		family: {
+			fatherName: "",
+			fatherPhoneNumber: "",
+			motherName: "",
+			motherPhoneNumber: "",
+			addressLine: "",
+			city: "",
+			state: "",
+			postalCode: "",
 		},
 	},
 });

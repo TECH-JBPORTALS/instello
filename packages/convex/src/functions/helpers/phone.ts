@@ -26,3 +26,11 @@ export function formatIndianPhoneNumberForStorage(value: string): string {
 export function validateIndianPhoneNumber(value: string): string {
 	return formatIndianPhoneNumberForStorage(value);
 }
+
+/** Validates an optional Indian phone number, passing through `undefined` for empty input. */
+export function validateOptionalIndianPhoneNumber(
+	value: string | undefined,
+): string | undefined {
+	if (value === undefined || value.trim() === "") return undefined;
+	return validateIndianPhoneNumber(value);
+}

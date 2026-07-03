@@ -1,6 +1,11 @@
 export const STUDENT_LIST_PAGE_SIZE = 20;
 
-export const ADD_STUDENT_STEPS = ["Personal", "Contact", "Academic"] as const;
+export const ADD_STUDENT_STEPS = [
+	"Personal",
+	"Academic",
+	"Contact",
+	"Family",
+] as const;
 
 export const GENDER_OPTIONS = ["male", "female", "others"] as const;
 
@@ -21,6 +26,14 @@ export const STUDENT_IMPORT_COLUMNS = [
 	"category",
 	"phone_number",
 	"apaar_id",
+	"father_name",
+	"father_phone_number",
+	"mother_name",
+	"mother_phone_number",
+	"address_line",
+	"city",
+	"state",
+	"postal_code",
 ] as const;
 
 export const STUDENT_IMPORT_TEMPLATE_CSV = [
@@ -34,6 +47,14 @@ export const STUDENT_IMPORT_TEMPLATE_CSV = [
 		"GM",
 		"9876543210",
 		"123456789012",
+		"Suresh Kumar",
+		"9876543211",
+		"Lakshmi Kumar",
+		"9876543212",
+		"123 MG Road",
+		"Bengaluru",
+		"Karnataka",
+		"560001",
 	].join(","),
 ].join("\n");
 

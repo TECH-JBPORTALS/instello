@@ -41,3 +41,12 @@ export const indianPhoneNumberSchema = v.pipe(
 	indianPhoneNumberInputSchema,
 	v.transform((value) => formatIndianPhoneNumberForStorage(value)),
 );
+
+/** Validates user input for optional phone fields; empty values are allowed. */
+export const optionalIndianPhoneNumberInputSchema = v.pipe(
+	v.string(),
+	v.check(
+		(value) => value.trim() === "" || isValidIndianPhoneNumber(value),
+		INDIAN_PHONE_ERROR_MESSAGE,
+	),
+);

@@ -94,6 +94,14 @@ export const createStudentInput = (
 		categoryId: Id<"institutionStudentCategories">;
 		phoneNumber: string;
 		apaarId: string;
+		fatherName: string;
+		fatherPhoneNumber: string;
+		motherName: string;
+		motherPhoneNumber: string;
+		addressLine: string;
+		city: string;
+		state: string;
+		postalCode: string;
 	}>,
 ) => ({
 	classId,

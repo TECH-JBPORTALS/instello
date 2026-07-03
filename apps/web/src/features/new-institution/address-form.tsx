@@ -24,11 +24,8 @@ import {
 } from "@instello/ui/components/select";
 import { Textarea } from "@instello/ui/components/textarea";
 import { withForm } from "@/hooks/form";
-import {
-	AddressSchema,
-	INDIAN_STATES,
-	newInstitutionFormOpt,
-} from "./shared-form";
+import { INDIAN_STATES } from "@/lib/indian-states";
+import { AddressSchema, newInstitutionFormOpt } from "./shared-form";
 
 export const AddressForm = withForm({
 	...newInstitutionFormOpt,

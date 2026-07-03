@@ -17,13 +17,24 @@ import {
 } from "@instello/ui/components/item";
 import type { GenderOption } from "../constants";
 import { StudentImageField } from "./fields/student-image-field";
-import { CategoryField, GenderField } from "./fields/student-select-fields";
 import {
+	CategoryField,
+	GenderField,
+	StateField,
+} from "./fields/student-select-fields";
+import {
+	AddressLineField,
 	ApaarIdField,
+	CityField,
 	EmailField,
+	FatherNameField,
+	FatherPhoneField,
 	FirstNameField,
 	LastNameField,
+	MotherNameField,
+	MotherPhoneField,
 	PhoneField,
+	PostalCodeField,
 	UsnField,
 } from "./fields/student-text-fields";
 
@@ -39,6 +50,14 @@ type StudentSettingsSectionProps = {
 		phoneNumber: string;
 		apaarId?: string;
 		image?: string;
+		fatherName?: string;
+		fatherPhoneNumber?: string;
+		motherName?: string;
+		motherPhoneNumber?: string;
+		addressLine?: string;
+		city?: string;
+		state?: string;
+		postalCode?: string;
 	};
 };
 
@@ -141,6 +160,107 @@ export function StudentSettingsSection({
 
 			<Card className="bg-transparent! shadow-none! ring-0!">
 				<CardHeader className="px-0">
+					<CardTitle>Family & Address</CardTitle>
+					<CardDescription>
+						Parent/guardian contact details and home address
+					</CardDescription>
+				</CardHeader>
+				<ItemGroup variant="stack">
+					<Item variant="outline">
+						<ItemContent>
+							<ItemTitle>Father&apos;s name</ItemTitle>
+						</ItemContent>
+						<ItemActions>
+							<FatherNameField
+								studentId={student._id}
+								savedValue={student.fatherName ?? ""}
+							/>
+						</ItemActions>
+					</Item>
+					<Item variant="outline">
+						<ItemContent>
+							<ItemTitle>Father&apos;s phone number</ItemTitle>
+						</ItemContent>
+						<ItemActions>
+							<FatherPhoneField
+								studentId={student._id}
+								savedValue={student.fatherPhoneNumber ?? ""}
+							/>
+						</ItemActions>
+					</Item>
+					<Item variant="outline">
+						<ItemContent>
+							<ItemTitle>Mother&apos;s name</ItemTitle>
+						</ItemContent>
+						<ItemActions>
+							<MotherNameField
+								studentId={student._id}
+								savedValue={student.motherName ?? ""}
+							/>
+						</ItemActions>
+					</Item>
+					<Item variant="outline">
+						<ItemContent>
+							<ItemTitle>Mother&apos;s phone number</ItemTitle>
+						</ItemContent>
+						<ItemActions>
+							<MotherPhoneField
+								studentId={student._id}
+								savedValue={student.motherPhoneNumber ?? ""}
+							/>
+						</ItemActions>
+					</Item>
+					<Item variant="outline">
+						<ItemContent>
+							<ItemTitle>Address line</ItemTitle>
+							<ItemDescription>Building, street, landmark</ItemDescription>
+						</ItemContent>
+						<ItemActions>
+							<AddressLineField
+								studentId={student._id}
+								savedValue={student.addressLine ?? ""}
+							/>
+						</ItemActions>
+					</Item>
+					<Item variant="outline">
+						<ItemContent>
+							<ItemTitle>City</ItemTitle>
+						</ItemContent>
+						<ItemActions>
+							<CityField
+								studentId={student._id}
+								savedValue={student.city ?? ""}
+							/>
+						</ItemActions>
+					</Item>
+					<Item variant="outline">
+						<ItemContent>
+							<ItemTitle>State</ItemTitle>
+						</ItemContent>
+						<ItemActions>
+							<StateField
+								studentId={student._id}
+								savedValue={student.state ?? ""}
+							/>
+						</ItemActions>
+					</Item>
+					<Item variant="outline">
+						<ItemContent>
+							<ItemTitle>Postal code</ItemTitle>
+							<ItemDescription>Area postal code</ItemDescription>
+						</ItemContent>
+						<ItemActions>
+							<PostalCodeField
+								studentId={student._id}
+								savedValue={student.postalCode ?? ""}
+							/>
+						</ItemActions>
+					</Item>
+				</ItemGroup>
+			</Card>
+
+			<Card className="bg-transparent! shadow-none! ring-0!">
+				<CardHeader className="px-0">
 					<CardTitle>Academic</CardTitle>
 					<CardDescription>
 						USN, reservation category, and APAAR ID
@@ -150,9 +270,7 @@ export function StudentSettingsSection({
 					<Item variant="outline">
 						<ItemContent>
 							<ItemTitle>USN</ItemTitle>
-							<ItemDescription>
-								University seat number (unique across the app)
-							</ItemDescription>
+							<ItemDescription>Unique student number</ItemDescription>
 						</ItemContent>
 						<ItemActions>
 							<UsnField studentId={student._id} savedValue={student.usn} />
@@ -176,11 +294,13 @@ export function StudentSettingsSection({
 						<ItemContent>
 							<ItemTitle>APAAR ID</ItemTitle>
 							<ItemDescription>Optional 12-digit APAAR code</ItemDescription>
+						</ItemContent>
+						<ItemActions>
 							<ApaarIdField
 								studentId={student._id}
 								savedValue={student.apaarId ?? ""}
 							/>
-						</ItemContent>
+						</ItemActions>
 					</Item>
 				</ItemGroup>
 			</Card>

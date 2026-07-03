@@ -29,7 +29,7 @@ type AcademicStepProps = {
 export const AcademicStep = withForm({
 	...addStudentFormOpt,
 	props: {
-		step: 2,
+		step: 1,
 		setStep: (_step: number) => {},
 		categories: [] as AcademicStepProps["categories"],
 	},
@@ -47,7 +47,7 @@ export const AcademicStep = withForm({
 					onDynamic: AcademicSchema,
 				}}
 				onGroupSubmit={() => {
-					form.handleSubmit();
+					setStep(step + 1);
 				}}
 				children={(formGroup) => (
 					<form
@@ -169,9 +169,7 @@ export const AcademicStep = withForm({
 							>
 								Back
 							</Button>
-							<form.AppForm>
-								<form.SubscribeButton label="Add student" />
-							</form.AppForm>
+							<Button type="submit">Continue</Button>
 						</div>
 					</form>
 				)}
