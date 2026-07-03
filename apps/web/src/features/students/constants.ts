@@ -36,30 +36,49 @@ export const STUDENT_IMPORT_COLUMNS = [
 	"postal_code",
 ] as const;
 
+const STUDENT_IMPORT_EXAMPLE_ROW = [
+	"1MS21CS001",
+	"Rahul",
+	"Kumar",
+	"rahul.kumar@example.com",
+	"male",
+	"GM",
+	"9876543210",
+	"123456789012",
+	"Suresh Kumar",
+	"9876543211",
+	"Lakshmi Kumar",
+	"9876543212",
+	"123 MG Road",
+	"Bengaluru",
+	"Karnataka",
+	"560001",
+];
+
 export const STUDENT_IMPORT_TEMPLATE_CSV = [
 	STUDENT_IMPORT_COLUMNS.join(","),
-	[
-		"1MS21CS001",
-		"Rahul",
-		"Kumar",
-		"rahul.kumar@example.com",
-		"male",
-		"GM",
-		"9876543210",
-		"123456789012",
-		"Suresh Kumar",
-		"9876543211",
-		"Lakshmi Kumar",
-		"9876543212",
-		"123 MG Road",
-		"Bengaluru",
-		"Karnataka",
-		"560001",
-	].join(","),
+	STUDENT_IMPORT_EXAMPLE_ROW.join(","),
 ].join("\n");
 
-export function downloadStudentImportTemplate() {
-	const blob = new Blob([STUDENT_IMPORT_TEMPLATE_CSV], {
+export function downloadStudentImportTemplate(includeBatch = false) {
+	const columns: string[] = includeBatch
+		? [
+				...STUDENT_IMPORT_COLUMNS.slice(0, 6),
+				"batch",
+				...STUDENT_IMPORT_COLUMNS.slice(6),
+			]
+		: [...STUDENT_IMPORT_COLUMNS];
+	const exampleRow: string[] = includeBatch
+		? [
+				...STUDENT_IMPORT_EXAMPLE_ROW.slice(0, 6),
+				"Batch 1",
+				...STUDENT_IMPORT_EXAMPLE_ROW.slice(6),
+			]
+		: [...STUDENT_IMPORT_EXAMPLE_ROW];
+
+	const csv = [columns.join(","), exampleRow.join(",")].join("\n");
+
+	const blob = new Blob([csv], {
 		type: "text/csv;charset=utf-8",
 	});
 	const url = URL.createObjectURL(blob);

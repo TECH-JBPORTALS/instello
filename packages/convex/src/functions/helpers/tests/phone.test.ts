@@ -14,11 +14,11 @@ describe("phone helpers", () => {
 	it("accepts valid Indian mobile numbers", () => {
 		expect(isValidIndianPhoneNumber("9876543210")).toBe(true);
 		expect(isValidIndianPhoneNumber("+919876543210")).toBe(true);
-		expect(isValidIndianPhoneNumber("919876543210")).toBe(true);
 		expect(isValidIndianPhoneNumber("+91 98765 43210")).toBe(true);
 	});
 
 	it("rejects invalid numbers", () => {
+		expect(isValidIndianPhoneNumber("919876543210")).toBe(false);
 		expect(isValidIndianPhoneNumber("1234567890")).toBe(false);
 		expect(isValidIndianPhoneNumber("987654321")).toBe(false);
 		expect(isValidIndianPhoneNumber("abcdefghij")).toBe(false);

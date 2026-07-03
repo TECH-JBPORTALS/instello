@@ -27,19 +27,24 @@ import { AcademicStep } from "../forms/academic-step";
 import { ContactStep } from "../forms/contact-step";
 import { FamilyStep } from "../forms/family-step";
 import { PersonalInfoStep } from "../forms/personal-info-step";
-import { addStudentFormOpt, CreateStudentSchema } from "../forms/shared-form";
+import {
+	addStudentFormOpt,
+	buildCreateStudentSchema,
+} from "../forms/shared-form";
 import { uploadStudentImage } from "../lib/upload-student-image";
 
 type NewStudentDialogProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	classId: Id<"classes">;
+	isGroupsEnabled?: boolean;
 };
 
 export function NewStudentDialog({
 	open,
 	onOpenChange,
 	classId,
+	isGroupsEnabled = false,
 }: NewStudentDialogProps) {
 	const [step, setStep] = useState(0);
 	const [globalError, setGlobalError] = useState<string | null>(null);
@@ -51,12 +56,16 @@ export function NewStudentDialog({
 		api.students.listCategories,
 		open ? {} : "skip",
 	);
+	const batches = useInsQuery(
+		api.classBatches.list,
+		open && isGroupsEnabled ? { classId } : "skip",
+	);
 
 	const form = useAppForm({
 		...addStudentFormOpt,
 		validationLogic: revalidateLogic(),
 		validators: {
-			onDynamic: CreateStudentSchema,
+			onDynamic: buildCreateStudentSchema(isGroupsEnabled),
 		},
 		onSubmit: async ({ value }) => {
 			setGlobalError(null);
@@ -84,6 +93,9 @@ export function NewStudentDialog({
 						value.contact.phoneNumber,
 					),
 					apaarId: value.academic.apaarId?.trim() || undefined,
+					batchId: isGroupsEnabled
+						? (value.academic.batchId as Id<"classBatches">)
+						: undefined,
 					image,
 					fatherName: value.family.fatherName.trim() || undefined,
 					fatherPhoneNumber: value.family.fatherPhoneNumber.trim()
@@ -144,6 +156,8 @@ export function NewStudentDialog({
 						setStep={setStep}
 						step={step}
 						categories={categories ?? []}
+						batches={batches ?? []}
+						isGroupsEnabled={isGroupsEnabled}
 					/>
 				)}
 

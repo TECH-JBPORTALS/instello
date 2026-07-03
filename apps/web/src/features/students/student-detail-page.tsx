@@ -74,6 +74,9 @@ export function StudentDetailPage() {
 							<p className="text-sm text-muted-foreground">{student.usn}</p>
 							<p className="text-sm text-muted-foreground">{student.email}</p>
 							<div className="flex flex-wrap items-center gap-2 pt-0.5">
+								{student.batchLabel && (
+									<Badge variant="outline">{student.batchLabel}</Badge>
+								)}
 								<Badge variant="secondary">{student.categoryName}</Badge>
 							</div>
 						</div>

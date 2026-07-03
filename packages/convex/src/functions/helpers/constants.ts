@@ -61,6 +61,20 @@ export const ERROR_CODES = {
 			code: "CLASS_INVALID_SLUG",
 			message: "Class slug must contain at least one alphanumeric character",
 		},
+		BATCHES_ALREADY_ENABLED: {
+			code: "CLASS_BATCHES_ALREADY_ENABLED",
+			message: "Batches are already enabled for this class",
+		},
+		BATCHES_NOT_ENABLED: {
+			code: "CLASS_BATCHES_NOT_ENABLED",
+			message: "Batches are not enabled for this class",
+		},
+	},
+	BATCH: {
+		NOT_FOUND: {
+			code: "BATCH_NOT_FOUND",
+			message: "Batch not found in this class",
+		},
 	},
 	FACULTY: {
 		NOT_FOUND: {

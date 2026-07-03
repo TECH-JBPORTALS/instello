@@ -23,7 +23,15 @@ export function PageHeaderEnd({
 	className,
 	...props
 }: React.ComponentProps<"div">) {
-	return <div className={cn("flex", className)} {...props} />;
+	return (
+		<div
+			className={cn(
+				"flex h-auto w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center",
+				className,
+			)}
+			{...props}
+		/>
+	);
 }
 
 export function PageHeaderTitle({

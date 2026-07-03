@@ -5,8 +5,10 @@ import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import { slugifyName } from "../helpers/slug";
 import { vv } from "../schema";
 import * as AcademicStage from "./academicStage";
+import { BatchNamingConventionSchema } from "./classBatch";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 import * as InstitutionAcademicPattern from "./institutionAcademicPattern";
+import * as Program from "./program";
 
 export const ClassStageSummarySchema = vv.object({
 	_id: vv.id("academicStages"),
@@ -47,6 +49,7 @@ export const ClassDtoSchema = vv.object({
 	slug: vv.string(),
 	description: vv.optional(vv.string()),
 	isGroupsEnabled: vv.boolean(),
+	batchNamingConvention: vv.optional(BatchNamingConventionSchema),
 	status: vv.union(vv.literal("inactive"), vv.literal("active")),
 	currentHeadStage: ClassStageSummarySchema,
 	createdAt: vv.number(),
@@ -89,6 +92,7 @@ export async function toDto(
 		slug: cls.slug,
 		description: cls.description,
 		isGroupsEnabled: cls.isGroupsEnabled,
+		batchNamingConvention: cls.batchNamingConvention,
 		status: cls.status,
 		currentHeadStage: toStageSummary(stage),
 		createdAt: cls.createdAt,
@@ -298,6 +302,31 @@ export async function listForSwitcher(
 
 export async function getById(ctx: AppQueryCtx, id: Id<"classes">) {
 	return await ctx.db.get("classes", id);
+}
+
+/** Fetches a class and verifies it belongs to the given institution (via its program). */
+export async function ensureInInstitution(
+	ctx: AppQueryCtx | AppMutationCtx,
+	id: Id<"classes">,
+	institutionId: string,
+) {
+	const cls = await getById(ctx, id);
+
+	if (!cls) {
+		throwAppError(ERROR_CODES.CLASS.NOT_FOUND);
+	}
+
+	const program = await Program.getById(
+		ctx,
+		cls.programId as Id<"programs">,
+		institutionId,
+	);
+
+	if (!program) {
+		throwAppError(ERROR_CODES.CLASS.NOT_FOUND);
+	}
+
+	return cls;
 }
 
 export async function patch(

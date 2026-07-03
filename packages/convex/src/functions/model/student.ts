@@ -7,6 +7,7 @@ import {
 	validateOptionalIndianPhoneNumber,
 } from "../helpers/phone";
 import { vv } from "../schema";
+import * as ClassBatch from "./classBatch";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 import * as InstitutionStudentCategory from "./institutionStudentCategory";
 
@@ -26,6 +27,7 @@ export const CreateInputSchema = {
 	categoryId: vv.id("institutionStudentCategories"),
 	phoneNumber: vv.string(),
 	apaarId: vv.optional(vv.string()),
+	batchId: vv.optional(vv.id("classBatches")),
 	image: v.optional(v.id("_storage")),
 	fatherName: vv.optional(vv.string()),
 	fatherPhoneNumber: vv.optional(vv.string()),
@@ -80,6 +82,8 @@ export const StudentDtoSchema = vv.object({
 	categoryName: vv.string(),
 	phoneNumber: vv.string(),
 	apaarId: vv.optional(vv.string()),
+	batchId: vv.optional(vv.id("classBatches")),
+	batchLabel: vv.optional(vv.string()),
 	image: vv.optional(vv.string()),
 	fatherName: vv.optional(vv.string()),
 	fatherPhoneNumber: vv.optional(vv.string()),
@@ -134,6 +138,23 @@ export async function toDto(
 		? await ctx.storage.getUrl(student.image)
 		: null;
 
+	let batchId: Doc<"batchStudents">["batchId"] | undefined;
+	let batchLabel: string | undefined;
+
+	const assignment = await ClassBatch.getAssignmentForStudent(ctx, student._id);
+
+	if (assignment) {
+		const batch = await ClassBatch.getById(ctx, assignment.batchId);
+		if (batch) {
+			const cls = await ctx.db.get("classes", student.classId);
+			batchId = batch._id;
+			batchLabel = ClassBatch.getBatchLabel(
+				batch.numIdx,
+				cls?.batchNamingConvention,
+			);
+		}
+	}
+
 	return {
 		_id: student._id,
 		classId: student.classId,
@@ -146,6 +167,8 @@ export async function toDto(
 		categoryName: category?.name ?? "Unknown",
 		phoneNumber: student.phoneNumber,
 		apaarId: student.apaarId,
+		batchId,
+		batchLabel,
 		image: imageUrl ?? undefined,
 		fatherName: student.fatherName,
 		fatherPhoneNumber: student.fatherPhoneNumber,

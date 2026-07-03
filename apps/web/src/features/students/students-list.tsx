@@ -35,7 +35,13 @@ import { getStudentDisplayName } from "./forms/shared-form";
 import { StudentAvatar } from "./student-avatar";
 import { studentPath } from "./student-path";
 
-function StudentsListEmpty({ classId }: { classId: Id<"classes"> }) {
+function StudentsListEmpty({
+	classId,
+	isGroupsEnabled,
+}: {
+	classId: Id<"classes">;
+	isGroupsEnabled: boolean;
+}) {
 	const [open, setOpen] = useState(false);
 
 	return (
@@ -55,7 +61,12 @@ function StudentsListEmpty({ classId }: { classId: Id<"classes"> }) {
 					Add student
 				</Button>
 			</EmptyContent>
-			<NewStudentDialog open={open} onOpenChange={setOpen} classId={classId} />
+			<NewStudentDialog
+				open={open}
+				onOpenChange={setOpen}
+				classId={classId}
+				isGroupsEnabled={isGroupsEnabled}
+			/>
 		</Empty>
 	);
 }
@@ -81,7 +92,13 @@ function StudentsListSkeleton({ count }: { count: number }) {
 	);
 }
 
-export function StudentsList({ classId }: { classId: Id<"classes"> }) {
+export function StudentsList({
+	classId,
+	isGroupsEnabled = false,
+}: {
+	classId: Id<"classes">;
+	isGroupsEnabled?: boolean;
+}) {
 	const programAlias = useProgramAlias();
 	const classSlug = useClassSlug();
 	const { results, status, loadMore, isLoading } = useInsPaginatedQuery(
@@ -95,7 +112,9 @@ export function StudentsList({ classId }: { classId: Id<"classes"> }) {
 	}
 
 	if (isEmpty(results)) {
-		return <StudentsListEmpty classId={classId} />;
+		return (
+			<StudentsListEmpty classId={classId} isGroupsEnabled={isGroupsEnabled} />
+		);
 	}
 
 	return (
@@ -129,7 +148,12 @@ export function StudentsList({ classId }: { classId: Id<"classes"> }) {
 								{student.usn} · {student.email}
 							</ItemDescription>
 						</ItemContent>
-						<Badge variant="secondary">{student.categoryName}</Badge>
+						<div className="flex items-center gap-2">
+							{student.batchLabel && (
+								<Badge variant="outline">{student.batchLabel}</Badge>
+							)}
+							<Badge variant="secondary">{student.categoryName}</Badge>
+						</div>
 					</Item>
 				))}
 				{isLoading && <StudentsListSkeleton count={3} />}

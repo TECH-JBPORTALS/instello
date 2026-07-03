@@ -53,7 +53,10 @@ type ImportStudentsDialogProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	classId: Id<"classes">;
+	isGroupsEnabled?: boolean;
 };
+
+type ImportBatch = { _id: Id<"classBatches">; numIdx: number; label: string };
 
 const LIST_MAX_HEIGHT = "max-h-[min(55vh,28rem)]";
 
@@ -73,12 +76,16 @@ const optionalPhoneSchema = v.pipe(
 	),
 );
 
-function buildStudentImportSchema(categoryNames: string[]): ImportSchema {
+function buildStudentImportSchema(
+	categoryNames: string[],
+	batches: ImportBatch[],
+): ImportSchema {
 	const normalizedCategories = new Set(
 		categoryNames.map((name) => name.toLowerCase()),
 	);
+	const batchNumbers = batches.map((batch) => String(batch.numIdx));
 
-	return {
+	const schema: ImportSchema = {
 		usn: {
 			possibleNames: ["usn"],
 			validator: v.pipe(trimmedString, v.nonEmpty("USN is required")),
@@ -175,6 +182,22 @@ function buildStudentImportSchema(categoryNames: string[]): ImportSchema {
 			validator: trimmedString,
 		},
 	};
+
+	if (batches.length > 0) {
+		schema.batch = {
+			possibleNames: ["batch"],
+			required: false,
+			validator: v.pipe(
+				trimmedString,
+				v.check(
+					(value) => value === "" || batchNumbers.includes(value),
+					`Batch must be one of: ${batchNumbers.join(", ")} (leave blank to auto-assign)`,
+				),
+			),
+		};
+	}
+
+	return schema;
 }
 
 function phaseDescription(phase: ImportPhase, fileName: string | null) {
@@ -202,6 +225,7 @@ export function ImportStudentsDialog({
 	open,
 	onOpenChange,
 	classId,
+	isGroupsEnabled = false,
 }: ImportStudentsDialogProps) {
 	const inputRef = useRef<HTMLInputElement>(null);
 	const createStudent = useInsMutation(api.students.create);
@@ -209,6 +233,10 @@ export function ImportStudentsDialog({
 	const categories = useInsQuery(
 		api.students.listCategories,
 		open ? {} : "skip",
+	);
+	const batches = useInsQuery(
+		api.classBatches.list,
+		open && isGroupsEnabled ? { classId } : "skip",
 	);
 
 	useEffect(() => {
@@ -229,9 +257,21 @@ export function ImportStudentsDialog({
 		[categories],
 	);
 
+	const resolvedBatches = useMemo<ImportBatch[]>(
+		() => (isGroupsEnabled ? (batches ?? []) : []),
+		[isGroupsEnabled, batches],
+	);
+	const batchByNumIdx = useMemo(
+		() =>
+			new Map(
+				resolvedBatches.map((batch) => [String(batch.numIdx), batch._id]),
+			),
+		[resolvedBatches],
+	);
+
 	const importSchema = useMemo(
-		() => buildStudentImportSchema(categoryNames),
-		[categoryNames],
+		() => buildStudentImportSchema(categoryNames, resolvedBatches),
+		[categoryNames, resolvedBatches],
 	);
 
 	const {
@@ -261,6 +301,9 @@ export function ImportStudentsDialog({
 				};
 			}
 
+			const batchValue = (row as { batch?: string }).batch;
+			const batchId = batchValue ? batchByNumIdx.get(batchValue) : undefined;
+
 			try {
 				await createStudent({
 					classId,
@@ -272,6 +315,7 @@ export function ImportStudentsDialog({
 					categoryId,
 					phoneNumber: row.phoneNumber,
 					apaarId: row.apaarId || undefined,
+					batchId,
 					fatherName: row.fatherName || undefined,
 					fatherPhoneNumber: row.fatherPhoneNumber || undefined,
 					motherName: row.motherName || undefined,
@@ -370,7 +414,9 @@ export function ImportStudentsDialog({
 										type="button"
 										variant="outline"
 										size="sm"
-										onClick={downloadStudentImportTemplate}
+										onClick={() =>
+											downloadStudentImportTemplate(resolvedBatches.length > 0)
+										}
 									>
 										<IconDownload className="size-4" />
 										Template

@@ -1,36 +1,11 @@
 import { paginationOptsValidator } from "convex/server";
-import type { Id } from "./_generated/dataModel";
 import { ERROR_CODES, throwAppError } from "./helpers/constants";
 import { insMutation, insQuery } from "./helpers/customFunctions";
 import * as Class from "./model/class";
+import * as ClassBatch from "./model/classBatch";
 import * as InstitutionStudentCategory from "./model/institutionStudentCategory";
-import * as Program from "./model/program";
 import * as Student from "./model/student";
 import { vv } from "./schema";
-
-async function getClassInInstitution(
-	ctx: Parameters<typeof Class.getById>[0],
-	classId: Id<"classes">,
-	institutionId: string,
-) {
-	const cls = await Class.getById(ctx, classId);
-
-	if (!cls) {
-		throwAppError(ERROR_CODES.CLASS.NOT_FOUND);
-	}
-
-	const program = await Program.getById(
-		ctx,
-		cls.programId as Id<"programs">,
-		institutionId,
-	);
-
-	if (!program) {
-		throwAppError(ERROR_CODES.CLASS.NOT_FOUND);
-	}
-
-	return cls;
-}
 
 /** Creates a student in the current institution for a class */
 export const create = insMutation({
@@ -38,13 +13,41 @@ export const create = insMutation({
 	args: Student.CreateInputSchema,
 	returns: vv.id("students"),
 	handler: async (ctx, args) => {
-		await getClassInInstitution(ctx, args.classId, ctx.institution._id);
+		const cls = await Class.ensureInInstitution(
+			ctx,
+			args.classId,
+			ctx.institution._id,
+		);
 
-		return await Student.create(ctx, {
+		if (!cls.isGroupsEnabled && args.batchId) {
+			throwAppError(ERROR_CODES.CLASS.BATCHES_NOT_ENABLED);
+		}
+
+		let batchId = args.batchId;
+
+		if (cls.isGroupsEnabled) {
+			if (batchId) {
+				await ClassBatch.ensureInClass(ctx, batchId, cls._id);
+			} else {
+				const leastPopulated = await ClassBatch.pickLeastPopulatedBatch(
+					ctx,
+					cls._id,
+				);
+				batchId = leastPopulated?._id;
+			}
+		}
+
+		const studentId = await Student.create(ctx, {
 			...args,
 			institutionId: ctx.institution._id,
 			createdBy: ctx.session.userId,
 		});
+
+		if (batchId) {
+			await ClassBatch.assignStudent(ctx, { batchId, studentId });
+		}
+
+		return studentId;
 	},
 });
 
@@ -57,7 +60,7 @@ export const list = insQuery({
 	},
 	returns: Student.PaginatedStudentListSchema,
 	handler: async (ctx, args) => {
-		await getClassInInstitution(ctx, args.classId, ctx.institution._id);
+		await Class.ensureInInstitution(ctx, args.classId, ctx.institution._id);
 
 		return await Student.list(ctx, {
 			classId: args.classId,

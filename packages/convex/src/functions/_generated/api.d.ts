@@ -11,6 +11,7 @@
 import type * as academicPatterns from "../academicPatterns.js";
 import type * as academicStages from "../academicStages.js";
 import type * as auth from "../auth.js";
+import type * as classBatches from "../classBatches.js";
 import type * as classes from "../classes.js";
 import type * as faculty from "../faculty.js";
 import type * as helpers_academicPatternTemplates from "../helpers/academicPatternTemplates.js";
@@ -25,6 +26,7 @@ import type * as institutions from "../institutions.js";
 import type * as model_academicPattern from "../model/academicPattern.js";
 import type * as model_academicStage from "../model/academicStage.js";
 import type * as model_class from "../model/class.js";
+import type * as model_classBatch from "../model/classBatch.js";
 import type * as model_faculty from "../model/faculty.js";
 import type * as model_institution from "../model/institution.js";
 import type * as model_institutionAcademicPattern from "../model/institutionAcademicPattern.js";
@@ -53,6 +55,7 @@ declare const fullApi: ApiFromModules<{
   academicPatterns: typeof academicPatterns;
   academicStages: typeof academicStages;
   auth: typeof auth;
+  classBatches: typeof classBatches;
   classes: typeof classes;
   faculty: typeof faculty;
   "helpers/academicPatternTemplates": typeof helpers_academicPatternTemplates;
@@ -67,6 +70,7 @@ declare const fullApi: ApiFromModules<{
   "model/academicPattern": typeof model_academicPattern;
   "model/academicStage": typeof model_academicStage;
   "model/class": typeof model_class;
+  "model/classBatch": typeof model_classBatch;
   "model/faculty": typeof model_faculty;
   "model/institution": typeof model_institution;
   "model/institutionAcademicPattern": typeof model_institutionAcademicPattern;

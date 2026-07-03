@@ -8,10 +8,7 @@ export default function Container({
 }: React.ComponentProps<"main">) {
 	return (
 		<main
-			className={cn(
-				"px-6 py-8 lg:px-14 xl:px-28 2xl:px-40 space-y-8",
-				className,
-			)}
+			className={cn("px-6 py-8 lg:px-14 xl:px-28 space-y-8", className)}
 			{...props}
 		>
 			{children}

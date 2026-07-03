@@ -1,8 +1,8 @@
 import { paginationOptsValidator } from "convex/server";
-import type { Id } from "./_generated/dataModel";
 import { ERROR_CODES, throwAppError } from "./helpers/constants";
 import { insMutation, insQuery } from "./helpers/customFunctions";
 import * as Class from "./model/class";
+import * as ClassBatch from "./model/classBatch";
 import * as Program from "./model/program";
 import { vv } from "./schema";
 
@@ -197,21 +197,11 @@ export const getById = insQuery({
 	},
 	returns: Class.ClassDtoSchema,
 	handler: async (ctx, args) => {
-		const cls = await Class.getById(ctx, args.id);
-
-		if (!cls) {
-			throwAppError(ERROR_CODES.CLASS.NOT_FOUND);
-		}
-
-		const program = await Program.getById(
+		const cls = await Class.ensureInInstitution(
 			ctx,
-			cls.programId as Id<"programs">,
+			args.id,
 			ctx.institution._id,
 		);
-
-		if (!program) {
-			throwAppError(ERROR_CODES.CLASS.NOT_FOUND);
-		}
 
 		return await Class.toDto(ctx, cls);
 	},
@@ -227,28 +217,19 @@ export const updateBasicInfo = insMutation({
 	},
 	returns: vv.null(),
 	handler: async (ctx, args) => {
-		const cls = await Class.getById(ctx, args.id);
-
-		if (!cls) {
-			throwAppError(ERROR_CODES.CLASS.NOT_FOUND);
-		}
-
-		const program = await Program.getById(
+		const cls = await Class.ensureInInstitution(
 			ctx,
-			cls.programId as Id<"programs">,
+			args.id,
 			ctx.institution._id,
 		);
-
-		if (!program) {
-			throwAppError(ERROR_CODES.CLASS.NOT_FOUND);
-		}
 
 		await Class.patch(ctx, args.id, args.body, cls);
 		return null;
 	},
 });
 
-/** Enable Section Groups for a class by id
+/** Enable batches for a class by id. Splits any existing students evenly across
+ * two new batches, or leaves them empty if the class has no students yet.
  * @returns class
  */
 export const enableSectionGroups = insMutation({
@@ -260,11 +241,25 @@ export const enableSectionGroups = insMutation({
 		_id: vv.id("classes"),
 		isGroupsEnabled: vv.boolean(),
 	}),
-	/** @ts-expect-error - TODO: Implement this. Once implemented please remove this line */
-	handler: async (_ctx, _args) => {},
+	handler: async (ctx, args) => {
+		const cls = await Class.ensureInInstitution(
+			ctx,
+			args.id,
+			ctx.institution._id,
+		);
+
+		if (cls.isGroupsEnabled) {
+			throwAppError(ERROR_CODES.CLASS.BATCHES_ALREADY_ENABLED);
+		}
+
+		await ClassBatch.enableForClass(ctx, cls);
+
+		return { _id: cls._id, isGroupsEnabled: true };
+	},
 });
 
-/** Disable Section Groups for a class by id
+/** Disable batches for a class by id. Deletes all batches and batch
+ * assignments; students remain in the class without a batch.
  * @returns class
  */
 export const disableSectionGroups = insMutation({
@@ -276,6 +271,19 @@ export const disableSectionGroups = insMutation({
 		_id: vv.id("classes"),
 		isGroupsEnabled: vv.boolean(),
 	}),
-	/** @ts-expect-error - TODO: Implement this. Once implemented please remove this line */
-	handler: async (_ctx, _args) => {},
+	handler: async (ctx, args) => {
+		const cls = await Class.ensureInInstitution(
+			ctx,
+			args.id,
+			ctx.institution._id,
+		);
+
+		if (!cls.isGroupsEnabled) {
+			throwAppError(ERROR_CODES.CLASS.BATCHES_NOT_ENABLED);
+		}
+
+		await ClassBatch.disableForClass(ctx, cls._id);
+
+		return { _id: cls._id, isGroupsEnabled: false };
+	},
 });
