@@ -14,11 +14,13 @@ import {
 	PageHeaderTitle,
 } from "@/components/common/page-header";
 import { AttendanceView } from "@/features/c/[slug]/attendance/attendance-view";
+import { TimetableHistoryView } from "@/features/c/[slug]/timetable/timetable-history-view";
 import { TimetableView } from "@/features/c/[slug]/timetable/timetable-view";
 import { StudentsView } from "@/features/students/students-view";
 import { useInsQuery, useInstitutionSlug } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
+import { classPath } from "@/lib/class-path";
 
 function ClassSectionPage({
 	title,
@@ -98,8 +100,22 @@ export function SubjectsPage() {
 	);
 }
 
-export function TimetablesPage() {
-	return <TimetableView />;
+export function TimetablePage() {
+	const programAlias = useProgramAlias();
+	const classSlug = useClassSlug();
+	return (
+		<TimetableView basePath={classPath(programAlias, classSlug, "timetable")} />
+	);
+}
+
+export function TimetableHistoryPage() {
+	const programAlias = useProgramAlias();
+	const classSlug = useClassSlug();
+	return (
+		<TimetableHistoryView
+			basePath={classPath(programAlias, classSlug, "timetable")}
+		/>
+	);
 }
 
 export function AttendancePage() {
