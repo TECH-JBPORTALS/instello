@@ -1,5 +1,6 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { cn } from "@instello/ui/lib/utils";
+import { IconLoader2 } from "@tabler/icons-react";
 import { cva, type VariantProps } from "class-variance-authority";
 
 const buttonVariants = cva(
@@ -43,14 +44,31 @@ function Button({
 	className,
 	variant = "default",
 	size = "default",
+	loading = false,
+	disabled = loading,
+	loadingText,
+	children,
 	...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+}: ButtonPrimitive.Props &
+	VariantProps<typeof buttonVariants> & {
+		loading?: boolean;
+		loadingText?: string;
+	}) {
 	return (
 		<ButtonPrimitive
 			data-slot="button"
+			disabled={loading}
 			className={cn(buttonVariants({ variant, size, className }))}
 			{...props}
-		/>
+		>
+			{children}
+			{loading && (
+				<>
+					<IconLoader2 className="size-4 animate-spin" />
+					{loadingText && <span className="ml-2">{loadingText}</span>}
+				</>
+			)}
+		</ButtonPrimitive>
 	);
 }
 
