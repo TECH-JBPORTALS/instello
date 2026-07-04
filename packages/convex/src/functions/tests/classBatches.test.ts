@@ -45,7 +45,7 @@ describe("classes.enableSectionGroups", () => {
 		);
 
 		expect(batches).toHaveLength(2);
-		expect(batches.map((b) => b.label)).toEqual(["Batch 1", "Batch 2"]);
+		expect(batches.map((b) => b.label)).toEqual(["B01", "B02"]);
 
 		const cls = await authed.query(
 			api.classes.getById,
@@ -97,8 +97,8 @@ describe("classes.enableSectionGroups", () => {
 		const batchLabels = students.page.map((s) => s.batchLabel);
 		expect(batchLabels.every((label) => label !== undefined)).toBe(true);
 
-		const batch1Count = batchLabels.filter((l) => l === "Batch 1").length;
-		const batch2Count = batchLabels.filter((l) => l === "Batch 2").length;
+		const batch1Count = batchLabels.filter((l) => l === "B01").length;
+		const batch2Count = batchLabels.filter((l) => l === "B02").length;
 		expect(batch1Count).toBe(2);
 		expect(batch2Count).toBe(1);
 	});
