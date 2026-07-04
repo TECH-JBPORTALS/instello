@@ -16,6 +16,7 @@ export {
 	ownerOrgInstitutionTest,
 	ownerOrgTest,
 	ownerTest,
+	programSubjectTest,
 	programTest,
 	subjectTest,
 } from "./vitest/index.setup";

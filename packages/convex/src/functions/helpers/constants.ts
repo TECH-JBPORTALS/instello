@@ -61,6 +61,25 @@ export const ERROR_CODES = {
 			code: "CLASS_INVALID_SLUG",
 			message: "Class slug must contain at least one alphanumeric character",
 		},
+		BATCHES_ALREADY_ENABLED: {
+			code: "CLASS_BATCHES_ALREADY_ENABLED",
+			message: "Batches are already enabled for this class",
+		},
+		BATCHES_NOT_ENABLED: {
+			code: "CLASS_BATCHES_NOT_ENABLED",
+			message: "Batches are not enabled for this class",
+		},
+		BATCH_REQUIRED: {
+			code: "CLASS_BATCH_REQUIRED",
+			message:
+				"This class has batches enabled. Choose a batch to move students into.",
+		},
+	},
+	BATCH: {
+		NOT_FOUND: {
+			code: "BATCH_NOT_FOUND",
+			message: "Batch not found in this class",
+		},
 	},
 	FACULTY: {
 		NOT_FOUND: {
@@ -166,6 +185,16 @@ export const ERROR_CODES = {
 		ALREADY_ADOPTED: {
 			code: "INSTITUTION_ACADEMIC_PATTERN_ALREADY_ADOPTED",
 			message: "Institution has already adopted an academic pattern",
+		},
+	},
+	PROGRAM_SUBJECT: {
+		NOT_FOUND: {
+			code: "PROGRAM_SUBJECT_NOT_FOUND",
+			message: "Program subject allocation not found",
+		},
+		INVALID_STAGE: {
+			code: "PROGRAM_SUBJECT_INVALID_STAGE",
+			message: "Academic stage does not belong to the institution's pattern",
 		},
 	},
 	/** Better auth organization error codes */

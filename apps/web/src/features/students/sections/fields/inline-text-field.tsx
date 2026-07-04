@@ -10,6 +10,7 @@ import { Spinner } from "@instello/ui/components/spinner";
 import { revalidateLogic, useForm } from "@tanstack/react-form-nextjs";
 import { useEffect, useState } from "react";
 import { getConvexErrorMessage } from "@/lib/convex-error";
+import { cn } from "@/lib/utils";
 
 type InlineTextFieldProps = {
 	fieldName: string;
@@ -58,7 +59,7 @@ export function InlineTextField({
 
 	return (
 		<form
-			className="w-full text-left"
+			className={cn("w-full text-left")}
 			onSubmit={(event) => {
 				event.preventDefault();
 				event.stopPropagation();
@@ -74,7 +75,7 @@ export function InlineTextField({
 
 							return (
 								<>
-									<InputGroup className="min-w-3xs">
+									<InputGroup className={cn("min-w-3xs")}>
 										{isSubmitting && (
 											<InputGroupAddon align="inline-start">
 												<Spinner className="size-4 text-muted-foreground" />

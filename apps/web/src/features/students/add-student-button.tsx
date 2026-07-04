@@ -2,7 +2,10 @@
 
 import type { Id } from "@instello/convex/dataModel";
 import { Button } from "@instello/ui/components/button";
-import { ButtonGroup } from "@instello/ui/components/button-group";
+import {
+	ButtonGroup,
+	ButtonGroupSeparator,
+} from "@instello/ui/components/button-group";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -21,9 +24,11 @@ import { NewStudentDialog } from "./dialogs/new-student-dialog";
 export function AddStudentButton({
 	classId,
 	disabled,
+	isGroupsEnabled = false,
 }: {
 	classId: Id<"classes">;
 	disabled?: boolean;
+	isGroupsEnabled?: boolean;
 }) {
 	const [addOpen, setAddOpen] = useState(false);
 	const [importOpen, setImportOpen] = useState(false);
@@ -35,6 +40,7 @@ export function AddStudentButton({
 					<IconPlus />
 					Add
 				</Button>
+				<ButtonGroupSeparator />
 				<DropdownMenu>
 					<DropdownMenuTrigger
 						disabled={disabled}
@@ -49,7 +55,7 @@ export function AddStudentButton({
 						</DropdownMenuItem>
 						<DropdownMenuItem onClick={() => setImportOpen(true)}>
 							<IconTableImport className="size-4" />
-							Import
+							Import students
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>
@@ -59,11 +65,13 @@ export function AddStudentButton({
 				open={addOpen}
 				onOpenChange={setAddOpen}
 				classId={classId}
+				isGroupsEnabled={isGroupsEnabled}
 			/>
 			<ImportStudentsDialog
 				open={importOpen}
 				onOpenChange={setImportOpen}
 				classId={classId}
+				isGroupsEnabled={isGroupsEnabled}
 			/>
 		</>
 	);

@@ -43,12 +43,17 @@ export function StudentsView() {
 				</PageHeaderStart>
 				{cls && (
 					<PageHeaderEnd>
-						<AddStudentButton classId={cls._id} />
+						<AddStudentButton
+							classId={cls._id}
+							isGroupsEnabled={cls.isGroupsEnabled}
+						/>
 					</PageHeaderEnd>
 				)}
 			</PageHeader>
 
-			{cls && <StudentsList classId={cls._id} />}
+			{cls && (
+				<StudentsList classId={cls._id} isGroupsEnabled={cls.isGroupsEnabled} />
+			)}
 		</Container>
 	);
 }

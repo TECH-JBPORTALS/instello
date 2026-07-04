@@ -5,4 +5,5 @@ export { ownerTest } from "./owner.setup";
 export { ownerOrgTest } from "./ownerOrg.setup";
 export { ownerOrgInstitutionTest } from "./ownerOrgInstitution.setup";
 export { programTest } from "./program.setup";
+export { programSubjectTest } from "./programSubject.setup";
 export { subjectTest } from "./subject.setup";

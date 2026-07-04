@@ -32,7 +32,19 @@ export const AcademicSchema = v.object({
 	usn: v.pipe(v.string(), v.nonEmpty("USN is required")),
 	categoryId: v.pipe(v.string(), v.nonEmpty("Category is required")),
 	apaarId: ApaarIdSchema,
+	batchId: v.string(),
 });
+
+export function buildAcademicSchema(isGroupsEnabled: boolean) {
+	return v.object({
+		usn: v.pipe(v.string(), v.nonEmpty("USN is required")),
+		categoryId: v.pipe(v.string(), v.nonEmpty("Category is required")),
+		apaarId: ApaarIdSchema,
+		batchId: isGroupsEnabled
+			? v.pipe(v.string(), v.nonEmpty("Batch is required"))
+			: v.string(),
+	});
+}
 
 export const FamilySchema = v.object({
 	fatherName: v.string(),
@@ -52,6 +64,15 @@ export const CreateStudentSchema = v.object({
 	academic: AcademicSchema,
 });
 
+export function buildCreateStudentSchema(isGroupsEnabled: boolean) {
+	return v.object({
+		personalInfo: PersonalInfoSchema,
+		contact: ContactSchema,
+		family: FamilySchema,
+		academic: buildAcademicSchema(isGroupsEnabled),
+	});
+}
+
 export const addStudentFormOpt = formOptions({
 	defaultValues: {
 		personalInfo: {
@@ -64,6 +85,7 @@ export const addStudentFormOpt = formOptions({
 			usn: "",
 			categoryId: "",
 			apaarId: "",
+			batchId: "",
 		},
 
 		contact: {

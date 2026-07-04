@@ -1,36 +1,11 @@
 import { paginationOptsValidator } from "convex/server";
-import type { Id } from "./_generated/dataModel";
 import { ERROR_CODES, throwAppError } from "./helpers/constants";
 import { insMutation, insQuery } from "./helpers/customFunctions";
 import * as Class from "./model/class";
+import * as ClassBatch from "./model/classBatch";
 import * as InstitutionStudentCategory from "./model/institutionStudentCategory";
-import * as Program from "./model/program";
 import * as Student from "./model/student";
 import { vv } from "./schema";
-
-async function getClassInInstitution(
-	ctx: Parameters<typeof Class.getById>[0],
-	classId: Id<"classes">,
-	institutionId: string,
-) {
-	const cls = await Class.getById(ctx, classId);
-
-	if (!cls) {
-		throwAppError(ERROR_CODES.CLASS.NOT_FOUND);
-	}
-
-	const program = await Program.getById(
-		ctx,
-		cls.programId as Id<"programs">,
-		institutionId,
-	);
-
-	if (!program) {
-		throwAppError(ERROR_CODES.CLASS.NOT_FOUND);
-	}
-
-	return cls;
-}
 
 /** Creates a student in the current institution for a class */
 export const create = insMutation({
@@ -38,29 +13,67 @@ export const create = insMutation({
 	args: Student.CreateInputSchema,
 	returns: vv.id("students"),
 	handler: async (ctx, args) => {
-		await getClassInInstitution(ctx, args.classId, ctx.institution._id);
+		const cls = await Class.ensureInInstitution(
+			ctx,
+			args.classId,
+			ctx.institution._id,
+		);
 
-		return await Student.create(ctx, {
+		if (!cls.isGroupsEnabled && args.batchId) {
+			throwAppError(ERROR_CODES.CLASS.BATCHES_NOT_ENABLED);
+		}
+
+		let batchId = args.batchId;
+
+		if (cls.isGroupsEnabled) {
+			if (batchId) {
+				await ClassBatch.ensureInClass(ctx, batchId, cls._id);
+			} else {
+				const leastPopulated = await ClassBatch.pickLeastPopulatedBatch(
+					ctx,
+					cls._id,
+				);
+				batchId = leastPopulated?._id;
+			}
+		}
+
+		const studentId = await Student.create(ctx, {
 			...args,
 			institutionId: ctx.institution._id,
 			createdBy: ctx.session.userId,
 		});
+
+		if (batchId) {
+			await ClassBatch.setBatch(ctx, { studentId, classId: cls._id, batchId });
+		}
+
+		return studentId;
 	},
 });
 
-/** Lists students in a class (paginated) */
+/** Lists students in a class (paginated), optionally scoped to a single batch */
 export const list = insQuery({
 	permissions: ["student:view"],
 	args: {
 		classId: vv.id("classes"),
+		batchId: vv.optional(vv.id("classBatches")),
 		paginationOpts: paginationOptsValidator,
 	},
 	returns: Student.PaginatedStudentListSchema,
 	handler: async (ctx, args) => {
-		await getClassInInstitution(ctx, args.classId, ctx.institution._id);
+		const cls = await Class.ensureInInstitution(
+			ctx,
+			args.classId,
+			ctx.institution._id,
+		);
+
+		if (args.batchId) {
+			await ClassBatch.ensureInClass(ctx, args.batchId, cls._id);
+		}
 
 		return await Student.list(ctx, {
 			classId: args.classId,
+			batchId: args.batchId,
 			paginationOpts: args.paginationOpts,
 		});
 	},
@@ -196,5 +209,55 @@ export const generateImageUploadUrl = insMutation({
 	returns: vv.string(),
 	handler: async (ctx) => {
 		return await ctx.storage.generateUploadUrl();
+	},
+});
+
+/** Moves a set of students into another class, optionally into a specific batch of that class. */
+export const bulkMove = insMutation({
+	permissions: ["student:update"],
+	args: {
+		studentIds: vv.array(vv.id("students")),
+		targetClassId: vv.id("classes"),
+		targetBatchId: vv.optional(vv.id("classBatches")),
+	},
+	returns: vv.null(),
+	handler: async (ctx, args) => {
+		const targetClass = await Class.ensureInInstitution(
+			ctx,
+			args.targetClassId,
+			ctx.institution._id,
+		);
+
+		if (args.targetBatchId) {
+			await ClassBatch.ensureInClass(ctx, args.targetBatchId, targetClass._id);
+		} else if (targetClass.isGroupsEnabled) {
+			throwAppError(ERROR_CODES.CLASS.BATCH_REQUIRED);
+		}
+
+		for (const studentId of args.studentIds) {
+			const student = await Student.getById(
+				ctx,
+				studentId,
+				ctx.institution._id,
+			);
+			if (!student) {
+				throwAppError(ERROR_CODES.STUDENT.NOT_FOUND);
+			}
+
+			if (args.targetBatchId) {
+				await ClassBatch.setBatch(ctx, {
+					studentId,
+					classId: targetClass._id,
+					batchId: args.targetBatchId,
+				});
+			} else {
+				await ClassBatch.clearBatch(ctx, {
+					studentId,
+					classId: targetClass._id,
+				});
+			}
+		}
+
+		return null;
 	},
 });

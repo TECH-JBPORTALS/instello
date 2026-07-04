@@ -1,4 +1,9 @@
-import { IconCalendarCheck, IconTable, IconUsers } from "@tabler/icons-react";
+import {
+	IconCalendarCheck,
+	IconSettings,
+	IconTable,
+	IconUsers,
+} from "@tabler/icons-react";
 
 export type ClassNavItem = {
 	id: string;
@@ -7,30 +12,51 @@ export type ClassNavItem = {
 	label: string;
 };
 
-export const classNavItems: ClassNavItem[] = [
+export type ClassNavGroup = {
+	label: string;
+	items: ClassNavItem[];
+};
+
+export const classNavGroups: ClassNavGroup[] = [
 	{
-		id: "students",
-		segment: "students",
-		icon: IconUsers,
-		label: "Students",
+		label: "CLASS",
+		items: [
+			{
+				id: "students",
+				segment: "students",
+				icon: IconUsers,
+				label: "Students",
+			},
+			// {
+			// 	id: "subjects",
+			// 	segment: "subjects",
+			// 	icon: IconBook,
+			// 	label: "Subjects",
+			// },
+			{
+				id: "timetable",
+				segment: "timetable",
+				icon: IconTable,
+				label: "Timetable",
+			},
+			{
+				id: "attendance",
+				segment: "attendance",
+				icon: IconCalendarCheck,
+				label: "Attendance",
+			},
+		],
 	},
-	// {
-	// 	id: "subjects",
-	// 	segment: "subjects",
-	// 	icon: IconBook,
-	// 	label: "Subjects",
-	// },
 	{
-		id: "timetable",
-		segment: "timetable",
-		icon: IconTable,
-		label: "Timetable",
-	},
-	{
-		id: "attendance",
-		segment: "attendance",
-		icon: IconCalendarCheck,
-		label: "Attendance",
+		label: "CLASS SETTINGS",
+		items: [
+			{
+				id: "settings",
+				segment: "settings",
+				icon: IconSettings,
+				label: "Settings",
+			},
+		],
 	},
 ];
 

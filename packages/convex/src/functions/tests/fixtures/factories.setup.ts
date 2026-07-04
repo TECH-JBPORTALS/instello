@@ -94,6 +94,7 @@ export const createStudentInput = (
 		categoryId: Id<"institutionStudentCategories">;
 		phoneNumber: string;
 		apaarId: string;
+		batchId: Id<"classBatches">;
 		fatherName: string;
 		fatherPhoneNumber: string;
 		motherName: string;

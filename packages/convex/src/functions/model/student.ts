@@ -7,6 +7,7 @@ import {
 	validateOptionalIndianPhoneNumber,
 } from "../helpers/phone";
 import { vv } from "../schema";
+import * as ClassBatch from "./classBatch";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 import * as InstitutionStudentCategory from "./institutionStudentCategory";
 
@@ -26,6 +27,7 @@ export const CreateInputSchema = {
 	categoryId: vv.id("institutionStudentCategories"),
 	phoneNumber: vv.string(),
 	apaarId: vv.optional(vv.string()),
+	batchId: vv.optional(vv.id("classBatches")),
 	image: v.optional(v.id("_storage")),
 	fatherName: vv.optional(vv.string()),
 	fatherPhoneNumber: vv.optional(vv.string()),
@@ -80,6 +82,8 @@ export const StudentDtoSchema = vv.object({
 	categoryName: vv.string(),
 	phoneNumber: vv.string(),
 	apaarId: vv.optional(vv.string()),
+	batchId: vv.optional(vv.id("classBatches")),
+	batchLabel: vv.optional(vv.string()),
 	image: vv.optional(vv.string()),
 	fatherName: vv.optional(vv.string()),
 	fatherPhoneNumber: vv.optional(vv.string()),
@@ -134,6 +138,19 @@ export async function toDto(
 		? await ctx.storage.getUrl(student.image)
 		: null;
 
+	let batchLabel: string | undefined;
+
+	if (student.batchId) {
+		const batch = await ClassBatch.getById(ctx, student.batchId);
+		if (batch) {
+			const cls = await ctx.db.get("classes", student.classId);
+			batchLabel = ClassBatch.getBatchLabel(
+				batch.numIdx,
+				cls?.batchNamingConvention,
+			);
+		}
+	}
+
 	return {
 		_id: student._id,
 		classId: student.classId,
@@ -146,6 +163,8 @@ export async function toDto(
 		categoryName: category?.name ?? "Unknown",
 		phoneNumber: student.phoneNumber,
 		apaarId: student.apaarId,
+		batchId: student.batchId,
+		batchLabel,
 		image: imageUrl ?? undefined,
 		fatherName: student.fatherName,
 		fatherPhoneNumber: student.fatherPhoneNumber,
@@ -265,14 +284,23 @@ export async function list(
 	ctx: AppQueryCtx,
 	args: {
 		classId: Id<"classes">;
+		batchId?: Id<"classBatches">;
 		paginationOpts: PaginationOptions;
 	},
 ): Promise<PaginatedStudentList> {
-	const result = await ctx.db
-		.query("students")
-		.withIndex("by_class", (q) => q.eq("classId", args.classId))
-		.order("desc")
-		.paginate(args.paginationOpts);
+	const result = args.batchId
+		? await ctx.db
+				.query("students")
+				.withIndex("by_class_and_batch", (q) =>
+					q.eq("classId", args.classId).eq("batchId", args.batchId),
+				)
+				.order("desc")
+				.paginate(args.paginationOpts)
+		: await ctx.db
+				.query("students")
+				.withIndex("by_class", (q) => q.eq("classId", args.classId))
+				.order("desc")
+				.paginate(args.paginationOpts);
 
 	const page = await Promise.all(
 		result.page.map((student) => toDto(ctx, student)),

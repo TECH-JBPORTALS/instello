@@ -17,6 +17,7 @@ import { AttendanceRegisterView } from "@/features/c/[slug]/attendance/attendanc
 import { AttendanceView } from "@/features/c/[slug]/attendance/attendance-view";
 import { TimetableHistoryView } from "@/features/c/[slug]/timetable/timetable-history-view";
 import { TimetableView } from "@/features/c/[slug]/timetable/timetable-view";
+import { ClassSettingsView } from "@/features/classes/class-settings-view";
 import { StudentsView } from "@/features/students/students-view";
 import { useInsQuery, useInstitutionSlug } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
@@ -125,4 +126,8 @@ export function AttendancePage() {
 
 export function AttendanceRegisterDetailPage() {
 	return <AttendanceRegisterView />;
+}
+
+export function ClassSettingsPage() {
+	return <ClassSettingsView />;
 }

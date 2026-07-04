@@ -116,6 +116,10 @@ const tables = {
 		slug: v.string(),
 		description: v.optional(v.string()),
 		isGroupsEnabled: v.boolean(),
+		/** How batch labels are displayed once batches are enabled. Defaults to "numeric". */
+		batchNamingConvention: v.optional(
+			v.union(v.literal("numeric"), v.literal("alphabetic")),
+		),
 		currentHeadStageId: v.id("academicStages"),
 		status: v.union(v.literal("inactive"), v.literal("active")),
 		createdAt: v.number(),
@@ -129,15 +133,68 @@ const tables = {
 			filterFields: ["programId"],
 		}),
 
-	/** Users can enable groups inside classes to divide students into smaller groups known as sections and batches */
-	classGroups: defineTable({
-		classId: v.string(),
-		name: v.string(),
-		description: v.optional(v.string()),
+	/** Users can enable batches inside classes to divide students into smaller groups */
+	classBatches: defineTable({
+		classId: v.id("classes"),
 		numIdx: v.number(),
 		createdAt: v.number(),
 		updatedAt: v.optional(v.number()),
-	}),
+	}).index("by_class", ["classId"]),
+
+	/** Students enrolled in a class within an institution */
+	students: defineTable({
+		institutionId: v.string(),
+		classId: v.id("classes"),
+		firstName: v.string(),
+		lastName: v.string(),
+		usn: v.string(),
+		email: v.string(),
+		gender: v.union(
+			v.literal("male"),
+			v.literal("female"),
+			v.literal("others"),
+		),
+		categoryId: v.id("institutionStudentCategories"),
+		phoneNumber: v.string(),
+		apaarId: v.optional(v.string()),
+		image: v.optional(v.id("_storage")),
+		fatherName: v.optional(v.string()),
+		fatherPhoneNumber: v.optional(v.string()),
+		motherName: v.optional(v.string()),
+		motherPhoneNumber: v.optional(v.string()),
+		addressLine: v.optional(v.string()),
+		city: v.optional(v.string()),
+		state: v.optional(v.string()),
+		postalCode: v.optional(v.string()),
+		country: v.optional(v.string()),
+		createdBy: v.string(),
+		createdAt: v.number(),
+		updatedAt: v.number(),
+
+		/**
+		 * The student's current batch assignment (only set when the class has batches
+		 * enabled). This is the sole record of batch membership — there is no separate
+		 * join table — so every write path must verify the batch belongs to this same
+		 * `classId` before setting it (see `ClassBatch.ensureInClass`).
+		 */
+		batchId: v.optional(v.id("classBatches")),
+
+		/**
+		 * This is used for search index on selected column values
+		 * Currently we are storing the student name and usn in this column for search index.
+		 * So we can search by name or usn or both. becasue some limitation in convex searchIndex functionality.
+		 *  */
+		searchString: v.optional(v.string()),
+	})
+		.index("by_class", ["classId"])
+		.index("by_class_and_batch", ["classId", "batchId"])
+		.index("by_institution_and_email", ["institutionId", "email"])
+		.index("by_usn", ["usn"])
+		.searchIndex("search_by_searchString", {
+			searchField: "searchString",
+			filterFields: ["institutionId", "classId", "usn", "email"],
+			staged: true,
+		}),
 
 	/** Faculty are the teachers who teach the students in the classes also may be non teaching staff like owner, principal, librarian, etc. */
 	faculty: defineTable({
@@ -205,56 +262,25 @@ const tables = {
 		updatedAt: v.number(),
 	}).index("by_institution", ["institutionId"]),
 
-	/** Students enrolled in a class within an institution */
-	students: defineTable({
-		institutionId: v.string(),
-		classId: v.id("classes"),
-		firstName: v.string(),
-		lastName: v.string(),
-		usn: v.string(),
-		email: v.string(),
-		gender: v.union(
-			v.literal("male"),
-			v.literal("female"),
-			v.literal("others"),
-		),
-		categoryId: v.id("institutionStudentCategories"),
-		phoneNumber: v.string(),
-		apaarId: v.optional(v.string()),
-		image: v.optional(v.id("_storage")),
-		fatherName: v.optional(v.string()),
-		fatherPhoneNumber: v.optional(v.string()),
-		motherName: v.optional(v.string()),
-		motherPhoneNumber: v.optional(v.string()),
-		addressLine: v.optional(v.string()),
-		city: v.optional(v.string()),
-		state: v.optional(v.string()),
-		postalCode: v.optional(v.string()),
-		country: v.optional(v.string()),
-		createdBy: v.string(),
+	/**
+	 * Subjects allocated to a program for a given academic stage (semester/year),
+	 * with the type (`theory`, `practical`) they're taught as in that stage.
+	 */
+	programSubjects: defineTable({
+		programId: v.id("programs"),
+		subjectId: v.id("subjects"),
+		academicStageId: v.id("academicStages"),
+		type: v.union(v.literal("theory"), v.literal("practical")),
 		createdAt: v.number(),
 		updatedAt: v.number(),
-
-		// This is used for search index on selected column values
-		searchString: v.optional(v.string()),
 	})
-		.index("by_class", ["classId"])
-		.index("by_institution_and_email", ["institutionId", "email"])
-		.index("by_usn", ["usn"])
-		.searchIndex("search_by_searchString", {
-			searchField: "searchString",
-			filterFields: ["institutionId", "classId", "usn", "email"],
-			staged: true,
-		}),
-
-	// programSubjects: defineTable({
-	// 	programId: v.string(),
-	// 	subjectId: v.string(),
-	// 	semester: v.number(),
-	// 	type: v.union(v.literal("theory"), v.literal("practical")),
-	// 	createdAt: v.number(),
-	// 	updatedAt: v.number(),
-	// }).index("by_subject", ["subjectId"]),
+		.index("by_program_and_stage", ["programId", "academicStageId"])
+		.index("by_program_and_stage_and_subject", [
+			"programId",
+			"academicStageId",
+			"subjectId",
+		])
+		.index("by_subject", ["subjectId"]),
 
 	// classSubjectsAllocation: defineTable({
 	// 	classId: v.string(),
