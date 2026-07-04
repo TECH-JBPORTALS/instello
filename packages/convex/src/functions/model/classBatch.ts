@@ -84,14 +84,16 @@ export async function ensureInClass(
 
 async function countStudentsInBatch(
 	ctx: AppQueryCtx | AppMutationCtx,
-	batchId: Id<"classBatches">,
+	args: { classId: Id<"classes">; batchId: Id<"classBatches"> },
 ) {
-	const assignments = await ctx.db
-		.query("batchStudents")
-		.withIndex("by_batch", (q) => q.eq("batchId", batchId))
+	const students = await ctx.db
+		.query("students")
+		.withIndex("by_class_and_batch", (q) =>
+			q.eq("classId", args.classId).eq("batchId", args.batchId),
+		)
 		.collect();
 
-	return assignments.length;
+	return students.length;
 }
 
 /** Picks the batch in a class with the fewest students currently assigned. */
@@ -108,7 +110,10 @@ export async function pickLeastPopulatedBatch(
 	let leastCount = Number.POSITIVE_INFINITY;
 
 	for (const batch of batches) {
-		const count = await countStudentsInBatch(ctx, batch._id);
+		const count = await countStudentsInBatch(ctx, {
+			classId,
+			batchId: batch._id,
+		});
 		if (count < leastCount) {
 			leastCount = count;
 			leastBatch = batch;
@@ -118,31 +123,38 @@ export async function pickLeastPopulatedBatch(
 	return leastBatch;
 }
 
-export async function assignStudent(
+/**
+ * Sets a student's class and batch assignment. `students.batchId` is the sole
+ * record of batch membership, so this always verifies the batch belongs to
+ * the target class before writing it.
+ */
+export async function setBatch(
 	ctx: AppMutationCtx,
-	args: { batchId: Id<"classBatches">; studentId: Id<"students"> },
+	args: {
+		studentId: Id<"students">;
+		classId: Id<"classes">;
+		batchId: Id<"classBatches">;
+	},
 ) {
-	const now = Date.now();
-	await ctx.db.insert("batchStudents", {
-		batchId: args.batchId,
-		studentId: args.studentId,
-		createdAt: now,
-		updatedAt: now,
-	});
+	await ensureInClass(ctx, args.batchId, args.classId);
+
 	await ctx.db.patch("students", args.studentId, {
+		classId: args.classId,
 		batchId: args.batchId,
-		updatedAt: now,
+		updatedAt: Date.now(),
 	});
 }
 
-export async function getAssignmentForStudent(
-	ctx: AppQueryCtx,
-	studentId: Id<"students">,
+/** Moves a student into a class and clears any batch assignment. */
+export async function clearBatch(
+	ctx: AppMutationCtx,
+	args: { studentId: Id<"students">; classId: Id<"classes"> },
 ) {
-	return await ctx.db
-		.query("batchStudents")
-		.withIndex("by_student", (q) => q.eq("studentId", studentId))
-		.unique();
+	await ctx.db.patch("students", args.studentId, {
+		classId: args.classId,
+		batchId: undefined,
+		updatedAt: Date.now(),
+	});
 }
 
 /** Creates two batches for a class, splitting any existing students evenly between them. */
@@ -173,9 +185,10 @@ export async function enableForClass(ctx: AppMutationCtx, cls: Doc<"classes">) {
 	const midpoint = Math.ceil(sorted.length / 2);
 
 	for (const [index, student] of sorted.entries()) {
-		await assignStudent(ctx, {
-			batchId: index < midpoint ? batch1Id : batch2Id,
+		await setBatch(ctx, {
 			studentId: student._id,
+			classId: cls._id,
+			batchId: index < midpoint ? batch1Id : batch2Id,
 		});
 	}
 
@@ -186,7 +199,7 @@ export async function enableForClass(ctx: AppMutationCtx, cls: Doc<"classes">) {
 	});
 }
 
-/** Deletes all batches and batch assignments for a class. Students themselves are untouched. */
+/** Deletes all batches for a class and clears each member's batchId. Students themselves are untouched. */
 export async function disableForClass(
 	ctx: AppMutationCtx,
 	classId: Id<"classes">,
@@ -199,17 +212,18 @@ export async function disableForClass(
 	const now = Date.now();
 
 	for (const batch of batches) {
-		const assignments = await ctx.db
-			.query("batchStudents")
-			.withIndex("by_batch", (q) => q.eq("batchId", batch._id))
+		const students = await ctx.db
+			.query("students")
+			.withIndex("by_class_and_batch", (q) =>
+				q.eq("classId", classId).eq("batchId", batch._id),
+			)
 			.collect();
 
-		for (const assignment of assignments) {
-			await ctx.db.patch("students", assignment.studentId, {
+		for (const student of students) {
+			await ctx.db.patch("students", student._id, {
 				batchId: undefined,
 				updatedAt: now,
 			});
-			await ctx.db.delete("batchStudents", assignment._id);
 		}
 
 		await ctx.db.delete("classBatches", batch._id);
@@ -232,26 +246,89 @@ export async function updateNamingConvention(
 	});
 }
 
-/**
- * One-off backfill for `students.batchId`: copies the existing `batchStudents`
- * assignments (made before that field existed) onto the student documents.
- * Safe to run multiple times; already-synced students are left untouched.
- */
-export async function backfillStudentBatchIds(ctx: AppMutationCtx) {
-	const assignments = await ctx.db.query("batchStudents").collect();
+/** Creates the next-numbered batch for a class (numIdx = current max + 1). */
+export async function createNextBatch(
+	ctx: AppMutationCtx,
+	classId: Id<"classes">,
+) {
+	const batches = await ctx.db
+		.query("classBatches")
+		.withIndex("by_class", (q) => q.eq("classId", classId))
+		.collect();
+
+	const nextNumIdx =
+		batches.length > 0 ? Math.max(...batches.map((b) => b.numIdx)) + 1 : 1;
+
 	const now = Date.now();
-	let patched = 0;
+	const batchId = await ctx.db.insert("classBatches", {
+		classId,
+		numIdx: nextNumIdx,
+		createdAt: now,
+		updatedAt: now,
+	});
 
-	for (const assignment of assignments) {
-		const student = await ctx.db.get("students", assignment.studentId);
-		if (!student || student.batchId === assignment.batchId) continue;
+	const batch = await ctx.db.get("classBatches", batchId);
+	if (!batch) throwAppError(ERROR_CODES.BATCH.NOT_FOUND);
 
-		await ctx.db.patch("students", assignment.studentId, {
-			batchId: assignment.batchId,
-			updatedAt: now,
-		});
-		patched += 1;
+	return batch;
+}
+
+export const MoveTargetDtoSchema = vv.object({
+	classId: vv.id("classes"),
+	className: vv.string(),
+	batchId: vv.optional(vv.id("classBatches")),
+	batchLabel: vv.optional(vv.string()),
+	isCurrentClass: vv.boolean(),
+});
+
+export type MoveTargetDto = Infer<typeof MoveTargetDtoSchema>;
+
+/**
+ * Lists every valid bulk-move destination across the program that `currentClass`
+ * belongs to: one entry per batch for the current class and any other
+ * batch-enabled sibling class, and a single bare-class entry for siblings that
+ * don't have batches enabled (since students can't be moved directly into a
+ * batch-enabled class without picking a batch).
+ */
+export async function listMoveTargets(
+	ctx: AppQueryCtx,
+	currentClass: Doc<"classes">,
+): Promise<MoveTargetDto[]> {
+	const siblingClasses = await ctx.db
+		.query("classes")
+		.withIndex("by_program", (q) => q.eq("programId", currentClass.programId))
+		.take(100);
+
+	const targets: MoveTargetDto[] = [];
+
+	for (const cls of siblingClasses) {
+		const isCurrentClass = cls._id === currentClass._id;
+
+		if (!cls.isGroupsEnabled) {
+			if (isCurrentClass) continue;
+
+			targets.push({
+				classId: cls._id,
+				className: cls.name,
+				batchId: undefined,
+				batchLabel: undefined,
+				isCurrentClass: false,
+			});
+			continue;
+		}
+
+		const batches = await listByClass(ctx, cls._id, cls.batchNamingConvention);
+
+		for (const batch of batches) {
+			targets.push({
+				classId: cls._id,
+				className: cls.name,
+				batchId: batch._id,
+				batchLabel: batch.label,
+				isCurrentClass,
+			});
+		}
 	}
 
-	return patched;
+	return targets;
 }

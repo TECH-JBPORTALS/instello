@@ -44,7 +44,7 @@ export const create = insMutation({
 		});
 
 		if (batchId) {
-			await ClassBatch.assignStudent(ctx, { batchId, studentId });
+			await ClassBatch.setBatch(ctx, { studentId, classId: cls._id, batchId });
 		}
 
 		return studentId;
@@ -209,5 +209,55 @@ export const generateImageUploadUrl = insMutation({
 	returns: vv.string(),
 	handler: async (ctx) => {
 		return await ctx.storage.generateUploadUrl();
+	},
+});
+
+/** Moves a set of students into another class, optionally into a specific batch of that class. */
+export const bulkMove = insMutation({
+	permissions: ["student:update"],
+	args: {
+		studentIds: vv.array(vv.id("students")),
+		targetClassId: vv.id("classes"),
+		targetBatchId: vv.optional(vv.id("classBatches")),
+	},
+	returns: vv.null(),
+	handler: async (ctx, args) => {
+		const targetClass = await Class.ensureInInstitution(
+			ctx,
+			args.targetClassId,
+			ctx.institution._id,
+		);
+
+		if (args.targetBatchId) {
+			await ClassBatch.ensureInClass(ctx, args.targetBatchId, targetClass._id);
+		} else if (targetClass.isGroupsEnabled) {
+			throwAppError(ERROR_CODES.CLASS.BATCH_REQUIRED);
+		}
+
+		for (const studentId of args.studentIds) {
+			const student = await Student.getById(
+				ctx,
+				studentId,
+				ctx.institution._id,
+			);
+			if (!student) {
+				throwAppError(ERROR_CODES.STUDENT.NOT_FOUND);
+			}
+
+			if (args.targetBatchId) {
+				await ClassBatch.setBatch(ctx, {
+					studentId,
+					classId: targetClass._id,
+					batchId: args.targetBatchId,
+				});
+			} else {
+				await ClassBatch.clearBatch(ctx, {
+					studentId,
+					classId: targetClass._id,
+				});
+			}
+		}
+
+		return null;
 	},
 });

@@ -69,6 +69,11 @@ export const ERROR_CODES = {
 			code: "CLASS_BATCHES_NOT_ENABLED",
 			message: "Batches are not enabled for this class",
 		},
+		BATCH_REQUIRED: {
+			code: "CLASS_BATCH_REQUIRED",
+			message:
+				"This class has batches enabled. Choose a batch to move students into.",
+		},
 	},
 	BATCH: {
 		NOT_FOUND: {

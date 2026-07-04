@@ -208,10 +208,13 @@ describe("classes.disableSectionGroups", () => {
 		});
 		expect(remainingBatches).toHaveLength(0);
 
-		const remainingAssignments = await t.run(async (ctx) => {
-			return await ctx.db.query("batchStudents").collect();
+		const classStudents = await t.run(async (ctx) => {
+			return await ctx.db
+				.query("students")
+				.withIndex("by_class", (q) => q.eq("classId", classes.class1._id))
+				.collect();
 		});
-		expect(remainingAssignments).toHaveLength(0);
+		expect(classStudents.every((s) => s.batchId === undefined)).toBe(true);
 
 		const student = await authed.query(
 			api.students.getById,

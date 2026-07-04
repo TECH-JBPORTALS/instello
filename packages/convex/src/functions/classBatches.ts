@@ -2,6 +2,7 @@ import { ERROR_CODES, throwAppError } from "./helpers/constants";
 import { insMutation, insQuery } from "./helpers/customFunctions";
 import * as Class from "./model/class";
 import * as ClassBatch from "./model/classBatch";
+import * as Student from "./model/student";
 import { vv } from "./schema";
 
 /** Lists the batches for a class, with labels computed from the class's naming convention. */
@@ -51,5 +52,75 @@ export const updateNamingConvention = insMutation({
 			args.namingConvention,
 		);
 		return null;
+	},
+});
+
+/** Lists every valid bulk-move destination (batch or class) across the class's program. */
+export const listMoveTargets = insQuery({
+	permissions: ["student:update"],
+	args: {
+		classId: vv.id("classes"),
+	},
+	returns: vv.array(ClassBatch.MoveTargetDtoSchema),
+	handler: async (ctx, args) => {
+		const cls = await Class.ensureInInstitution(
+			ctx,
+			args.classId,
+			ctx.institution._id,
+		);
+
+		return await ClassBatch.listMoveTargets(ctx, cls);
+	},
+});
+
+/** Creates the next batch in a class and moves the given students into it. */
+export const splitIntoNewBatch = insMutation({
+	permissions: ["student:update"],
+	args: {
+		classId: vv.id("classes"),
+		studentIds: vv.array(vv.id("students")),
+	},
+	returns: ClassBatch.BatchDtoSchema,
+	handler: async (ctx, args) => {
+		const cls = await Class.ensureInInstitution(
+			ctx,
+			args.classId,
+			ctx.institution._id,
+		);
+
+		if (!cls.isGroupsEnabled) {
+			throwAppError(ERROR_CODES.CLASS.BATCHES_NOT_ENABLED);
+		}
+
+		for (const studentId of args.studentIds) {
+			const student = await Student.getById(
+				ctx,
+				studentId,
+				ctx.institution._id,
+			);
+			if (!student || student.classId !== cls._id) {
+				throwAppError(ERROR_CODES.STUDENT.NOT_FOUND);
+			}
+		}
+
+		const newBatch = await ClassBatch.createNextBatch(ctx, cls._id);
+
+		for (const studentId of args.studentIds) {
+			await ClassBatch.setBatch(ctx, {
+				studentId,
+				classId: cls._id,
+				batchId: newBatch._id,
+			});
+		}
+
+		return {
+			_id: newBatch._id,
+			classId: cls._id,
+			numIdx: newBatch.numIdx,
+			label: ClassBatch.getBatchLabel(
+				newBatch.numIdx,
+				cls.batchNamingConvention,
+			),
+		};
 	},
 });

@@ -141,15 +141,6 @@ const tables = {
 		updatedAt: v.optional(v.number()),
 	}).index("by_class", ["classId"]),
 
-	batchStudents: defineTable({
-		batchId: v.id("classBatches"),
-		studentId: v.id("students"),
-		createdAt: v.number(),
-		updatedAt: v.optional(v.number()),
-	})
-		.index("by_batch", ["batchId"])
-		.index("by_student", ["studentId"]),
-
 	/** Students enrolled in a class within an institution */
 	students: defineTable({
 		institutionId: v.string(),
@@ -166,8 +157,6 @@ const tables = {
 		categoryId: v.id("institutionStudentCategories"),
 		phoneNumber: v.string(),
 		apaarId: v.optional(v.string()),
-		/** Denormalized copy of the student's current batch assignment (kept in sync with `batchStudents`), enabling pagination scoped to a single batch. */
-		batchId: v.optional(v.id("classBatches")),
 		image: v.optional(v.id("_storage")),
 		fatherName: v.optional(v.string()),
 		fatherPhoneNumber: v.optional(v.string()),
@@ -182,7 +171,19 @@ const tables = {
 		createdAt: v.number(),
 		updatedAt: v.number(),
 
-		// This is used for search index on selected column values
+		/**
+		 * The student's current batch assignment (only set when the class has batches
+		 * enabled). This is the sole record of batch membership — there is no separate
+		 * join table — so every write path must verify the batch belongs to this same
+		 * `classId` before setting it (see `ClassBatch.ensureInClass`).
+		 */
+		batchId: v.optional(v.id("classBatches")),
+
+		/**
+		 * This is used for search index on selected column values
+		 * Currently we are storing the student name and usn in this column for search index.
+		 * So we can search by name or usn or both. becasue some limitation in convex searchIndex functionality.
+		 *  */
 		searchString: v.optional(v.string()),
 	})
 		.index("by_class", ["classId"])
