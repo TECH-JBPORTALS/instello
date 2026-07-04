@@ -33,9 +33,11 @@ import type * as model_institutionAcademicPattern from "../model/institutionAcad
 import type * as model_institutionStudentCategory from "../model/institutionStudentCategory.js";
 import type * as model_ownerOrganization from "../model/ownerOrganization.js";
 import type * as model_program from "../model/program.js";
+import type * as model_programSubject from "../model/programSubject.js";
 import type * as model_student from "../model/student.js";
 import type * as model_subject from "../model/subject.js";
 import type * as ownerOrganizations from "../ownerOrganizations.js";
+import type * as programSubjects from "../programSubjects.js";
 import type * as programs from "../programs.js";
 import type * as seed_academicPatternTemplates from "../seed/academicPatternTemplates.js";
 import type * as seed_institutions from "../seed/institutions.js";
@@ -77,9 +79,11 @@ declare const fullApi: ApiFromModules<{
   "model/institutionStudentCategory": typeof model_institutionStudentCategory;
   "model/ownerOrganization": typeof model_ownerOrganization;
   "model/program": typeof model_program;
+  "model/programSubject": typeof model_programSubject;
   "model/student": typeof model_student;
   "model/subject": typeof model_subject;
   ownerOrganizations: typeof ownerOrganizations;
+  programSubjects: typeof programSubjects;
   programs: typeof programs;
   "seed/academicPatternTemplates": typeof seed_academicPatternTemplates;
   "seed/institutions": typeof seed_institutions;

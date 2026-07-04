@@ -19,6 +19,7 @@ import { UpcomingFeaturePreview } from "@/components/common/upcoming-feature-pre
 import { TimetableHistoryView } from "@/features/c/[slug]/timetable/timetable-history-view";
 import { TimetableView } from "@/features/c/[slug]/timetable/timetable-view";
 import ClassesView from "@/features/classes/classes-view";
+import { ProgramSubjectAllocationView } from "@/features/p/[alias]/subjects/program-subject-allocation-view";
 import { ProgramTimetablesView } from "@/features/p/[alias]/timetable/program-timetables-view";
 import { getClassMockTimetableInfo } from "@/features/timetable/dummy-timetable-data";
 import { useInsQuery, useInstitutionSlug } from "@/hooks/convex-react";
@@ -92,12 +93,7 @@ export function ClassesPage() {
 }
 
 export function SubjectsPage() {
-	return (
-		<ProgramSectionPage
-			title="Alloted Subjects"
-			description="Manage alloted subjects"
-		/>
-	);
+	return <ProgramSubjectAllocationView />;
 }
 
 export function FacultyPage() {

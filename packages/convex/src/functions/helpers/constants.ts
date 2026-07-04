@@ -187,6 +187,16 @@ export const ERROR_CODES = {
 			message: "Institution has already adopted an academic pattern",
 		},
 	},
+	PROGRAM_SUBJECT: {
+		NOT_FOUND: {
+			code: "PROGRAM_SUBJECT_NOT_FOUND",
+			message: "Program subject allocation not found",
+		},
+		INVALID_STAGE: {
+			code: "PROGRAM_SUBJECT_INVALID_STAGE",
+			message: "Academic stage does not belong to the institution's pattern",
+		},
+	},
 	/** Better auth organization error codes */
 	ORGANIZATION: ORGANIZATION_ERROR_CODES,
 } as const;
