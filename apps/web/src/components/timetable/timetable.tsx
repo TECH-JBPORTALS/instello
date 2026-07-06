@@ -16,10 +16,14 @@ import { IconX } from "@tabler/icons-react";
 import React from "react";
 import {
 	canPlaceSpan,
+	computeSubRowLayout,
+	DAY_ROW_BASE_HEIGHT_PX,
 	formatHourDropId,
 	getMaxEndForResize,
 	getMinStartForResize,
+	getMaxSubRowsForDay,
 	type HourSpan,
+	type SubRowLayout,
 	isPaletteDragId,
 } from "@/components/timetable/hour-span-utils";
 import { TimetableSidePanel } from "@/components/timetable/timetable-side-panel";
@@ -122,26 +126,41 @@ export function TimetableEditor({
 			</div>
 
 			<div className="flex flex-1 flex-col overflow-y-auto">
-				{days.map((dayIndex) => (
-					<div
-						key={dayIndex}
-						className="flex h-min min-h-20 max-h-fit w-full border-b last:border-b-0"
-					>
-						<div className="flex h-20 w-20 shrink-0 items-center justify-center border-r bg-muted/15 px-2 py-3 text-sm font-medium">
-							<span className="-rotate-45">{DAYS[dayIndex]?.slice(0, 3)}</span>
-						</div>
+				{days.map((dayIndex) => {
+					const daySessions = data.filter(
+						(hourSpan) => hourSpan.day === dayIndex,
+					);
+					const maxSubRows = getMaxSubRowsForDay(daySessions);
+					const rowHeight = DAY_ROW_BASE_HEIGHT_PX * maxSubRows;
 
-						<DayRow
-							dayIndex={dayIndex}
-							numberOfhours={numberOfhours}
-							sessions={data.filter((hourSpan) => hourSpan.day === dayIndex)}
-							readOnly={readOnly}
-							onResize={onResize}
-							onSpanSelect={onSpanSelect}
-							selectedSpanId={selectedSpanId}
-						/>
-					</div>
-				))}
+					return (
+						<div
+							key={dayIndex}
+							className="flex h-min w-full border-b last:border-b-0"
+							style={{ minHeight: rowHeight }}
+						>
+							<div
+								className="flex w-20 shrink-0 items-center justify-center border-r bg-muted/15 px-2 py-3 text-sm font-medium"
+								style={{ minHeight: rowHeight }}
+							>
+								<span className="-rotate-45">
+									{DAYS[dayIndex]?.slice(0, 3)}
+								</span>
+							</div>
+
+							<DayRow
+								dayIndex={dayIndex}
+								numberOfhours={numberOfhours}
+								rowHeight={rowHeight}
+								sessions={daySessions}
+								readOnly={readOnly}
+								onResize={onResize}
+								onSpanSelect={onSpanSelect}
+								selectedSpanId={selectedSpanId}
+							/>
+						</div>
+					);
+				})}
 			</div>
 		</div>
 	);
@@ -190,6 +209,7 @@ export function TimetableEditorShell({
 interface DayRowProps {
 	dayIndex: number;
 	numberOfhours: number;
+	rowHeight: number;
 	sessions: HourSpan[];
 	readOnly?: boolean;
 	onResize?: (id: string, range: { start: number; end: number }) => void;
@@ -197,9 +217,24 @@ interface DayRowProps {
 	selectedSpanId?: string | null;
 }
 
+function getSpanVerticalStyle(
+	layout: SubRowLayout,
+	rowHeight: number,
+): { top: number; height: number } {
+	const padding = 4;
+	const gap = 2;
+	const available = rowHeight - padding * 2;
+	const laneHeight =
+		(available - gap * (layout.subRowCount - 1)) / layout.subRowCount;
+	const top = padding + layout.subRowIndex * (laneHeight + gap);
+
+	return { top, height: laneHeight };
+}
+
 function DayRow({
 	dayIndex,
 	numberOfhours,
+	rowHeight,
 	sessions,
 	readOnly = false,
 	onResize,
@@ -207,9 +242,17 @@ function DayRow({
 	selectedSpanId,
 }: DayRowProps) {
 	const containerRef = React.useRef<HTMLDivElement>(null);
+	const subRowLayout = React.useMemo(
+		() => computeSubRowLayout(sessions),
+		[sessions],
+	);
 
 	return (
-		<div ref={containerRef} className="relative min-h-20 flex-1">
+		<div
+			ref={containerRef}
+			className="relative flex-1"
+			style={{ minHeight: rowHeight }}
+		>
 			<div className="pointer-events-none absolute inset-0 flex flex-row">
 				{Array.from({ length: numberOfhours }).map((_, index) => (
 					<div
@@ -225,6 +268,13 @@ function DayRow({
 							key={session.id}
 							session={session}
 							numberOfhours={numberOfhours}
+							verticalStyle={getSpanVerticalStyle(
+								subRowLayout.get(session.id) ?? {
+									subRowIndex: 0,
+									subRowCount: 1,
+								},
+								rowHeight,
+							)}
 						/>
 					))
 				: null}
@@ -248,6 +298,13 @@ function DayRow({
 							numberOfhours={numberOfhours}
 							siblings={sessions}
 							containerRef={containerRef}
+							verticalStyle={getSpanVerticalStyle(
+								subRowLayout.get(session.id) ?? {
+									subRowIndex: 0,
+									subRowCount: 1,
+								},
+								rowHeight,
+							)}
 							onResize={onResize}
 							onSpanSelect={onSpanSelect}
 							isSelected={selectedSpanId === session.id}
@@ -261,18 +318,22 @@ function DayRow({
 function StaticHourSpan({
 	session,
 	numberOfhours,
+	verticalStyle,
 }: {
 	session: HourSpan;
 	numberOfhours: number;
+	verticalStyle: { top: number; height: number };
 }) {
 	const duration = session.end - session.start;
 
 	return (
 		<div
-			className="absolute top-1 bottom-1 z-10 overflow-hidden rounded-md border shadow-sm"
+			className="absolute z-10 overflow-hidden rounded-md border shadow-sm"
 			style={{
 				left: `${(session.start / numberOfhours) * 100}%`,
 				width: `${(duration / numberOfhours) * 100}%`,
+				top: verticalStyle.top,
+				height: verticalStyle.height,
 				backgroundColor: `color-mix(in srgb, ${session.color} 20%, transparent)`,
 				borderColor: `color-mix(in srgb, ${session.color} 45%, transparent)`,
 			}}
@@ -310,6 +371,7 @@ interface DraggableHourSpanProps {
 	numberOfhours: number;
 	siblings: HourSpan[];
 	containerRef: React.RefObject<HTMLDivElement | null>;
+	verticalStyle: { top: number; height: number };
 	onResize?: (id: string, range: { start: number; end: number }) => void;
 	onSpanSelect?: (id: string) => void;
 	isSelected?: boolean;
@@ -320,6 +382,7 @@ function DraggableHourSpan({
 	numberOfhours,
 	siblings,
 	containerRef,
+	verticalStyle,
 	onResize,
 	onSpanSelect,
 	isSelected,
@@ -350,10 +413,10 @@ function DraggableHourSpan({
 		const initialEnd = session.end;
 		const hourWidth = container.getBoundingClientRect().width / numberOfhours;
 
-		const minStart = getMinStartForResize(siblings, session.id, initialEnd);
+		const minStart = getMinStartForResize(siblings, session, initialEnd);
 		const maxEnd = getMaxEndForResize(
 			siblings,
-			session.id,
+			session,
 			initialStart,
 			numberOfhours,
 		);
@@ -374,6 +437,7 @@ function DraggableHourSpan({
 						newStart,
 						initialEnd,
 						numberOfhours,
+						session.batchId,
 					)
 				) {
 					onResize(session.id, { start: newStart, end: initialEnd });
@@ -391,6 +455,7 @@ function DraggableHourSpan({
 						initialStart,
 						newEnd,
 						numberOfhours,
+						session.batchId,
 					)
 				) {
 					onResize(session.id, { start: initialStart, end: newEnd });
@@ -416,7 +481,7 @@ function DraggableHourSpan({
 				setDropRef(node);
 			}}
 			className={cn(
-				"absolute top-1 bottom-1 z-10 overflow-hidden transition-all ease-linear rounded-md border shadow-sm",
+				"absolute z-10 overflow-hidden transition-all ease-linear rounded-md border shadow-sm",
 				"cursor-grab active:cursor-grabbing",
 				isDragging && "opacity-50",
 				isOver && "ring-2 ring-primary/40",
@@ -425,6 +490,8 @@ function DraggableHourSpan({
 			style={{
 				left: `${(session.start / numberOfhours) * 100}%`,
 				width: `${(duration / numberOfhours) * 100}%`,
+				top: verticalStyle.top,
+				height: verticalStyle.height,
 				backgroundColor: `color-mix(in srgb, ${session.color} 20%, transparent)`,
 				borderColor: `color-mix(in srgb, ${session.color} 45%, transparent)`,
 			}}

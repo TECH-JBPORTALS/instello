@@ -2,10 +2,12 @@
 
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { useCallback, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { applyEditorDrop } from "@/components/timetable/hour-span-drag";
 import type { HourSpan } from "@/components/timetable/hour-span-utils";
 import {
 	canPlaceSpan,
+	findConflictingSpan,
 	isPaletteDragId,
 } from "@/components/timetable/hour-span-utils";
 import type {
@@ -67,11 +69,31 @@ export function useTimetableEditor({
 			>,
 		) => {
 			if (!selectedSpanId) return;
-			setSpans((current) =>
-				current.map((span) =>
-					span.id === selectedSpanId ? { ...span, ...patch } : span,
-				),
-			);
+
+			setSpans((current) => {
+				const span = current.find((item) => item.id === selectedSpanId);
+				if (!span) return current;
+
+				const nextSpan = { ...span, ...patch };
+
+				if (
+					findConflictingSpan(
+						current,
+						selectedSpanId,
+						nextSpan.day,
+						nextSpan.start,
+						nextSpan.end,
+						nextSpan.batchId,
+					)
+				) {
+					toast.error("This batch already has a subject in that time slot");
+					return current;
+				}
+
+				return current.map((item) =>
+					item.id === selectedSpanId ? nextSpan : item,
+				);
+			});
 		},
 		[selectedSpanId],
 	);
@@ -96,6 +118,7 @@ export function useTimetableEditor({
 						range.start,
 						range.end,
 						numberOfhours,
+						span.batchId,
 					)
 				) {
 					return current;
@@ -125,11 +148,12 @@ export function useTimetableEditor({
 					event.over ? String(event.over.id) : undefined,
 					numberOfhours,
 					subjects,
+					batches,
 				);
 				return next ?? current;
 			});
 		},
-		[numberOfhours, subjects],
+		[numberOfhours, subjects, batches],
 	);
 
 	const handleDragCancel = useCallback(() => {

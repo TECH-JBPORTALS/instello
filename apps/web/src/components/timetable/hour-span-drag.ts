@@ -5,8 +5,9 @@ import {
 	isPaletteDragId,
 	parseHourDropId,
 	parsePaletteDragId,
+	spansConflict,
 } from "./hour-span-utils";
-import type { TimetableSubjectOption } from "./types";
+import type { TimetableBatchOption, TimetableSubjectOption } from "./types";
 
 /**
  * Exchange day and time range between two spans. Subject, room, and color stay with each id.
@@ -20,7 +21,8 @@ export function swapHourSpans(a: HourSpan, b: HourSpan): [HourSpan, HourSpan] {
 
 /**
  * Maximal empty half-open range [start, end) on `day` that contains `dropHour`,
- * excluding the dragged span from occupancy.
+ * excluding the dragged span from occupancy. Only spans that conflict with
+ * `batchId` block the gap.
  */
 export function findGapAtHour(
 	spans: HourSpan[],
@@ -28,6 +30,7 @@ export function findGapAtHour(
 	dropHour: number,
 	excludeId: string,
 	numberOfhours: number,
+	batchId?: string,
 ): { start: number; end: number } | null {
 	if (dropHour < 0 || dropHour >= numberOfhours) {
 		return null;
@@ -37,13 +40,24 @@ export function findGapAtHour(
 		.filter((span) => span.day === day && span.id !== excludeId)
 		.sort((a, b) => a.start - b.start);
 
+	const probe: Pick<HourSpan, "day" | "start" | "end" | "batchId"> = {
+		day,
+		start: dropHour,
+		end: dropHour + 1,
+		batchId,
+	};
+
 	const occupied = daySpans.some(
-		(span) => dropHour >= span.start && dropHour < span.end,
+		(span) =>
+			dropHour >= span.start &&
+			dropHour < span.end &&
+			spansConflict(probe, span),
 	);
 	if (occupied) {
 		return null;
 	}
 
+	// Physical gap boundaries use all spans on the day.
 	let gapStart = 0;
 	for (const span of daySpans) {
 		if (span.end <= dropHour) {
@@ -76,6 +90,7 @@ export function placeSpanAtDrop(
 	dropHour: number,
 	spans: HourSpan[],
 	numberOfhours: number,
+	batchId?: string,
 ): { day: number; start: number; end: number } | null {
 	const gap = findGapAtHour(
 		spans,
@@ -83,6 +98,7 @@ export function placeSpanAtDrop(
 		dropHour,
 		dragged.id,
 		numberOfhours,
+		batchId ?? dragged.batchId,
 	);
 	if (!gap) {
 		return null;
@@ -100,7 +116,8 @@ export function placeSpanAtDrop(
 }
 
 /**
- * Create a new span from a palette subject dropped on an empty hour cell.
+ * Create a new span from a palette subject dropped on an hour cell.
+ * Auto-assigns the first free batch when the hour is occupied by another batch.
  */
 export function createSpanFromPaletteDrop(
 	subject: TimetableSubjectOption,
@@ -108,6 +125,7 @@ export function createSpanFromPaletteDrop(
 	dropHour: number,
 	spans: HourSpan[],
 	numberOfhours: number,
+	batches: TimetableBatchOption[] = [],
 ): HourSpan | null {
 	const duration = subject.defaultDuration ?? 1;
 	const tempSpan: HourSpan = {
@@ -122,13 +140,37 @@ export function createSpanFromPaletteDrop(
 		color: subject.color,
 	};
 
-	const placement = placeSpanAtDrop(
+	let batchId: string | undefined;
+	let batchName: string | undefined;
+
+	let placement = placeSpanAtDrop(
 		tempSpan,
 		targetDay,
 		dropHour,
 		spans,
 		numberOfhours,
+		undefined,
 	);
+
+	if (!placement && batches.length > 0) {
+		for (const batch of batches) {
+			const candidate = placeSpanAtDrop(
+				tempSpan,
+				targetDay,
+				dropHour,
+				spans,
+				numberOfhours,
+				batch.id,
+			);
+			if (candidate) {
+				placement = candidate;
+				batchId = batch.id;
+				batchName = batch.label;
+				break;
+			}
+		}
+	}
+
 	if (!placement) {
 		return null;
 	}
@@ -142,6 +184,8 @@ export function createSpanFromPaletteDrop(
 		room: "",
 		notes: "",
 		color: subject.color,
+		batchId,
+		batchName,
 	};
 }
 
@@ -203,6 +247,7 @@ export function applyEditorDrop(
 	overId: string | undefined,
 	numberOfhours: number,
 	subjects: TimetableSubjectOption[],
+	batches: TimetableBatchOption[] = [],
 ): HourSpan[] | null {
 	if (!overId || activeId === overId) {
 		return null;
@@ -224,6 +269,7 @@ export function applyEditorDrop(
 			hourDrop.hour,
 			data,
 			numberOfhours,
+			batches,
 		);
 		if (!newSpan) return null;
 

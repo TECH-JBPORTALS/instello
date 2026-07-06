@@ -9,7 +9,7 @@ import {
 } from "./hour-span-drag";
 import type { HourSpan } from "./hour-span-utils";
 import { formatHourDropId, formatPaletteDragId } from "./hour-span-utils";
-import type { TimetableSubjectOption } from "./types";
+import type { TimetableBatchOption, TimetableSubjectOption } from "./types";
 
 function span(overrides: Partial<HourSpan> & Pick<HourSpan, "id">): HourSpan {
 	return {
@@ -37,6 +37,11 @@ const subjects: TimetableSubjectOption[] = [
 		color: "#A855F7",
 		defaultDuration: 2,
 	},
+];
+
+const batches: TimetableBatchOption[] = [
+	{ id: "batch-1", label: "B01" },
+	{ id: "batch-2", label: "B02" },
 ];
 
 describe("swapHourSpans", () => {
@@ -75,6 +80,17 @@ describe("findGapAtHour", () => {
 
 	it("returns null when the drop hour is occupied", () => {
 		expect(findGapAtHour(spans, 1, 0, "x", 7)).toBeNull();
+	});
+
+	it("allows a different batch to use an occupied hour", () => {
+		const batchSpans = [
+			span({ id: "a", day: 1, start: 0, end: 2, batchId: "batch-1" }),
+		];
+
+		expect(findGapAtHour(batchSpans, 1, 0, "x", 7, "batch-2")).toEqual({
+			start: 0,
+			end: 7,
+		});
 	});
 });
 
@@ -137,6 +153,57 @@ describe("createSpanFromPaletteDrop", () => {
 			subject: "Lab",
 		});
 	});
+
+	it("auto-assigns a free batch when dropping on an occupied hour", () => {
+		const spans = [
+			span({
+				id: "existing",
+				day: 0,
+				start: 0,
+				end: 1,
+				batchId: "batch-1",
+				batchName: "B01",
+			}),
+		];
+
+		// biome-ignore lint/style/noNonNullAssertion: <We are sure we get always subjects>
+		const created = createSpanFromPaletteDrop(
+			subjects[0]!,
+			0,
+			0,
+			spans,
+			7,
+			batches,
+		);
+
+		expect(created).toMatchObject({
+			day: 0,
+			start: 0,
+			end: 1,
+			batchId: "batch-2",
+			batchName: "B02",
+			subject: "Mathematics",
+		});
+	});
+
+	it("returns null when all batches are taken at the drop hour", () => {
+		const spans = [
+			span({ id: "a", day: 0, start: 0, end: 1, batchId: "batch-1" }),
+			span({ id: "b", day: 0, start: 0, end: 1, batchId: "batch-2" }),
+		];
+
+		// biome-ignore lint/style/noNonNullAssertion: <We are sure we get always subjects>
+		const created = createSpanFromPaletteDrop(
+			subjects[0]!,
+			0,
+			0,
+			spans,
+			7,
+			batches,
+		);
+
+		expect(created).toBeNull();
+	});
 });
 
 describe("applySpanDrop", () => {
@@ -177,6 +244,32 @@ describe("applySpanDrop", () => {
 	it("returns null when there is no drop target", () => {
 		expect(applySpanDrop(data, "math", undefined, 7)).toBeNull();
 	});
+
+	it("places on an hour occupied by a different batch", () => {
+		const batchData = [
+			span({
+				id: "batch1",
+				day: 0,
+				start: 0,
+				end: 2,
+				batchId: "batch-1",
+			}),
+			span({
+				id: "batch2",
+				day: 0,
+				start: 4,
+				end: 5,
+				batchId: "batch-2",
+			}),
+		];
+
+		const next = applySpanDrop(batchData, "batch2", formatHourDropId(0, 0), 7);
+		expect(next?.find((s) => s.id === "batch2")).toMatchObject({
+			day: 0,
+			start: 0,
+			end: 1,
+		});
+	});
 });
 
 describe("applyEditorDrop", () => {
@@ -209,6 +302,36 @@ describe("applyEditorDrop", () => {
 			day: 1,
 			start: 1,
 			end: 3,
+		});
+	});
+
+	it("creates a sub-row when palette drop targets an occupied hour with a free batch", () => {
+		const data = [
+			span({
+				id: "existing",
+				day: 0,
+				start: 0,
+				end: 1,
+				batchId: "batch-1",
+			}),
+		];
+
+		const next = applyEditorDrop(
+			data,
+			formatPaletteDragId("subj-math"),
+			formatHourDropId(0, 0),
+			7,
+			subjects,
+			batches,
+		);
+
+		expect(next).toHaveLength(2);
+		expect(next?.[1]).toMatchObject({
+			day: 0,
+			start: 0,
+			end: 1,
+			batchId: "batch-2",
+			batchName: "B02",
 		});
 	});
 });
