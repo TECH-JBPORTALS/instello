@@ -282,17 +282,25 @@ const tables = {
 		])
 		.index("by_subject", ["subjectId"]),
 
-	// classSubjectsAllocation: defineTable({
-	// 	classId: v.string(),
-	// 	programSubjectId: v.string(),
-	// 	userId: v.string(),
-	// 	facultyId: v.optional(v.string()),
-	// 	createdAt: v.number(),
-	// 	updatedAt: v.number(),
-	// })
-	// 	.index("by_class", ["classId"])
-	// 	.index("by_program_subject", ["programSubjectId"])
-	// 	.index("by_faculty", ["facultyId"]),
+	timetable: defineTable({
+		classId: v.id("classes"),
+		version: v.number(),
+		createdBy: v.string(),
+		changeMessage: v.string(),
+		effectiveFrom: v.number(),
+		createdAt: v.number(),
+		updatedAt: v.number(),
+	}).index("by_class_and_version", ["classId", "version"]),
+
+	timetableSlots: defineTable({
+		timetableId: v.id("timetable"),
+		subjectId: v.id("subjects"),
+		batchId: v.optional(v.id("classBatches")),
+		/** 0 = Monday … 5 = Saturday */
+		day: v.number(),
+		startHour: v.number(),
+		endHour: v.number(),
+	}).index("by_timetable", ["timetableId"]),
 };
 
 const schema = defineSchema(tables);

@@ -36,15 +36,18 @@ import type * as model_program from "../model/program.js";
 import type * as model_programSubject from "../model/programSubject.js";
 import type * as model_student from "../model/student.js";
 import type * as model_subject from "../model/subject.js";
+import type * as model_timetable from "../model/timetable.js";
 import type * as ownerOrganizations from "../ownerOrganizations.js";
 import type * as programSubjects from "../programSubjects.js";
 import type * as programs from "../programs.js";
 import type * as seed_academicPatternTemplates from "../seed/academicPatternTemplates.js";
 import type * as seed_institutions from "../seed/institutions.js";
 import type * as seed_mock from "../seed/mock.js";
+import type * as seed_timetables from "../seed/timetables.js";
 import type * as seed_users from "../seed/users.js";
 import type * as students from "../students.js";
 import type * as subjects from "../subjects.js";
+import type * as timetables from "../timetables.js";
 import type * as users from "../users.js";
 
 import type {
@@ -82,15 +85,18 @@ declare const fullApi: ApiFromModules<{
   "model/programSubject": typeof model_programSubject;
   "model/student": typeof model_student;
   "model/subject": typeof model_subject;
+  "model/timetable": typeof model_timetable;
   ownerOrganizations: typeof ownerOrganizations;
   programSubjects: typeof programSubjects;
   programs: typeof programs;
   "seed/academicPatternTemplates": typeof seed_academicPatternTemplates;
   "seed/institutions": typeof seed_institutions;
   "seed/mock": typeof seed_mock;
+  "seed/timetables": typeof seed_timetables;
   "seed/users": typeof seed_users;
   students: typeof students;
   subjects: typeof subjects;
+  timetables: typeof timetables;
   users: typeof users;
 }>;
 

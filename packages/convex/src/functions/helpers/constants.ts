@@ -197,6 +197,24 @@ export const ERROR_CODES = {
 			message: "Academic stage does not belong to the institution's pattern",
 		},
 	},
+	TIMETABLE: {
+		NOT_FOUND: {
+			code: "TIMETABLE_NOT_FOUND",
+			message: "Timetable not found",
+		},
+		VERSION_NOT_FOUND: {
+			code: "TIMETABLE_VERSION_NOT_FOUND",
+			message: "Timetable version not found",
+		},
+		SLOT_CONFLICT: {
+			code: "TIMETABLE_SLOT_CONFLICT",
+			message: "Timetable slots conflict with each other",
+		},
+		INVALID_SLOT: {
+			code: "TIMETABLE_INVALID_SLOT",
+			message: "Timetable slot has invalid day or hour range",
+		},
+	},
 	/** Better auth organization error codes */
 	ORGANIZATION: ORGANIZATION_ERROR_CODES,
 } as const;
