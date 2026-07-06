@@ -79,6 +79,25 @@ export const get = insQuery({
 	},
 });
 
+/** List all timetable versions for a class, newest first */
+export const listVersions = insQuery({
+	permissions: ["class:view"],
+	args: {
+		programId: vv.id("programs"),
+		classAlias: vv.string(),
+	},
+	returns: vv.array(Timetable.TimetableVersionDtoSchema),
+	handler: async (ctx, args) => {
+		const cls = await Timetable.resolveClass(ctx, {
+			programId: args.programId,
+			classAlias: args.classAlias,
+			institutionId: ctx.institution._id,
+		});
+
+		return await Timetable.listVersions(ctx, cls._id);
+	},
+});
+
 /** Get timetable for given version number */
 export const getByVersion = insQuery({
 	permissions: ["class:view"],

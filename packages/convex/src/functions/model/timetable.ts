@@ -74,6 +74,20 @@ export type ProgramTimetableListItem = Infer<
 	typeof ProgramTimetableListItemSchema
 >;
 
+export const TimetableVersionDtoSchema = vv.object({
+	version: vv.number(),
+	changeMessage: vv.string(),
+	commitedBy: vv.object({
+		_id: vv.string(),
+		firstName: vv.string(),
+		lastName: vv.string(),
+		image: vv.optional(vv.string()),
+	}),
+	createdAt: vv.number(),
+});
+
+export type TimetableVersionDto = Infer<typeof TimetableVersionDtoSchema>;
+
 type SlotRange = {
 	day: number;
 	startHour: number;
@@ -167,6 +181,38 @@ export async function getByVersion(
 			q.eq("classId", classId).eq("version", version),
 		)
 		.unique();
+}
+
+export async function listVersions(
+	ctx: AppQueryCtx,
+	classId: Id<"classes">,
+): Promise<TimetableVersionDto[]> {
+	const timetables = await ctx.db
+		.query("timetable")
+		.withIndex("by_class_and_version", (q) => q.eq("classId", classId))
+		.order("desc")
+		.collect();
+
+	return await Promise.all(
+		timetables.map(async (timetable) => {
+			const user = await ctx.runQuery(components.betterAuth.users.getById, {
+				userId: timetable.createdBy,
+			});
+			const { firstName, lastName } = splitUserName(user.name);
+
+			return {
+				version: timetable.version,
+				changeMessage: timetable.changeMessage,
+				commitedBy: {
+					_id: user._id,
+					firstName,
+					lastName,
+					...(user.image ? { image: user.image } : {}),
+				},
+				createdAt: timetable.createdAt,
+			};
+		}),
+	);
 }
 
 async function listSlots(

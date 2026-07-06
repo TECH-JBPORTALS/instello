@@ -599,6 +599,68 @@ describe("timetables.getByVersion", () => {
 	});
 });
 
+describe("timetables.listVersions", () => {
+	const test = timetableTest;
+
+	test("returns versions newest first", async ({
+		ins1,
+		programs,
+		classes,
+		subjects,
+		asOwner,
+		user1,
+	}) => {
+		const authed = asOwner(user1, ins1);
+		const base = createInput({
+			programId: programs.me._id,
+			classAlias: classes.class1.slug,
+			mathId: subjects.math._id,
+			scienceId: subjects.appliedScience._id,
+		});
+
+		await authed.mutation(api.timetables.create, withSlug(ins1, base));
+		await authed.mutation(
+			api.timetables.create,
+			withSlug(ins1, {
+				...base,
+				changeMessage: "Version two",
+			}),
+		);
+
+		const versions = await authed.query(
+			api.timetables.listVersions,
+			withSlug(ins1, {
+				programId: programs.me._id,
+				classAlias: classes.class1.slug,
+			}),
+		);
+
+		expect(versions).toHaveLength(2);
+		expect(versions[0]?.version).toBe(2);
+		expect(versions[0]?.changeMessage).toBe("Version two");
+		expect(versions[1]?.version).toBe(1);
+		expect(versions[1]?.changeMessage).toBe("Initial timetable");
+	});
+
+	test("returns empty array when no timetable exists", async ({
+		ins1,
+		programs,
+		classes,
+		asOwner,
+		user1,
+	}) => {
+		const versions = await asOwner(user1, ins1).query(
+			api.timetables.listVersions,
+			withSlug(ins1, {
+				programId: programs.me._id,
+				classAlias: classes.class1.slug,
+			}),
+		);
+
+		expect(versions).toEqual([]);
+	});
+});
+
 describe("timetables.listByProgram", () => {
 	const test = timetableTest;
 

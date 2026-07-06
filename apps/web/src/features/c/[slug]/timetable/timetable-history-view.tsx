@@ -8,6 +8,7 @@ import {
 } from "@instello/ui/components/avatar";
 import { Badge } from "@instello/ui/components/badge";
 import { Button } from "@instello/ui/components/button";
+import { Skeleton } from "@instello/ui/components/skeleton";
 import {
 	IconCheck,
 	IconChevronLeft,
@@ -17,27 +18,52 @@ import {
 } from "@tabler/icons-react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Container from "@/components/common/container";
 import { PageHeader, PageHeaderStart } from "@/components/common/page-header";
-import {
-	CLASS_TIMETABLE_VERSION_HISTORY,
-	type TimetableVersionEntry,
-} from "@/features/timetable/dummy-timetable-data";
+import { mapVersionSummaries } from "@/components/timetable/timetable-mappers";
+import type { TimetableVersionEntry } from "@/components/timetable/timetable-publish-info";
 import { useInsQuery } from "@/hooks/convex-react";
+import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
 
-export function TimetableHistoryView({
-	basePath,
-	versionHistory = CLASS_TIMETABLE_VERSION_HISTORY,
-}: {
-	basePath: string;
-	versionHistory?: TimetableVersionEntry[];
-}) {
+function TimetableHistorySkeleton() {
+	return (
+		<ol className="relative ml-3 space-y-6 border-l pl-8">
+			{Array.from({ length: 3 }).map((_, index) => (
+				<li key={index} className="relative">
+					<Skeleton className="h-20 w-full rounded-lg" />
+				</li>
+			))}
+		</ol>
+	);
+}
+
+export function TimetableHistoryView({ basePath }: { basePath: string }) {
 	const programAlias = useProgramAlias();
+	const classSlug = useClassSlug();
+
 	const program = useInsQuery(api.programs.getByAlias, { alias: programAlias });
+	const cls = useInsQuery(
+		api.classes.getBySlug,
+		program && classSlug ? { programId: program._id, classSlug } : "skip",
+	);
+
+	const versions = useInsQuery(
+		api.timetables.listVersions,
+		program && classSlug
+			? { programId: program._id, classAlias: classSlug }
+			: "skip",
+	);
+
+	const versionHistory = useMemo(
+		() => (versions ? mapVersionSummaries(versions) : []),
+		[versions],
+	);
 
 	const latestVersion = versionHistory[0]?.version;
+	const isLoading =
+		program === undefined || cls === undefined || versions === undefined;
 
 	return (
 		<Container className="flex min-h-0 flex-1 flex-col">
@@ -61,21 +87,26 @@ export function TimetableHistoryView({
 					Timetable Versions
 				</h1>
 				<p className="text-sm text-muted-foreground">
-					Version history for <i className="text-foreground">{"this class"}</i>{" "}
-					in <i className="text-foreground">{program?.name}</i>
+					Version history for{" "}
+					<i className="text-foreground">{cls?.name ?? "this class"}</i> in{" "}
+					<i className="text-foreground">{program?.name}</i>
 				</p>
 			</div>
 
-			<ol className="relative ml-3 space-y-6 border-l pl-8">
-				{versionHistory.map((entry) => (
-					<VersionHistoryItem
-						key={entry.version}
-						entry={entry}
-						isLatest={entry.version === latestVersion}
-						timetablePath={basePath}
-					/>
-				))}
-			</ol>
+			{isLoading ? (
+				<TimetableHistorySkeleton />
+			) : (
+				<ol className="relative ml-3 space-y-6 border-l pl-8">
+					{versionHistory.map((entry) => (
+						<VersionHistoryItem
+							key={entry.version}
+							entry={entry}
+							isLatest={entry.version === latestVersion}
+							timetablePath={basePath}
+						/>
+					))}
+				</ol>
+			)}
 		</Container>
 	);
 }

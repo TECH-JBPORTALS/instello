@@ -4,7 +4,10 @@ import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { nanoid } from "nanoid";
 import type { HourSpan } from "@/components/timetable/hour-span-utils";
 import type { TimetableItem } from "@/components/timetable/timetable-display";
-import type { TimetablePublishInfoProps } from "@/components/timetable/timetable-publish-info";
+import type {
+	TimetablePublishInfoProps,
+	TimetableVersionEntry,
+} from "@/components/timetable/timetable-publish-info";
 import type {
 	TimetableBatchOption,
 	TimetableSubjectOption,
@@ -13,6 +16,10 @@ import type {
 export type TimetableDto = NonNullable<
 	FunctionReturnType<typeof api.timetables.getOrNull>
 >;
+
+export type TimetableVersionDto = FunctionReturnType<
+	typeof api.timetables.listVersions
+>[number];
 
 type SlotInput = FunctionArgs<typeof api.timetables.create>["slots"][number];
 
@@ -129,4 +136,18 @@ export function dtoToPublishInfo(
 		currentVersion: timetable.version,
 		totalVersions: timetable.version,
 	};
+}
+
+export function mapVersionSummaries(
+	versions: TimetableVersionDto[],
+): TimetableVersionEntry[] {
+	return versions.map((version) => ({
+		version: version.version,
+		publisher: {
+			name: `${version.commitedBy.firstName} ${version.commitedBy.lastName}`.trim(),
+			image: version.commitedBy.image,
+		},
+		message: version.changeMessage,
+		publishedAt: version.createdAt,
+	}));
 }

@@ -12,10 +12,13 @@
  *
  * // Application admin email. Emails should always follow this template <name>+test@resend.dev
  * ADMIN_EMAIL = <email>
+ *
+ * Production seeds (no SEED_MODE): `superadmin`, `owner`
  */
 
 import { fakerEN_IN as faker } from "@faker-js/faker";
 import type { Infer } from "convex/values";
+import { v } from "convex/values";
 import { components } from "../_generated/api";
 import { env, internalMutation } from "../_generated/server";
 import { authComponent, createAuth } from "../auth";
@@ -94,6 +97,103 @@ export const superadmin = internalMutation({
 		}
 
 		console.info("🛈 Super admin already exists");
+	},
+});
+
+/**
+ * **Seeds a single owner with password and owner organization details.**
+ *
+ * Safe to run in production (no SEED_MODE required). Idempotent: skips user
+ * creation if the email already exists; creates the organization only when missing.
+ *
+ * ```bash
+ * # inside packages/convex
+ * bun x convex run seed/users:owner '{
+ *   "email": "owner@example.com",
+ *   "password": "<password>",
+ *   "name": "Owner Name",
+ *   "organization": {
+ *     "name": "Acme Education",
+ *     "slug": "acme-education",
+ *     "addressLine": "123 Main St",
+ *     "city": "Mumbai",
+ *     "state": "Maharashtra",
+ *     "postalCode": "400001",
+ *     "country": "India"
+ *   }
+ * }'
+ * ```
+ */
+export const owner = internalMutation({
+	args: {
+		email: v.string(),
+		password: v.string(),
+		name: v.string(),
+		organization: OwnerOrganization.OwnerOrgCreateSchema,
+	},
+	returns: v.object({
+		status: v.union(v.literal("created"), v.literal("already_exists")),
+		userId: v.string(),
+		ownerOrganizationId: v.optional(v.id("ownerOrganizations")),
+	}),
+	handler: async (ctx, args) => {
+		console.info("Seeding owner 🌱");
+
+		const { auth } = await authComponent.getAuth(createAuth, ctx);
+
+		const existingUser = await ctx.runQuery(
+			components.betterAuth.users.safeGetByEmail,
+			{ email: args.email },
+		);
+
+		if (existingUser) {
+			const existingOrg = await OwnerOrganization.getByUserId(ctx, {
+				userId: existingUser._id,
+			});
+
+			if (existingOrg) {
+				console.info("🛈 Owner already exists");
+				return {
+					status: "already_exists" as const,
+					userId: existingUser._id,
+					ownerOrganizationId: existingOrg._id,
+				};
+			}
+
+			const ownerOrganizationId = await OwnerOrganization.create(ctx, {
+				...args.organization,
+				ownerId: existingUser._id,
+			});
+
+			console.info("✅ Owner organization created for existing user");
+			return {
+				status: "created" as const,
+				userId: existingUser._id,
+				ownerOrganizationId,
+			};
+		}
+
+		const { user } = await auth.api.createUser({
+			body: {
+				name: args.name,
+				email: args.email,
+				role: "owner",
+				password: args.password,
+				data: { emailVerified: true },
+			},
+		});
+
+		const ownerOrganizationId = await OwnerOrganization.create(ctx, {
+			...args.organization,
+			ownerId: user.id,
+		});
+
+		console.info(`✅ Owner ${args.name} seeded`);
+		return {
+			status: "created" as const,
+			userId: user.id,
+			ownerOrganizationId,
+		};
 	},
 });
 

@@ -2,11 +2,13 @@ export type SidePanelState = "palette" | "properties";
 
 export type TimetableSubjectType = "theory" | "practical";
 
-export const TIMETABLE_SUBJECT_TYPE_LABELS: Record<TimetableSubjectType, string> =
-	{
-		theory: "Theory",
-		practical: "Practical",
-	};
+export const TIMETABLE_SUBJECT_TYPE_LABELS: Record<
+	TimetableSubjectType,
+	string
+> = {
+	theory: "Theory",
+	practical: "Practical",
+};
 
 export interface TimetableSubjectOption {
 	id: string;
