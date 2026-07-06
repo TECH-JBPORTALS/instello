@@ -12,7 +12,7 @@ import {
 	PageHeaderStart,
 	PageHeaderTitle,
 } from "@/components/common/page-header";
-import { Timetable } from "@/components/timetable/timetable";
+import { Timetable } from "@/components/timetable/timetable-display";
 import {
 	TimetablePublishInfo,
 	type TimetablePublishInfoProps,

@@ -1,4 +1,4 @@
-import type { TimetableItem } from "@/components/timetable/timetable";
+import type { TimetableItem } from "@/components/timetable/timetable-display";
 import type {
 	TimetablePublisher,
 	TimetablePublishInfoProps,
