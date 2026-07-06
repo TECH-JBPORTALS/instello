@@ -18,8 +18,9 @@ export interface TimetableItem {
 	endHour: number;
 	subject: string;
 	room?: string;
+	batch?: string;
 	color: string;
-	teacher: TimetableTeacher;
+	teacher?: TimetableTeacher;
 }
 
 const DAYS = [
@@ -63,21 +64,24 @@ function TimetableEntry({ item }: { item: TimetableItem }) {
 				style={{ color: item.color }}
 			>
 				{item.subject}
+				{item.batch ? ` (${item.batch})` : ""}
 				{item.room ? ` (${item.room})` : ""}
 			</span>
-			<div className="flex items-center gap-1.5">
-				<Avatar size="sm">
-					{item.teacher.image ? (
-						<AvatarImage src={item.teacher.image} alt={item.teacher.name} />
-					) : null}
-					<AvatarFallback>
-						<IconUser className="size-3" />
-					</AvatarFallback>
-				</Avatar>
-				<span className="truncate text-xs text-muted-foreground">
-					{item.teacher.name}
-				</span>
-			</div>
+			{item.teacher ? (
+				<div className="flex items-center gap-1.5">
+					<Avatar size="sm">
+						{item.teacher.image ? (
+							<AvatarImage src={item.teacher.image} alt={item.teacher.name} />
+						) : null}
+						<AvatarFallback>
+							<IconUser className="size-3" />
+						</AvatarFallback>
+					</Avatar>
+					<span className="truncate text-xs text-muted-foreground">
+						{item.teacher.name}
+					</span>
+				</div>
+			) : null}
 		</div>
 	);
 }

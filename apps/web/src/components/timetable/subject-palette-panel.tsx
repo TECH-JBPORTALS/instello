@@ -12,8 +12,8 @@ export function SubjectPalettePanel({
 }) {
 	return (
 		<div className="flex flex-col gap-2 overflow-y-auto p-3">
-			{subjects.map((subject) => (
-				<DraggableSubjectItem key={subject.id} subject={subject} />
+			{subjects.map((subject, i) => (
+				<DraggableSubjectItem key={i} subject={subject} />
 			))}
 		</div>
 	);

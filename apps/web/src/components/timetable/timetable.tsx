@@ -23,7 +23,10 @@ import {
 	isPaletteDragId,
 } from "@/components/timetable/hour-span-utils";
 import { TimetableSidePanel } from "@/components/timetable/timetable-side-panel";
-import type { TimetableSubjectOption } from "@/components/timetable/types";
+import {
+	TIMETABLE_SUBJECT_TYPE_LABELS,
+	type TimetableSubjectOption,
+} from "@/components/timetable/types";
 import type { TimetableEditorController } from "@/components/timetable/use-timetable-editor";
 import { cn } from "@/lib/utils";
 
@@ -68,11 +71,22 @@ const DAYS = [
 	"Saturday",
 ];
 
+export function TimetableViewer({
+	spans,
+	className,
+}: {
+	spans: HourSpan[];
+	className?: string;
+}) {
+	return <TimetableEditor data={spans} readOnly className={className} />;
+}
+
 export function TimetableEditor({
 	days = [0, 1, 2, 3, 4, 5],
 	numberOfhours = 7,
 	className,
 	data = [],
+	readOnly = false,
 	onResize,
 	onSpanSelect,
 	selectedSpanId,
@@ -81,6 +95,7 @@ export function TimetableEditor({
 	numberOfhours?: number;
 	className?: string;
 	data?: HourSpan[];
+	readOnly?: boolean;
 	onResize?: (id: string, range: { start: number; end: number }) => void;
 	onSpanSelect?: (id: string) => void;
 	selectedSpanId?: string | null;
@@ -120,6 +135,7 @@ export function TimetableEditor({
 							dayIndex={dayIndex}
 							numberOfhours={numberOfhours}
 							sessions={data.filter((hourSpan) => hourSpan.day === dayIndex)}
+							readOnly={readOnly}
 							onResize={onResize}
 							onSpanSelect={onSpanSelect}
 							selectedSpanId={selectedSpanId}
@@ -175,6 +191,7 @@ interface DayRowProps {
 	dayIndex: number;
 	numberOfhours: number;
 	sessions: HourSpan[];
+	readOnly?: boolean;
 	onResize?: (id: string, range: { start: number; end: number }) => void;
 	onSpanSelect?: (id: string) => void;
 	selectedSpanId?: string | null;
@@ -184,6 +201,7 @@ function DayRow({
 	dayIndex,
 	numberOfhours,
 	sessions,
+	readOnly = false,
 	onResize,
 	onSpanSelect,
 	selectedSpanId,
@@ -201,27 +219,65 @@ function DayRow({
 				))}
 			</div>
 
-			{Array.from({ length: numberOfhours }).map((_, hour) => (
-				<HourDropCell
-					key={hour}
-					id={formatHourDropId(dayIndex, hour)}
-					numberOfhours={numberOfhours}
-					hour={hour}
-				/>
-			))}
+			{readOnly
+				? sessions.map((session) => (
+						<StaticHourSpan
+							key={session.id}
+							session={session}
+							numberOfhours={numberOfhours}
+						/>
+					))
+				: null}
 
-			{sessions.map((session) => (
-				<DraggableHourSpan
-					key={session.id}
-					session={session}
-					numberOfhours={numberOfhours}
-					siblings={sessions}
-					containerRef={containerRef}
-					onResize={onResize}
-					onSpanSelect={onSpanSelect}
-					isSelected={selectedSpanId === session.id}
-				/>
-			))}
+			{!readOnly
+				? Array.from({ length: numberOfhours }).map((_, hour) => (
+						<HourDropCell
+							key={hour}
+							id={formatHourDropId(dayIndex, hour)}
+							numberOfhours={numberOfhours}
+							hour={hour}
+						/>
+					))
+				: null}
+
+			{!readOnly
+				? sessions.map((session) => (
+						<DraggableHourSpan
+							key={session.id}
+							session={session}
+							numberOfhours={numberOfhours}
+							siblings={sessions}
+							containerRef={containerRef}
+							onResize={onResize}
+							onSpanSelect={onSpanSelect}
+							isSelected={selectedSpanId === session.id}
+						/>
+					))
+				: null}
+		</div>
+	);
+}
+
+function StaticHourSpan({
+	session,
+	numberOfhours,
+}: {
+	session: HourSpan;
+	numberOfhours: number;
+}) {
+	const duration = session.end - session.start;
+
+	return (
+		<div
+			className="absolute top-1 bottom-1 z-10 overflow-hidden rounded-md border shadow-sm"
+			style={{
+				left: `${(session.start / numberOfhours) * 100}%`,
+				width: `${(duration / numberOfhours) * 100}%`,
+				backgroundColor: `color-mix(in srgb, ${session.color} 20%, transparent)`,
+				borderColor: `color-mix(in srgb, ${session.color} 45%, transparent)`,
+			}}
+		>
+			<HourSpanCard span={session} />
 		</div>
 	);
 }
@@ -404,7 +460,10 @@ export function HourSpanCard({
 	onDelete,
 	className,
 }: {
-	span: Pick<HourSpan, "start" | "end" | "subject" | "room" | "color">;
+	span: Pick<
+		HourSpan,
+		"start" | "end" | "subject" | "subjectType" | "room" | "batchName" | "color"
+	>;
 	isOverlay?: boolean;
 	duration?: number;
 	onDelete?: () => void;
@@ -453,11 +512,19 @@ export function HourSpanCard({
 				) : null}
 			</div>
 
-			<div className="flex w-full flex-row gap-1.5 items-end h-fit">
-				<span className="truncate font-medium">{span.subject}</span>
+			<div className="flex w-full flex-row flex-wrap gap-x-1.5 gap-y-0.5 items-end h-fit">
+				<span className="truncate font-medium">
+					{span.subject}
+					{span.batchName ? ` (${span.batchName})` : ""}
+				</span>
+				{span.subjectType ? (
+					<span className="truncate text-[10px] mx-0.5 uppercase text-accent-foreground/60">
+						({TIMETABLE_SUBJECT_TYPE_LABELS[span.subjectType]})
+					</span>
+				) : null}
 				{span.room ? (
-					<span className="truncate text-xs text-muted-foreground">
-						{span.room}
+					<span className="truncate text-xs text-accent-foreground/60">
+						({span.room})
 					</span>
 				) : null}
 			</div>

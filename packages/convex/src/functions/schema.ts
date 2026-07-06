@@ -300,6 +300,7 @@ const tables = {
 		day: v.number(),
 		startHour: v.number(),
 		endHour: v.number(),
+		room: v.optional(v.string()),
 	}).index("by_timetable", ["timetableId"]),
 };
 

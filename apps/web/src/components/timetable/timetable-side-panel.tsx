@@ -28,7 +28,7 @@ export function TimetableSidePanel({
 	selectedSpan: HourSpan | null;
 	onBack: () => void;
 	onUpdateSpan: (
-		patch: Partial<Pick<HourSpan, "room" | "notes" | "batchId">>,
+		patch: Partial<Pick<HourSpan, "room" | "notes" | "batchId" | "batchName">>,
 	) => void;
 	onRemoveSpan: () => void;
 	className?: string;

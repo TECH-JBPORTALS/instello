@@ -31,6 +31,30 @@ export const create = insMutation({
 	},
 });
 
+/** Get latest timetable for class, or null when none exists */
+export const getOrNull = insQuery({
+	permissions: ["class:view"],
+	args: {
+		programId: vv.id("programs"),
+		classAlias: vv.string(),
+	},
+	returns: vv.union(Timetable.TimetableDtoSchema, vv.null()),
+	handler: async (ctx, args) => {
+		const cls = await Timetable.resolveClass(ctx, {
+			programId: args.programId,
+			classAlias: args.classAlias,
+			institutionId: ctx.institution._id,
+		});
+
+		const latest = await Timetable.getLatest(ctx, cls._id);
+		if (!latest) {
+			return null;
+		}
+
+		return await Timetable.toDto(ctx, latest);
+	},
+});
+
 /** Get latest timetable for class */
 export const get = insQuery({
 	permissions: ["class:view"],

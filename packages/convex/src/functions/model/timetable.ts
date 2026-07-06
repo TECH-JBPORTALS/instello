@@ -17,6 +17,7 @@ export const SlotInputSchema = vv.object({
 	day: vv.number(),
 	startHour: vv.number(),
 	endHour: vv.number(),
+	room: vv.optional(vv.string()),
 });
 
 export type SlotInput = Infer<typeof SlotInputSchema>;
@@ -41,6 +42,7 @@ export const TimetableSlotDtoSchema = vv.object({
 	day: vv.number(),
 	startHour: vv.number(),
 	endHour: vv.number(),
+	room: vv.optional(vv.string()),
 });
 
 export const TimetableDtoSchema = vv.object({
@@ -237,6 +239,7 @@ export async function toDto(
 				day: slot.day,
 				startHour: slot.startHour,
 				endHour: slot.endHour,
+				room: slot.room,
 			};
 		}),
 	);
@@ -332,6 +335,7 @@ export async function create(
 			day: slot.day,
 			startHour: slot.startHour,
 			endHour: slot.endHour,
+			room: slot.room,
 		});
 	}
 

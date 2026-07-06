@@ -7,10 +7,12 @@ export interface HourSpan {
 	end: number;
 	subjectId: string;
 	subject: string;
+	subjectType?: "theory" | "practical";
 	room: string;
 	notes: string;
 	color: string;
 	batchId?: string;
+	batchName?: string;
 }
 
 /**

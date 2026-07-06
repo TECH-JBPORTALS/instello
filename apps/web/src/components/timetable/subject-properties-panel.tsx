@@ -26,7 +26,7 @@ export function SubjectPropertiesPanel({
 	span: HourSpan;
 	batches: TimetableBatchOption[];
 	onUpdateSpan: (
-		patch: Partial<Pick<HourSpan, "room" | "notes" | "batchId">>,
+		patch: Partial<Pick<HourSpan, "room" | "notes" | "batchId" | "batchName">>,
 	) => void;
 	onRemoveSpan: () => void;
 }) {
@@ -59,8 +59,11 @@ export function SubjectPropertiesPanel({
 					value={span.batchId ?? WHOLE_CLASS_BATCH_VALUE}
 					onValueChange={(value) => {
 						if (!value) return;
+						const isWholeClass = value === WHOLE_CLASS_BATCH_VALUE;
+						const selectedBatch = batches.find((batch) => batch.id === value);
 						onUpdateSpan({
-							batchId: value === WHOLE_CLASS_BATCH_VALUE ? undefined : value,
+							batchId: isWholeClass ? undefined : value,
+							batchName: isWholeClass ? undefined : selectedBatch?.label,
 						});
 					}}
 				>

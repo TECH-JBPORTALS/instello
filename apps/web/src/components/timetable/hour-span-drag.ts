@@ -138,6 +138,7 @@ export function createSpanFromPaletteDrop(
 		...placement,
 		subjectId: subject.id,
 		subject: subject.name,
+		subjectType: subject.type,
 		room: "",
 		notes: "",
 		color: subject.color,

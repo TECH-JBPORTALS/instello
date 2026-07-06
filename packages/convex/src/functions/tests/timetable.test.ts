@@ -373,6 +373,40 @@ describe("timetables.create", () => {
 		expect(result.slots[0]?.batch?.name).toBe("B01");
 		expect(result.slots[1]?.batch?.name).toBe("B02");
 	});
+
+	test("persists room on slots", async ({
+		ins1,
+		programs,
+		classes,
+		subjects,
+		asOwner,
+		user1,
+	}) => {
+		const result = await asOwner(user1, ins1).mutation(
+			api.timetables.create,
+			withSlug(ins1, {
+				programId: programs.me._id,
+				classAlias: classes.class1.slug,
+				changeMessage: "With rooms",
+				slots: [
+					{
+						subjectId: subjects.math._id,
+						day: 0,
+						startHour: 0,
+						endHour: 1,
+						room: "101",
+					},
+				],
+			}),
+		);
+
+		expect(result.slots[0]).toMatchObject({
+			day: 0,
+			startHour: 0,
+			endHour: 1,
+			room: "101",
+		});
+	});
 });
 
 describe("timetables.get", () => {
@@ -432,6 +466,60 @@ describe("timetables.get", () => {
 			),
 			ERROR_CODES.TIMETABLE.NOT_FOUND,
 		);
+	});
+});
+
+describe("timetables.getOrNull", () => {
+	const test = timetableTest;
+
+	test("returns null when no timetable exists", async ({
+		ins1,
+		programs,
+		classes,
+		asOwner,
+		user1,
+	}) => {
+		const result = await asOwner(user1, ins1).query(
+			api.timetables.getOrNull,
+			withSlug(ins1, {
+				programId: programs.me._id,
+				classAlias: classes.class1.slug,
+			}),
+		);
+
+		expect(result).toBeNull();
+	});
+
+	test("returns latest timetable when one exists", async ({
+		ins1,
+		programs,
+		classes,
+		subjects,
+		asOwner,
+		user1,
+	}) => {
+		await asOwner(user1, ins1).mutation(
+			api.timetables.create,
+			withSlug(
+				ins1,
+				createInput({
+					programId: programs.me._id,
+					classAlias: classes.class1.slug,
+					mathId: subjects.math._id,
+					scienceId: subjects.appliedScience._id,
+				}),
+			),
+		);
+
+		const result = await asOwner(user1, ins1).query(
+			api.timetables.getOrNull,
+			withSlug(ins1, {
+				programId: programs.me._id,
+				classAlias: classes.class1.slug,
+			}),
+		);
+
+		expect(result?.version).toBe(1);
 	});
 });
 

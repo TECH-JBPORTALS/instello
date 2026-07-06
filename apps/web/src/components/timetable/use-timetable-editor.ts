@@ -61,7 +61,11 @@ export function useTimetableEditor({
 	}, []);
 
 	const updateSelectedSpan = useCallback(
-		(patch: Partial<Pick<HourSpan, "room" | "notes" | "batchId">>) => {
+		(
+			patch: Partial<
+				Pick<HourSpan, "room" | "notes" | "batchId" | "batchName">
+			>,
+		) => {
 			if (!selectedSpanId) return;
 			setSpans((current) =>
 				current.map((span) =>

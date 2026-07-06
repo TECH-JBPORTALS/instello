@@ -107,7 +107,6 @@ export function TimetablesPage() {
 export function ProgramClassTimetablePage() {
 	const programAlias = useProgramAlias();
 	const classSlug = useClassSlug();
-	const { publishInfo, versionHistory } = getClassMockTimetableInfo(classSlug);
 
 	return (
 		<>
@@ -127,8 +126,6 @@ export function ProgramClassTimetablePage() {
 
 			<TimetableView
 				basePath={programPath(programAlias, `timetables/${classSlug}`)}
-				publishInfo={publishInfo}
-				versionHistory={versionHistory}
 			/>
 		</>
 	);
