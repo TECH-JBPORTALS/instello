@@ -91,6 +91,7 @@ describe("timetables.create", () => {
 	});
 
 	test("creates version 1 with slots including day", async ({
+		t,
 		ins1,
 		programs,
 		classes,
@@ -129,6 +130,11 @@ describe("timetables.create", () => {
 			firstName: expect.any(String),
 			lastName: expect.any(String),
 		});
+
+		const registers = await t.run((ctx) =>
+			ctx.db.query("attendanceRegisters").collect(),
+		);
+		expect(registers).toHaveLength(2);
 	});
 
 	test("bumps version on second create", async ({

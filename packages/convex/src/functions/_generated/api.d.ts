@@ -10,11 +10,13 @@
 
 import type * as academicPatterns from "../academicPatterns.js";
 import type * as academicStages from "../academicStages.js";
+import type * as attendance from "../attendance.js";
 import type * as auth from "../auth.js";
 import type * as classBatches from "../classBatches.js";
 import type * as classes from "../classes.js";
 import type * as faculty from "../faculty.js";
 import type * as helpers_academicPatternTemplates from "../helpers/academicPatternTemplates.js";
+import type * as helpers_academicSchedule from "../helpers/academicSchedule.js";
 import type * as helpers_auth from "../helpers/auth.js";
 import type * as helpers_constants from "../helpers/constants.js";
 import type * as helpers_customFunctions from "../helpers/customFunctions.js";
@@ -25,6 +27,9 @@ import type * as http from "../http.js";
 import type * as institutions from "../institutions.js";
 import type * as model_academicPattern from "../model/academicPattern.js";
 import type * as model_academicStage from "../model/academicStage.js";
+import type * as model_attendanceRecord from "../model/attendanceRecord.js";
+import type * as model_attendanceRegister from "../model/attendanceRegister.js";
+import type * as model_attendanceSession from "../model/attendanceSession.js";
 import type * as model_class from "../model/class.js";
 import type * as model_classBatch from "../model/classBatch.js";
 import type * as model_faculty from "../model/faculty.js";
@@ -59,11 +64,13 @@ import type {
 declare const fullApi: ApiFromModules<{
   academicPatterns: typeof academicPatterns;
   academicStages: typeof academicStages;
+  attendance: typeof attendance;
   auth: typeof auth;
   classBatches: typeof classBatches;
   classes: typeof classes;
   faculty: typeof faculty;
   "helpers/academicPatternTemplates": typeof helpers_academicPatternTemplates;
+  "helpers/academicSchedule": typeof helpers_academicSchedule;
   "helpers/auth": typeof helpers_auth;
   "helpers/constants": typeof helpers_constants;
   "helpers/customFunctions": typeof helpers_customFunctions;
@@ -74,6 +81,9 @@ declare const fullApi: ApiFromModules<{
   institutions: typeof institutions;
   "model/academicPattern": typeof model_academicPattern;
   "model/academicStage": typeof model_academicStage;
+  "model/attendanceRecord": typeof model_attendanceRecord;
+  "model/attendanceRegister": typeof model_attendanceRegister;
+  "model/attendanceSession": typeof model_attendanceSession;
   "model/class": typeof model_class;
   "model/classBatch": typeof model_classBatch;
   "model/faculty": typeof model_faculty;

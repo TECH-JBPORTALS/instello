@@ -1,6 +1,7 @@
 "use client";
 
 import { api } from "@instello/convex/api";
+import type { Id } from "@instello/convex/dataModel";
 import {
 	Avatar,
 	AvatarFallback,
@@ -31,6 +32,7 @@ import {
 	ItemMedia,
 	ItemTitle,
 } from "@instello/ui/components/item";
+import { Skeleton } from "@instello/ui/components/skeleton";
 import {
 	Tabs,
 	TabsContent,
@@ -53,19 +55,15 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Fragment, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import Container from "@/components/common/container";
 import { useInsQuery } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
 import { classPath } from "@/lib/class-path";
-import { CLASS_ATTENDANCE_REGISTERS_MOCK } from "./dummy-attendance-data";
-import {
-	type AttendanceSessionMock,
-	type AttendanceSessionStatus,
-	CLASS_ATTENDANCE_SESSION_GROUPS,
-} from "./dummy-attendance-sessions-data";
+import { getAttendanceTimeContext } from "./attendance-time";
 import { MarkAttendanceSheet } from "./mark-attendance-sheet";
+import type { AttendanceSessionDto, AttendanceSessionStatus } from "./types";
 
 interface SessionAction {
 	label: string;
@@ -163,8 +161,8 @@ function SessionItem({
 	session,
 	onMarkAttendance,
 }: {
-	session: AttendanceSessionMock;
-	onMarkAttendance: (session: AttendanceSessionMock) => void;
+	session: AttendanceSessionDto;
+	onMarkAttendance: (session: AttendanceSessionDto) => void;
 }) {
 	const isOngoing = session.status === "ongoing";
 	const actions = getSessionActions(session.status, () =>
@@ -183,6 +181,9 @@ function SessionItem({
 						<IconClock className="size-3" />
 						{session.timeRange}
 					</Badge>
+					{session.inGracePeriod ? (
+						<Badge variant="destructive">Mark attendance</Badge>
+					) : null}
 					<SessionStatusBadge status={session.status} />
 				</ItemTitle>
 				<div className="flex items-center gap-1.5">
@@ -252,21 +253,28 @@ export function AttendanceRegisterView() {
 	const programAlias = useProgramAlias();
 	const classSlug = useClassSlug();
 	const registersPath = classPath(programAlias, classSlug, "attendance");
+	const registerId = params.registerId as Id<"attendanceRegisters"> | undefined;
 
-	const program = useInsQuery(api.programs.getByAlias, {
-		alias: programAlias,
-	});
-	const cls = useInsQuery(
-		api.classes.getBySlug,
-		program && classSlug ? { programId: program._id, classSlug } : "skip",
+	const timeContext = useMemo(() => getAttendanceTimeContext(), []);
+
+	const register = useInsQuery(
+		api.attendance.getRegister,
+		registerId ? { registerId } : "skip",
+	);
+	const sessionGroups = useInsQuery(
+		api.attendance.listSessions,
+		registerId
+			? {
+					registerId,
+					...timeContext,
+					daysBack: 14,
+				}
+			: "skip",
 	);
 
 	const [markAttendanceSession, setMarkAttendanceSession] =
-		useState<AttendanceSessionMock | null>(null);
+		useState<AttendanceSessionDto | null>(null);
 
-	const register = CLASS_ATTENDANCE_REGISTERS_MOCK.find(
-		(item) => item.id === params.registerId,
-	);
 	const title = register
 		? `${register.subjectName}${
 				register.type === "practical" && register.batchLabel
@@ -300,22 +308,42 @@ export function AttendanceRegisterView() {
 				</div>
 
 				<TabsContent value="daily" className="space-y-6">
-					{CLASS_ATTENDANCE_SESSION_GROUPS.map((group) => (
-						<div key={group.id}>
-							<h3 className="mb-2 text-sm font-medium text-muted-foreground">
-								{group.label}
-							</h3>
-							<ItemGroup className="bg-card" variant="stack">
-								{group.sessions.map((session) => (
-									<SessionItem
-										key={session.id}
-										session={session}
-										onMarkAttendance={setMarkAttendanceSession}
-									/>
-								))}
-							</ItemGroup>
+					{sessionGroups === undefined ? (
+						<div className="space-y-3">
+							{Array.from({ length: 3 }).map((_, index) => (
+								<Skeleton key={index} className="h-24 w-full rounded-lg" />
+							))}
 						</div>
-					))}
+					) : sessionGroups.length === 0 ? (
+						<Empty>
+							<EmptyHeader>
+								<EmptyMedia variant="icon">
+									<IconCalendar />
+								</EmptyMedia>
+								<EmptyTitle>No sessions scheduled</EmptyTitle>
+								<EmptyDescription>
+									This register has no timetable sessions in the selected range.
+								</EmptyDescription>
+							</EmptyHeader>
+						</Empty>
+					) : (
+						sessionGroups.map((group) => (
+							<div key={group.id}>
+								<h3 className="mb-2 text-sm font-medium text-muted-foreground">
+									{group.label}
+								</h3>
+								<ItemGroup className="bg-card" variant="stack">
+									{group.sessions.map((session) => (
+										<SessionItem
+											key={session.sessionKey}
+											session={session}
+											onMarkAttendance={setMarkAttendanceSession}
+										/>
+									))}
+								</ItemGroup>
+							</div>
+						))
+					)}
 				</TabsContent>
 
 				<TabsContent value="monthly">
@@ -335,8 +363,8 @@ export function AttendanceRegisterView() {
 			</Tabs>
 
 			<MarkAttendanceSheet
+				register={register ?? null}
 				session={markAttendanceSession}
-				classId={cls?._id}
 				open={markAttendanceSession !== null}
 				onOpenChange={(open) => {
 					if (!open) setMarkAttendanceSession(null);

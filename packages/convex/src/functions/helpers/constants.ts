@@ -215,6 +215,28 @@ export const ERROR_CODES = {
 			message: "Timetable slot has invalid day or hour range",
 		},
 	},
+	ATTENDANCE: {
+		REGISTER_NOT_FOUND: {
+			code: "ATTENDANCE_REGISTER_NOT_FOUND",
+			message: "Attendance register not found",
+		},
+		REGISTER_ARCHIVED: {
+			code: "ATTENDANCE_REGISTER_ARCHIVED",
+			message: "Attendance register is archived",
+		},
+		SESSION_NOT_MARKABLE: {
+			code: "ATTENDANCE_SESSION_NOT_MARKABLE",
+			message: "Attendance cannot be marked for this session",
+		},
+		SESSION_ALREADY_MARKED: {
+			code: "ATTENDANCE_SESSION_ALREADY_MARKED",
+			message: "Attendance has already been marked for this session",
+		},
+		INVALID_STUDENT: {
+			code: "ATTENDANCE_INVALID_STUDENT",
+			message: "One or more students are not valid for this register",
+		},
+	},
 	/** Better auth organization error codes */
 	ORGANIZATION: ORGANIZATION_ERROR_CODES,
 } as const;

@@ -35,12 +35,13 @@ import { Skeleton } from "@instello/ui/components/skeleton";
 import { Switch, SwitchThumb } from "@instello/ui/components/switch";
 import { IconSearch, IconUsers } from "@tabler/icons-react";
 import { isEmpty } from "lodash";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { getStudentDisplayName } from "@/features/students/forms/shared-form";
 import { StudentAvatar } from "@/features/students/student-avatar";
-import { useInsPaginatedQuery } from "@/hooks/convex-react";
-import type { AttendanceSessionMock } from "./dummy-attendance-sessions-data";
+import { useInsMutation, useInsPaginatedQuery } from "@/hooks/convex-react";
+import type { AttendanceRegisterDto, AttendanceSessionDto } from "./types";
+import { getAttendanceTimeContext } from "./attendance-time";
 
 const ATTENDANCE_ROSTER_PAGE_SIZE = 50;
 
@@ -71,13 +72,13 @@ function PresenceSwitch({
 }
 
 export function MarkAttendanceSheet({
+	register,
 	session,
-	classId,
 	open,
 	onOpenChange,
 }: {
-	session: AttendanceSessionMock | null;
-	classId: Id<"classes"> | undefined;
+	register: AttendanceRegisterDto | null;
+	session: AttendanceSessionDto | null;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 }) {
@@ -85,12 +86,25 @@ export function MarkAttendanceSheet({
 	const [presenceByStudentId, setPresenceByStudentId] = useState<
 		Record<Id<"students">, boolean>
 	>({});
+	const [isSaving, setIsSaving] = useState(false);
+
+	const markAttendance = useInsMutation(api.attendance.mark);
 
 	const { results, status, loadMore, isLoading } = useInsPaginatedQuery(
 		api.students.list,
-		classId ? { classId } : "skip",
+		register
+			? {
+					classId: register.classId,
+					batchId: register.batchId,
+				}
+			: "skip",
 		{ initialNumItems: ATTENDANCE_ROSTER_PAGE_SIZE },
 	);
+
+	useEffect(() => {
+		if (!open || status !== "CanLoadMore") return;
+		loadMore(ATTENDANCE_ROSTER_PAGE_SIZE);
+	}, [loadMore, open, status]);
 
 	const query = searchQuery.trim().toLowerCase();
 	const students = useMemo(() => {
@@ -116,8 +130,34 @@ export function MarkAttendanceSheet({
 		setPresenceByStudentId((prev) => ({ ...prev, [studentId]: present }));
 	}
 
-	function handleSave() {
-		onOpenChange(false);
+	async function handleSave() {
+		if (!register || !session || !results || results.length === 0) {
+			onOpenChange(false);
+			return;
+		}
+
+		if (status === "CanLoadMore") {
+			return;
+		}
+
+		setIsSaving(true);
+		try {
+			await markAttendance({
+				registerId: register._id,
+				sessionDate: session.sessionDate,
+				day: session.day,
+				startHour: session.startHour,
+				endHour: session.endHour,
+				entries: results.map((student) => ({
+					studentId: student._id,
+					status: isPresent(student._id) ? "present" : "absent",
+				})),
+				...getAttendanceTimeContext(),
+			});
+			onOpenChange(false);
+		} finally {
+			setIsSaving(false);
+		}
 	}
 
 	return (
@@ -220,7 +260,16 @@ export function MarkAttendanceSheet({
 				</div>
 
 				<SheetFooter className="border-t">
-					<Button onClick={handleSave}>Save attendance</Button>
+					<Button
+						onClick={handleSave}
+						disabled={isSaving || !session || status === "CanLoadMore"}
+					>
+						{isSaving
+							? "Saving..."
+							: status === "CanLoadMore"
+								? "Loading students..."
+								: "Save attendance"}
+					</Button>
 				</SheetFooter>
 			</SheetContent>
 		</Sheet>

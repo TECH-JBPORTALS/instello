@@ -7,6 +7,7 @@ import * as Class from "./class";
 import * as ClassBatch from "./classBatch";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 import * as Program from "./program";
+import * as AttendanceRegister from "./attendanceRegister";
 
 export const TOTAL_HOURS = 7;
 export const MAX_DAY = 5;
@@ -384,6 +385,11 @@ export async function create(
 			room: slot.room,
 		});
 	}
+
+	await AttendanceRegister.syncFromTimetable(ctx, {
+		classId: args.classId,
+		slots: args.slots,
+	});
 
 	const timetable = await ctx.db.get("timetable", timetableId);
 	if (!timetable) {
