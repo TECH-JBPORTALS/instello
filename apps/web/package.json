@@ -15,6 +15,7 @@
 		"clean": "rm -rf .turbo dist .next node_modules"
 	},
 	"dependencies": {
+		"@dnd-kit/core": "^6.3.1",
 		"@instello/convex": "workspace:*",
 		"@instello/ui": "workspace:*",
 		"@tabler/icons-react": "catalog:",
@@ -25,6 +26,7 @@
 		"date-fns": "^4.4.0",
 		"framer-motion": "^12.42.0",
 		"lodash": "^4.18.1",
+		"nanoid": "^5.1.16",
 		"next": "^16.2.4",
 		"nextjs-toploader": "^3.9.17",
 		"nuqs": "^2.9.0",
@@ -32,6 +34,7 @@
 		"react": "catalog:",
 		"react-dom": "catalog:",
 		"react-infinite-scroll-component": "^7.2.1",
+		"sonner": "^2.0.7",
 		"tailwind-merge": "^3.6.0",
 		"valibot": "^1.4.1",
 		"xlsx": "^0.18.5"

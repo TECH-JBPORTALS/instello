@@ -1,7 +1,8 @@
-import type { TimetableItem } from "@/components/timetable/timetable";
+import type { TimetableItem } from "@/components/timetable/timetable-display";
 import type {
 	TimetablePublisher,
 	TimetablePublishInfoProps,
+	TimetableVersionEntry,
 } from "@/components/timetable/timetable-publish-info";
 
 const SUBJECT_COLORS = {
@@ -185,12 +186,7 @@ const PRIYA_NAIR: TimetablePublisher = {
 	image: "https://i.pravatar.cc/64?img=8",
 };
 
-export interface TimetableVersionEntry {
-	version: number;
-	publisher: TimetablePublisher;
-	message: string;
-	publishedAt: number;
-}
+export type { TimetableVersionEntry };
 
 // Newest first, matching CLASS_TIMETABLE_PUBLISH_INFO at v12.
 export const CLASS_TIMETABLE_VERSION_HISTORY: TimetableVersionEntry[] = [

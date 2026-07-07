@@ -21,7 +21,6 @@ import { TimetableView } from "@/features/c/[slug]/timetable/timetable-view";
 import ClassesView from "@/features/classes/classes-view";
 import { ProgramSubjectAllocationView } from "@/features/p/[alias]/subjects/program-subject-allocation-view";
 import { ProgramTimetablesView } from "@/features/p/[alias]/timetable/program-timetables-view";
-import { getClassMockTimetableInfo } from "@/features/timetable/dummy-timetable-data";
 import { useInsQuery, useInstitutionSlug } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
@@ -107,7 +106,6 @@ export function TimetablesPage() {
 export function ProgramClassTimetablePage() {
 	const programAlias = useProgramAlias();
 	const classSlug = useClassSlug();
-	const { publishInfo, versionHistory } = getClassMockTimetableInfo(classSlug);
 
 	return (
 		<>
@@ -127,8 +125,6 @@ export function ProgramClassTimetablePage() {
 
 			<TimetableView
 				basePath={programPath(programAlias, `timetables/${classSlug}`)}
-				publishInfo={publishInfo}
-				versionHistory={versionHistory}
 			/>
 		</>
 	);
@@ -137,12 +133,10 @@ export function ProgramClassTimetablePage() {
 export function ProgramClassTimetableHistoryPage() {
 	const programAlias = useProgramAlias();
 	const classSlug = useClassSlug();
-	const { versionHistory } = getClassMockTimetableInfo(classSlug);
 
 	return (
 		<TimetableHistoryView
 			basePath={programPath(programAlias, `timetables/${classSlug}`)}
-			versionHistory={versionHistory}
 		/>
 	);
 }

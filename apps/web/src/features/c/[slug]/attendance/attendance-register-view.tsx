@@ -1,6 +1,7 @@
 "use client";
 
 import { api } from "@instello/convex/api";
+import type { Id } from "@instello/convex/dataModel";
 import {
 	Avatar,
 	AvatarFallback,
@@ -31,6 +32,7 @@ import {
 	ItemMedia,
 	ItemTitle,
 } from "@instello/ui/components/item";
+import { Skeleton } from "@instello/ui/components/skeleton";
 import {
 	Tabs,
 	TabsContent,
@@ -39,13 +41,10 @@ import {
 } from "@instello/ui/components/tabs";
 import {
 	IconCalendar,
-	IconCheckFilled,
 	IconChevronLeft,
 	IconClipboardCheck,
 	IconClock,
-	IconClockQuestion,
 	IconDots,
-	IconFidgetSpinnerFilled,
 	IconHistory,
 	IconInfoCircle,
 	IconUser,
@@ -53,19 +52,20 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Fragment, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import Container from "@/components/common/container";
 import { useInsQuery } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
 import { classPath } from "@/lib/class-path";
-import { CLASS_ATTENDANCE_REGISTERS_MOCK } from "./dummy-attendance-data";
-import {
-	type AttendanceSessionMock,
-	type AttendanceSessionStatus,
-	CLASS_ATTENDANCE_SESSION_GROUPS,
-} from "./dummy-attendance-sessions-data";
+import { getAttendanceTimeContext } from "./attendance-time";
 import { MarkAttendanceSheet } from "./mark-attendance-sheet";
+import {
+	SessionDetailsSheet,
+	type SessionDetailsTab,
+} from "./session-details-sheet";
+import { SessionStatusBadge, SessionStatusMedia } from "./session-status";
+import type { AttendanceSessionDto, AttendanceSessionStatus } from "./types";
 
 interface SessionAction {
 	label: string;
@@ -74,107 +74,85 @@ interface SessionAction {
 	withSeparator?: boolean;
 }
 
+function canShowMarkButton(status: AttendanceSessionStatus): boolean {
+	return status === "ongoing" || status === "missed" || status === "completed";
+}
+
+function markButtonLabel(status: AttendanceSessionStatus): string {
+	return status === "completed" ? "Edit attendance" : "Mark attendance";
+}
+
 function getSessionActions(
 	status: AttendanceSessionStatus,
-	onMarkAttendance: () => void,
+	handlers: {
+		onMarkAttendance: () => void;
+		onSessionDetails: () => void;
+		onActivityLog: () => void;
+	},
 ): SessionAction[] {
-	if (status === "completed") {
-		return [
-			{ label: "Attendance", icon: IconClipboardCheck },
-			{ label: "Activity log", icon: IconHistory },
-		];
-	}
-
-	const actions: SessionAction[] = [
-		{ label: "Session details", icon: IconInfoCircle },
-		{ label: "Staff details", icon: IconUser },
-	];
-
-	if (status === "ongoing") {
-		return [
-			{
-				label: "Mark attendance",
-				icon: IconClipboardCheck,
-				onClick: onMarkAttendance,
-				withSeparator: true,
-			},
-			...actions,
-		];
-	}
-
-	return actions;
-}
-
-function SessionMedia({ status }: { status: AttendanceSessionStatus }) {
 	switch (status) {
 		case "upcoming":
-			return (
-				<Avatar
-					size="lg"
-					className="after:rounded-lg after:border-dashed after:border-muted-foreground/40"
-				>
-					<AvatarFallback className="rounded-lg bg-transparent" />
-				</Avatar>
-			);
+			return [
+				{
+					label: "Session details",
+					icon: IconInfoCircle,
+					onClick: handlers.onSessionDetails,
+				},
+			];
 		case "ongoing":
-			return (
-				<Avatar size="lg" className="after:rounded-lg after:border-warning">
-					<AvatarFallback className="rounded-lg bg-warning/10 text-warning">
-						<IconFidgetSpinnerFilled className="animate-spin duration-1000" />
-					</AvatarFallback>
-				</Avatar>
-			);
-		case "completed":
-			return (
-				<Avatar size="lg" className="after:rounded-lg after:border-success/40">
-					<AvatarFallback className="rounded-lg bg-success/10 text-success">
-						<IconCheckFilled />
-					</AvatarFallback>
-				</Avatar>
-			);
 		case "missed":
-			return (
-				<Avatar
-					size="lg"
-					className="after:rounded-lg after:border-destructive/40"
-				>
-					<AvatarFallback className="rounded-lg bg-destructive/10 text-destructive">
-						<IconClockQuestion />
-					</AvatarFallback>
-				</Avatar>
-			);
-	}
-}
-
-function SessionStatusBadge({ status }: { status: AttendanceSessionStatus }) {
-	switch (status) {
-		case "upcoming":
-			return <Badge variant="outline">Upcoming class</Badge>;
-		case "ongoing":
-			return <Badge variant="outline">Ongoing</Badge>;
-		case "missed":
-			return <Badge variant="destructive">Attendance missed</Badge>;
+			return [
+				{
+					label: "Mark attendance",
+					icon: IconClipboardCheck,
+					onClick: handlers.onMarkAttendance,
+					withSeparator: true,
+				},
+				{
+					label: "Session details",
+					icon: IconInfoCircle,
+					onClick: handlers.onSessionDetails,
+				},
+			];
 		case "completed":
-			return null;
+			return [
+				{
+					label: "Session details",
+					icon: IconInfoCircle,
+					onClick: handlers.onSessionDetails,
+				},
+				{
+					label: "Activity log",
+					icon: IconHistory,
+					onClick: handlers.onActivityLog,
+					withSeparator: true,
+				},
+			];
 	}
 }
 
 function SessionItem({
 	session,
 	onMarkAttendance,
+	onSessionDetails,
+	onActivityLog,
 }: {
-	session: AttendanceSessionMock;
-	onMarkAttendance: (session: AttendanceSessionMock) => void;
+	session: AttendanceSessionDto;
+	onMarkAttendance: (session: AttendanceSessionDto) => void;
+	onSessionDetails: (session: AttendanceSessionDto) => void;
+	onActivityLog: (session: AttendanceSessionDto) => void;
 }) {
-	const isOngoing = session.status === "ongoing";
-	const actions = getSessionActions(session.status, () =>
-		onMarkAttendance(session),
-	);
+	const showMarkButton = canShowMarkButton(session.status);
+	const actions = getSessionActions(session.status, {
+		onMarkAttendance: () => onMarkAttendance(session),
+		onSessionDetails: () => onSessionDetails(session),
+		onActivityLog: () => onActivityLog(session),
+	});
 
 	return (
 		<Item className="border-x-0 border-t-0 last:border-b-0 relative rounded-none border-border!">
 			<ItemMedia variant="icon">
-				<SessionMedia status={session.status} />
+				<SessionStatusMedia status={session.status} />
 			</ItemMedia>
 			<ItemContent>
 				<ItemTitle>
@@ -183,20 +161,30 @@ function SessionItem({
 						<IconClock className="size-3" />
 						{session.timeRange}
 					</Badge>
+					{session.inGracePeriod ? (
+						<Badge variant="destructive">Mark attendance</Badge>
+					) : null}
 					<SessionStatusBadge status={session.status} />
 				</ItemTitle>
 				<div className="flex items-center gap-1.5">
-					<Avatar size="xs">
-						{session.actor.image ? (
-							<AvatarImage src={session.actor.image} alt={session.actor.name} />
-						) : null}
-						<AvatarFallback>
-							<IconUser className="size-3" />
-						</AvatarFallback>
-					</Avatar>
-					<strong className="text-xs text-muted-foreground">
-						{session.actor.name}
-					</strong>
+					{session.actor ? (
+						<>
+							<Avatar size="xs">
+								{session.actor.image ? (
+									<AvatarImage
+										src={session.actor.image}
+										alt={session.actor.name}
+									/>
+								) : null}
+								<AvatarFallback>
+									<IconUser className="size-3" />
+								</AvatarFallback>
+							</Avatar>
+							<strong className="text-xs text-muted-foreground">
+								{session.actor.name}
+							</strong>
+						</>
+					) : null}
 					<ItemDescription className="truncate text-muted-foreground">
 						{session.description}
 					</ItemDescription>
@@ -207,14 +195,14 @@ function SessionItem({
 					) : null}
 				</div>
 			</ItemContent>
-			{isOngoing ? (
+			{showMarkButton ? (
 				<Button
 					variant="outline"
 					size="sm"
 					onClick={() => onMarkAttendance(session)}
 				>
 					<IconClipboardCheck />
-					Mark attendance
+					{markButtonLabel(session.status)}
 				</Button>
 			) : null}
 			<ItemActions>
@@ -252,21 +240,32 @@ export function AttendanceRegisterView() {
 	const programAlias = useProgramAlias();
 	const classSlug = useClassSlug();
 	const registersPath = classPath(programAlias, classSlug, "attendance");
+	const registerId = params.registerId as Id<"attendanceRegisters"> | undefined;
 
-	const program = useInsQuery(api.programs.getByAlias, {
-		alias: programAlias,
-	});
-	const cls = useInsQuery(
-		api.classes.getBySlug,
-		program && classSlug ? { programId: program._id, classSlug } : "skip",
+	const timeContext = useMemo(() => getAttendanceTimeContext(), []);
+
+	const register = useInsQuery(
+		api.attendance.getRegister,
+		registerId ? { registerId } : "skip",
+	);
+	const sessionGroups = useInsQuery(
+		api.attendance.listSessions,
+		registerId
+			? {
+					registerId,
+					...timeContext,
+					daysBack: 14,
+				}
+			: "skip",
 	);
 
 	const [markAttendanceSession, setMarkAttendanceSession] =
-		useState<AttendanceSessionMock | null>(null);
+		useState<AttendanceSessionDto | null>(null);
+	const [sessionDetailsState, setSessionDetailsState] = useState<{
+		session: AttendanceSessionDto;
+		tab: SessionDetailsTab;
+	} | null>(null);
 
-	const register = CLASS_ATTENDANCE_REGISTERS_MOCK.find(
-		(item) => item.id === params.registerId,
-	);
 	const title = register
 		? `${register.subjectName}${
 				register.type === "practical" && register.batchLabel
@@ -300,22 +299,54 @@ export function AttendanceRegisterView() {
 				</div>
 
 				<TabsContent value="daily" className="space-y-6">
-					{CLASS_ATTENDANCE_SESSION_GROUPS.map((group) => (
-						<div key={group.id}>
-							<h3 className="mb-2 text-sm font-medium text-muted-foreground">
-								{group.label}
-							</h3>
-							<ItemGroup className="bg-card" variant="stack">
-								{group.sessions.map((session) => (
-									<SessionItem
-										key={session.id}
-										session={session}
-										onMarkAttendance={setMarkAttendanceSession}
-									/>
-								))}
-							</ItemGroup>
+					{sessionGroups === undefined ? (
+						<div className="space-y-3">
+							{Array.from({ length: 3 }).map((_, index) => (
+								<Skeleton key={index} className="h-24 w-full rounded-lg" />
+							))}
 						</div>
-					))}
+					) : sessionGroups.length === 0 ? (
+						<Empty>
+							<EmptyHeader>
+								<EmptyMedia variant="icon">
+									<IconCalendar />
+								</EmptyMedia>
+								<EmptyTitle>No sessions scheduled</EmptyTitle>
+								<EmptyDescription>
+									This register has no timetable sessions in the selected range.
+								</EmptyDescription>
+							</EmptyHeader>
+						</Empty>
+					) : (
+						sessionGroups.map((group) => (
+							<div key={group.id}>
+								<h3 className="mb-2 text-sm font-medium text-muted-foreground">
+									{group.label}
+								</h3>
+								<ItemGroup className="bg-card" variant="stack">
+									{group.sessions.map((session) => (
+										<SessionItem
+											key={session.sessionKey}
+											session={session}
+											onMarkAttendance={setMarkAttendanceSession}
+											onSessionDetails={(selectedSession) =>
+												setSessionDetailsState({
+													session: selectedSession,
+													tab: "details",
+												})
+											}
+											onActivityLog={(selectedSession) =>
+												setSessionDetailsState({
+													session: selectedSession,
+													tab: "activity",
+												})
+											}
+										/>
+									))}
+								</ItemGroup>
+							</div>
+						))
+					)}
 				</TabsContent>
 
 				<TabsContent value="monthly">
@@ -335,12 +366,23 @@ export function AttendanceRegisterView() {
 			</Tabs>
 
 			<MarkAttendanceSheet
+				register={register ?? null}
 				session={markAttendanceSession}
-				classId={cls?._id}
 				open={markAttendanceSession !== null}
 				onOpenChange={(open) => {
 					if (!open) setMarkAttendanceSession(null);
 				}}
+			/>
+
+			<SessionDetailsSheet
+				register={register ?? null}
+				session={sessionDetailsState?.session ?? null}
+				initialTab={sessionDetailsState?.tab ?? "details"}
+				open={sessionDetailsState !== null}
+				onOpenChange={(open) => {
+					if (!open) setSessionDetailsState(null);
+				}}
+				onMarkAttendance={setMarkAttendanceSession}
 			/>
 		</Container>
 	);

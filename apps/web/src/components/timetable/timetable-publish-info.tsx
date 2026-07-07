@@ -33,6 +33,13 @@ export interface TimetablePublishInfoProps {
 	latestHref?: string;
 }
 
+export interface TimetableVersionEntry {
+	version: number;
+	publisher: TimetablePublisher;
+	message: string;
+	publishedAt: number;
+}
+
 export function TimetablePublishInfo({
 	publisher,
 	message,

@@ -15,6 +15,7 @@ import {
 } from "@/components/common/page-header";
 import { AttendanceRegisterView } from "@/features/c/[slug]/attendance/attendance-register-view";
 import { AttendanceView } from "@/features/c/[slug]/attendance/attendance-view";
+import { TimetableEditorView } from "@/features/c/[slug]/timetable/timetable-editor-view";
 import { TimetableHistoryView } from "@/features/c/[slug]/timetable/timetable-history-view";
 import { TimetableView } from "@/features/c/[slug]/timetable/timetable-view";
 import { ClassSettingsView } from "@/features/classes/class-settings-view";
@@ -107,6 +108,16 @@ export function TimetablePage() {
 	const classSlug = useClassSlug();
 	return (
 		<TimetableView basePath={classPath(programAlias, classSlug, "timetable")} />
+	);
+}
+
+export function TimetableEditorPage() {
+	const programAlias = useProgramAlias();
+	const classSlug = useClassSlug();
+	return (
+		<TimetableEditorView
+			basePath={classPath(programAlias, classSlug, "timetable")}
+		/>
 	);
 }
 
