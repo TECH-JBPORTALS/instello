@@ -41,13 +41,10 @@ import {
 } from "@instello/ui/components/tabs";
 import {
 	IconCalendar,
-	IconCheckFilled,
 	IconChevronLeft,
 	IconClipboardCheck,
 	IconClock,
-	IconClockQuestion,
 	IconDots,
-	IconFidgetSpinnerFilled,
 	IconHistory,
 	IconInfoCircle,
 	IconUser,
@@ -63,6 +60,11 @@ import { useProgramAlias } from "@/hooks/use-program-alias";
 import { classPath } from "@/lib/class-path";
 import { getAttendanceTimeContext } from "./attendance-time";
 import { MarkAttendanceSheet } from "./mark-attendance-sheet";
+import {
+	SessionDetailsSheet,
+	type SessionDetailsTab,
+} from "./session-details-sheet";
+import { SessionStatusBadge, SessionStatusMedia } from "./session-status";
 import type { AttendanceSessionDto, AttendanceSessionStatus } from "./types";
 
 interface SessionAction {
@@ -72,107 +74,85 @@ interface SessionAction {
 	withSeparator?: boolean;
 }
 
+function canShowMarkButton(status: AttendanceSessionStatus): boolean {
+	return status === "ongoing" || status === "missed" || status === "completed";
+}
+
+function markButtonLabel(status: AttendanceSessionStatus): string {
+	return status === "completed" ? "Edit attendance" : "Mark attendance";
+}
+
 function getSessionActions(
 	status: AttendanceSessionStatus,
-	onMarkAttendance: () => void,
+	handlers: {
+		onMarkAttendance: () => void;
+		onSessionDetails: () => void;
+		onActivityLog: () => void;
+	},
 ): SessionAction[] {
-	if (status === "completed") {
-		return [
-			{ label: "Attendance", icon: IconClipboardCheck },
-			{ label: "Activity log", icon: IconHistory },
-		];
-	}
-
-	const actions: SessionAction[] = [
-		{ label: "Session details", icon: IconInfoCircle },
-		{ label: "Staff details", icon: IconUser },
-	];
-
-	if (status === "ongoing") {
-		return [
-			{
-				label: "Mark attendance",
-				icon: IconClipboardCheck,
-				onClick: onMarkAttendance,
-				withSeparator: true,
-			},
-			...actions,
-		];
-	}
-
-	return actions;
-}
-
-function SessionMedia({ status }: { status: AttendanceSessionStatus }) {
 	switch (status) {
 		case "upcoming":
-			return (
-				<Avatar
-					size="lg"
-					className="after:rounded-lg after:border-dashed after:border-muted-foreground/40"
-				>
-					<AvatarFallback className="rounded-lg bg-transparent" />
-				</Avatar>
-			);
+			return [
+				{
+					label: "Session details",
+					icon: IconInfoCircle,
+					onClick: handlers.onSessionDetails,
+				},
+			];
 		case "ongoing":
-			return (
-				<Avatar size="lg" className="after:rounded-lg after:border-warning">
-					<AvatarFallback className="rounded-lg bg-warning/10 text-warning">
-						<IconFidgetSpinnerFilled className="animate-spin duration-1000" />
-					</AvatarFallback>
-				</Avatar>
-			);
-		case "completed":
-			return (
-				<Avatar size="lg" className="after:rounded-lg after:border-success/40">
-					<AvatarFallback className="rounded-lg bg-success/10 text-success">
-						<IconCheckFilled />
-					</AvatarFallback>
-				</Avatar>
-			);
 		case "missed":
-			return (
-				<Avatar
-					size="lg"
-					className="after:rounded-lg after:border-destructive/40"
-				>
-					<AvatarFallback className="rounded-lg bg-destructive/10 text-destructive">
-						<IconClockQuestion />
-					</AvatarFallback>
-				</Avatar>
-			);
-	}
-}
-
-function SessionStatusBadge({ status }: { status: AttendanceSessionStatus }) {
-	switch (status) {
-		case "upcoming":
-			return <Badge variant="outline">Upcoming class</Badge>;
-		case "ongoing":
-			return <Badge variant="outline">Ongoing</Badge>;
-		case "missed":
-			return <Badge variant="destructive">Attendance missed</Badge>;
+			return [
+				{
+					label: "Mark attendance",
+					icon: IconClipboardCheck,
+					onClick: handlers.onMarkAttendance,
+					withSeparator: true,
+				},
+				{
+					label: "Session details",
+					icon: IconInfoCircle,
+					onClick: handlers.onSessionDetails,
+				},
+			];
 		case "completed":
-			return null;
+			return [
+				{
+					label: "Session details",
+					icon: IconInfoCircle,
+					onClick: handlers.onSessionDetails,
+				},
+				{
+					label: "Activity log",
+					icon: IconHistory,
+					onClick: handlers.onActivityLog,
+					withSeparator: true,
+				},
+			];
 	}
 }
 
 function SessionItem({
 	session,
 	onMarkAttendance,
+	onSessionDetails,
+	onActivityLog,
 }: {
 	session: AttendanceSessionDto;
 	onMarkAttendance: (session: AttendanceSessionDto) => void;
+	onSessionDetails: (session: AttendanceSessionDto) => void;
+	onActivityLog: (session: AttendanceSessionDto) => void;
 }) {
-	const isOngoing = session.status === "ongoing";
-	const actions = getSessionActions(session.status, () =>
-		onMarkAttendance(session),
-	);
+	const showMarkButton = canShowMarkButton(session.status);
+	const actions = getSessionActions(session.status, {
+		onMarkAttendance: () => onMarkAttendance(session),
+		onSessionDetails: () => onSessionDetails(session),
+		onActivityLog: () => onActivityLog(session),
+	});
 
 	return (
 		<Item className="border-x-0 border-t-0 last:border-b-0 relative rounded-none border-border!">
 			<ItemMedia variant="icon">
-				<SessionMedia status={session.status} />
+				<SessionStatusMedia status={session.status} />
 			</ItemMedia>
 			<ItemContent>
 				<ItemTitle>
@@ -187,17 +167,24 @@ function SessionItem({
 					<SessionStatusBadge status={session.status} />
 				</ItemTitle>
 				<div className="flex items-center gap-1.5">
-					<Avatar size="xs">
-						{session.actor.image ? (
-							<AvatarImage src={session.actor.image} alt={session.actor.name} />
-						) : null}
-						<AvatarFallback>
-							<IconUser className="size-3" />
-						</AvatarFallback>
-					</Avatar>
-					<strong className="text-xs text-muted-foreground">
-						{session.actor.name}
-					</strong>
+					{session.actor ? (
+						<>
+							<Avatar size="xs">
+								{session.actor.image ? (
+									<AvatarImage
+										src={session.actor.image}
+										alt={session.actor.name}
+									/>
+								) : null}
+								<AvatarFallback>
+									<IconUser className="size-3" />
+								</AvatarFallback>
+							</Avatar>
+							<strong className="text-xs text-muted-foreground">
+								{session.actor.name}
+							</strong>
+						</>
+					) : null}
 					<ItemDescription className="truncate text-muted-foreground">
 						{session.description}
 					</ItemDescription>
@@ -208,14 +195,14 @@ function SessionItem({
 					) : null}
 				</div>
 			</ItemContent>
-			{isOngoing ? (
+			{showMarkButton ? (
 				<Button
 					variant="outline"
 					size="sm"
 					onClick={() => onMarkAttendance(session)}
 				>
 					<IconClipboardCheck />
-					Mark attendance
+					{markButtonLabel(session.status)}
 				</Button>
 			) : null}
 			<ItemActions>
@@ -274,6 +261,10 @@ export function AttendanceRegisterView() {
 
 	const [markAttendanceSession, setMarkAttendanceSession] =
 		useState<AttendanceSessionDto | null>(null);
+	const [sessionDetailsState, setSessionDetailsState] = useState<{
+		session: AttendanceSessionDto;
+		tab: SessionDetailsTab;
+	} | null>(null);
 
 	const title = register
 		? `${register.subjectName}${
@@ -338,6 +329,18 @@ export function AttendanceRegisterView() {
 											key={session.sessionKey}
 											session={session}
 											onMarkAttendance={setMarkAttendanceSession}
+											onSessionDetails={(selectedSession) =>
+												setSessionDetailsState({
+													session: selectedSession,
+													tab: "details",
+												})
+											}
+											onActivityLog={(selectedSession) =>
+												setSessionDetailsState({
+													session: selectedSession,
+													tab: "activity",
+												})
+											}
 										/>
 									))}
 								</ItemGroup>
@@ -369,6 +372,17 @@ export function AttendanceRegisterView() {
 				onOpenChange={(open) => {
 					if (!open) setMarkAttendanceSession(null);
 				}}
+			/>
+
+			<SessionDetailsSheet
+				register={register ?? null}
+				session={sessionDetailsState?.session ?? null}
+				initialTab={sessionDetailsState?.tab ?? "details"}
+				open={sessionDetailsState !== null}
+				onOpenChange={(open) => {
+					if (!open) setSessionDetailsState(null);
+				}}
+				onMarkAttendance={setMarkAttendanceSession}
 			/>
 		</Container>
 	);

@@ -328,6 +328,7 @@ const tables = {
 		timetableVersion: v.number(),
 		markedBy: v.string(),
 		markedAt: v.number(),
+		updatedAt: v.number(),
 		presentCount: v.number(),
 		absentCount: v.number(),
 	})
@@ -348,6 +349,23 @@ const tables = {
 	})
 		.index("by_record", ["recordId"])
 		.index("by_record_and_student", ["recordId", "studentId"]),
+
+	/** Audit trail for attendance mark and update actions */
+	attendanceActivityLogs: defineTable({
+		recordId: v.id("attendanceRecords"),
+		action: v.union(v.literal("marked"), v.literal("updated")),
+		performedBy: v.string(),
+		performedAt: v.number(),
+		changes: v.array(
+			v.object({
+				studentId: v.id("students"),
+				previousStatus: v.optional(
+					v.union(v.literal("present"), v.literal("absent")),
+				),
+				newStatus: v.union(v.literal("present"), v.literal("absent")),
+			}),
+		),
+	}).index("by_record", ["recordId"]),
 };
 
 const schema = defineSchema(tables);

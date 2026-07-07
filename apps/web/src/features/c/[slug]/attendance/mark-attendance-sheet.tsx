@@ -39,9 +39,13 @@ import { useEffect, useMemo, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { getStudentDisplayName } from "@/features/students/forms/shared-form";
 import { StudentAvatar } from "@/features/students/student-avatar";
-import { useInsMutation, useInsPaginatedQuery } from "@/hooks/convex-react";
-import type { AttendanceRegisterDto, AttendanceSessionDto } from "./types";
+import {
+	useInsMutation,
+	useInsPaginatedQuery,
+	useInsQuery,
+} from "@/hooks/convex-react";
 import { getAttendanceTimeContext } from "./attendance-time";
+import type { AttendanceRegisterDto, AttendanceSessionDto } from "./types";
 
 const ATTENDANCE_ROSTER_PAGE_SIZE = 50;
 
@@ -90,6 +94,22 @@ export function MarkAttendanceSheet({
 
 	const markAttendance = useInsMutation(api.attendance.mark);
 
+	const existingEntries = useInsQuery(
+		api.attendance.getSessionEntries,
+		register && session?.recordId && open
+			? {
+					registerId: register._id,
+					sessionDate: session.sessionDate,
+					day: session.day,
+					startHour: session.startHour,
+					endHour: session.endHour,
+				}
+			: "skip",
+	);
+
+	const isLoadingEntries =
+		open && session?.recordId !== undefined && existingEntries === undefined;
+
 	const { results, status, loadMore, isLoading } = useInsPaginatedQuery(
 		api.students.list,
 		register
@@ -100,6 +120,28 @@ export function MarkAttendanceSheet({
 			: "skip",
 		{ initialNumItems: ATTENDANCE_ROSTER_PAGE_SIZE },
 	);
+
+	useEffect(() => {
+		if (!open) {
+			setPresenceByStudentId({});
+			setSearchQuery("");
+			return;
+		}
+
+		if (session?.recordId && existingEntries === undefined) {
+			return;
+		}
+
+		if (existingEntries && existingEntries.length > 0) {
+			const next: Record<Id<"students">, boolean> = {};
+			for (const entry of existingEntries) {
+				next[entry.studentId] = entry.status === "present";
+			}
+			setPresenceByStudentId(next);
+		} else if (!session?.recordId) {
+			setPresenceByStudentId({});
+		}
+	}, [existingEntries, open, session?.recordId]);
 
 	useEffect(() => {
 		if (!open || status !== "CanLoadMore") return;
@@ -164,7 +206,9 @@ export function MarkAttendanceSheet({
 		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
 				<SheetHeader className="border-b">
-					<SheetTitle>Mark Attendance</SheetTitle>
+					<SheetTitle>
+						{session?.recordId ? "Edit Attendance" : "Mark Attendance"}
+					</SheetTitle>
 					{session ? (
 						<SheetDescription>
 							{session.hourLabel} · {session.timeRange}
@@ -194,7 +238,7 @@ export function MarkAttendanceSheet({
 					id="mark-attendance-scroll"
 					className="min-h-0 flex-1 overflow-y-auto px-4 pb-4"
 				>
-					{status === "LoadingFirstPage" ? (
+					{status === "LoadingFirstPage" || isLoadingEntries ? (
 						<div className="space-y-3">
 							{Array.from({ length: 6 }).map((_, i) => (
 								<Skeleton key={i} className="h-12 w-full rounded-lg" />
@@ -262,13 +306,20 @@ export function MarkAttendanceSheet({
 				<SheetFooter className="border-t">
 					<Button
 						onClick={handleSave}
-						disabled={isSaving || !session || status === "CanLoadMore"}
+						disabled={
+							isSaving ||
+							!session ||
+							status === "CanLoadMore" ||
+							isLoadingEntries
+						}
 					>
 						{isSaving
 							? "Saving..."
-							: status === "CanLoadMore"
+							: status === "CanLoadMore" || isLoadingEntries
 								? "Loading students..."
-								: "Save attendance"}
+								: session?.recordId
+									? "Update attendance"
+									: "Save attendance"}
 					</Button>
 				</SheetFooter>
 			</SheetContent>

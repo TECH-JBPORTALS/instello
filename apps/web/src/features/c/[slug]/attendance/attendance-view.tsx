@@ -30,7 +30,7 @@ import {
 } from "@tabler/icons-react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Container from "@/components/common/container";
 import {
 	PageHeader,
@@ -44,13 +44,15 @@ import { useInsMutation, useInsQuery } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
 import { classPath } from "@/lib/class-path";
-import type { AttendanceRegisterDto } from "./types";
+import { getAttendanceTimeContext } from "./attendance-time";
+import { RegisterSessionStatusBadge } from "./session-status";
 
 export function AttendanceView() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [debouncedSearch, setDebouncedSearch] = useState("");
 	const programAlias = useProgramAlias();
 	const classSlug = useClassSlug();
+	const timeContext = useMemo(() => getAttendanceTimeContext(), []);
 	const program = useInsQuery(api.programs.getByAlias, { alias: programAlias });
 	const cls = useInsQuery(
 		api.classes.getBySlug,
@@ -59,7 +61,9 @@ export function AttendanceView() {
 
 	const registers = useInsQuery(
 		api.attendance.listRegisters,
-		program && classSlug ? { programId: program._id, classSlug } : "skip",
+		program && classSlug
+			? { programId: program._id, classSlug, ...timeContext }
+			: "skip",
 	);
 	const bootstrapRegisters = useInsMutation(api.attendance.bootstrapRegisters);
 
@@ -161,6 +165,11 @@ export function AttendanceView() {
 										</Badge>
 										{isPractical && register.batchLabel ? (
 											<Badge variant="outline">{register.batchLabel}</Badge>
+										) : null}
+										{register.currentSession ? (
+											<RegisterSessionStatusBadge
+												status={register.currentSession.status}
+											/>
 										) : null}
 									</ItemTitle>
 									{register.activity ? (

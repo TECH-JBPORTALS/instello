@@ -3,11 +3,11 @@ import { components } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import { vv } from "../schema";
+import * as AttendanceRegister from "./attendanceRegister";
 import * as Class from "./class";
 import * as ClassBatch from "./classBatch";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 import * as Program from "./program";
-import * as AttendanceRegister from "./attendanceRegister";
 
 export const TOTAL_HOURS = 7;
 export const MAX_DAY = 5;

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { HourSpan } from "./hour-span-utils";
 import {
 	canPlaceSpan,
 	computeSubRowLayout,
@@ -8,7 +9,6 @@ import {
 	hourRangesOverlap,
 	spansConflict,
 } from "./hour-span-utils";
-import type { HourSpan } from "./hour-span-utils";
 import type { TimetableBatchOption } from "./types";
 
 function span(overrides: Partial<HourSpan> & Pick<HourSpan, "id">): HourSpan {

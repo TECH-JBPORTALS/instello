@@ -37,7 +37,9 @@ export function endOfDayMs(
 	sessionDate: string,
 	timezoneOffsetMinutes: number,
 ): number {
-	return sessionDateToDayStartMs(sessionDate, timezoneOffsetMinutes) + MS_PER_DAY - 1;
+	return (
+		sessionDateToDayStartMs(sessionDate, timezoneOffsetMinutes) + MS_PER_DAY - 1
+	);
 }
 
 export function sessionDateFromNow(
@@ -57,7 +59,10 @@ export function weekdayFromSessionDate(
 	sessionDate: string,
 	timezoneOffsetMinutes: number,
 ): number {
-	const dayStartMs = sessionDateToDayStartMs(sessionDate, timezoneOffsetMinutes);
+	const dayStartMs = sessionDateToDayStartMs(
+		sessionDate,
+		timezoneOffsetMinutes,
+	);
 	const localMs = dayStartMs - timezoneOffsetMinutes * 60 * 1000;
 	const utcDay = new Date(localMs).getUTCDay();
 	return utcDay === 0 ? 6 : utcDay - 1;

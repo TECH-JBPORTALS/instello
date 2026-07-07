@@ -3,6 +3,8 @@ import { components } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import { vv } from "../schema";
+import * as AttendanceActivityLog from "./attendanceActivityLog";
+import * as AttendanceSession from "./attendanceSession";
 import * as Class from "./class";
 import * as ClassBatch from "./classBatch";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
@@ -24,6 +26,19 @@ export const RegisterActivitySchema = vv.object({
 	updatedAt: vv.number(),
 });
 
+export const RegisterCurrentSessionSchema = vv.object({
+	status: AttendanceSession.SessionStatusSchema,
+	hourLabel: vv.string(),
+	timeRange: vv.string(),
+	description: vv.string(),
+	inGracePeriod: vv.boolean(),
+	sessionDate: vv.string(),
+	day: vv.number(),
+	startHour: vv.number(),
+	endHour: vv.number(),
+	stats: vv.optional(vv.string()),
+});
+
 export const AttendanceRegisterDtoSchema = vv.object({
 	_id: vv.id("attendanceRegisters"),
 	classId: vv.id("classes"),
@@ -36,6 +51,7 @@ export const AttendanceRegisterDtoSchema = vv.object({
 	type: vv.union(vv.literal("theory"), vv.literal("practical")),
 	batchLabel: vv.optional(vv.string()),
 	activity: vv.optional(RegisterActivitySchema),
+	currentSession: vv.optional(RegisterCurrentSessionSchema),
 	createdAt: vv.number(),
 	updatedAt: vv.number(),
 });
@@ -185,27 +201,46 @@ export async function syncFromTimetable(
 	}
 }
 
+import * as AttendanceRecord from "./attendanceRecord";
+
 async function getLatestActivity(
 	ctx: AppQueryCtx | AppMutationCtx,
 	registerId: Id<"attendanceRegisters">,
 ) {
-	const records = await ctx.db
-		.query("attendanceRecords")
-		.withIndex("by_register_and_sessionDate", (q) =>
-			q.eq("registerId", registerId),
-		)
-		.order("desc")
-		.take(1);
+	const records = await AttendanceRecord.listRecordsForRegister(
+		ctx,
+		registerId,
+	);
+	if (records.length === 0) return undefined;
 
-	const record = records[0];
-	if (!record) return undefined;
+	const latestRecord = records.reduce((latest, record) => {
+		const latestTime = latest.updatedAt ?? latest.markedAt;
+		const recordTime = record.updatedAt ?? record.markedAt;
+		return recordTime > latestTime ? record : latest;
+	});
+
+	const latestLog = await AttendanceActivityLog.getLatestForRecord(
+		ctx,
+		latestRecord._id,
+	);
+
+	if (latestLog) {
+		const logs = await AttendanceActivityLog.listByRecord(
+			ctx,
+			latestRecord._id,
+		);
+		const logDto = logs[0];
+		if (logDto) {
+			return await AttendanceActivityLog.toActivitySummary(ctx, logDto);
+		}
+	}
 
 	const user = await ctx.runQuery(components.betterAuth.users.getById, {
-		userId: record.markedBy,
+		userId: latestRecord.markedBy,
 	});
 	const { firstName, lastName } = splitUserName(user.name);
 	const name = `${firstName} ${lastName}`.trim();
-	const total = record.presentCount + record.absentCount;
+	const total = latestRecord.presentCount + latestRecord.absentCount;
 
 	return {
 		actor: {
@@ -213,14 +248,18 @@ async function getLatestActivity(
 			name,
 			...(user.image ? { image: user.image } : {}),
 		},
-		description: `Marked attendance (${record.presentCount}/${total})`,
-		updatedAt: record.markedAt,
+		description: `Marked attendance (${latestRecord.presentCount}/${total})`,
+		updatedAt: latestRecord.updatedAt ?? latestRecord.markedAt,
 	};
 }
 
 export async function toDto(
 	ctx: AppQueryCtx | AppMutationCtx,
 	register: Doc<"attendanceRegisters">,
+	options?: {
+		now: number;
+		timezoneOffsetMinutes: number;
+	},
 ): Promise<AttendanceRegisterDto> {
 	const cls = await Class.getById(ctx, register.classId);
 	if (!cls) {
@@ -253,7 +292,7 @@ export async function toDto(
 
 	const activity = await getLatestActivity(ctx, register._id);
 
-	return {
+	const baseDto = {
 		_id: register._id,
 		classId: register.classId,
 		subjectId: register.subjectId,
@@ -267,5 +306,38 @@ export async function toDto(
 		activity,
 		createdAt: register.createdAt,
 		updatedAt: register.updatedAt,
+	} satisfies AttendanceRegisterDto;
+
+	if (!options) {
+		return baseDto;
+	}
+
+	const highlight = await AttendanceSession.getHighlightSessionForRegister(
+		ctx,
+		{
+			register: baseDto,
+			now: options.now,
+			timezoneOffsetMinutes: options.timezoneOffsetMinutes,
+		},
+	);
+
+	return {
+		...baseDto,
+		...(highlight
+			? {
+					currentSession: {
+						status: highlight.status,
+						hourLabel: highlight.hourLabel,
+						timeRange: highlight.timeRange,
+						description: highlight.description,
+						inGracePeriod: highlight.inGracePeriod,
+						sessionDate: highlight.sessionDate,
+						day: highlight.day,
+						startHour: highlight.startHour,
+						endHour: highlight.endHour,
+						stats: highlight.stats,
+					},
+				}
+			: {}),
 	};
 }

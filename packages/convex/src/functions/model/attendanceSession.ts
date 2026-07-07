@@ -14,9 +14,9 @@ import {
 } from "../helpers/academicSchedule";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import { vv } from "../schema";
-import type { AppQueryCtx } from "./common.types";
 import * as AttendanceRecord from "./attendanceRecord";
 import type { AttendanceRegisterDto } from "./attendanceRegister";
+import type { AppQueryCtx } from "./common.types";
 
 export const SessionStatusSchema = vv.union(
 	vv.literal("upcoming"),
@@ -42,7 +42,8 @@ export const AttendanceSessionDtoSchema = vv.object({
 	hourLabel: vv.string(),
 	timeRange: vv.string(),
 	status: SessionStatusSchema,
-	actor: SessionActorSchema,
+	recordId: vv.optional(vv.id("attendanceRecords")),
+	actor: vv.optional(SessionActorSchema),
 	description: vv.string(),
 	stats: vv.optional(vv.string()),
 	updatedAt: vv.optional(vv.number()),
@@ -233,14 +234,6 @@ function ordinalSuffix(day: number): string {
 	}
 }
 
-function defaultActor(): {
-	_id?: string;
-	name: string;
-	image?: string;
-} {
-	return { name: "Staff" };
-}
-
 async function buildSessionDto(
 	ctx: AppQueryCtx,
 	args: {
@@ -261,10 +254,17 @@ async function buildSessionDto(
 		hasRecord: args.record !== undefined,
 	});
 
-	let actor = defaultActor();
-	let description = "is gonna take this class";
+	let actor:
+		| {
+				_id?: string;
+				name: string;
+				image?: string;
+		  }
+		| undefined;
+	let description = "Attendance not marked yet";
 	let stats: string | undefined;
 	let updatedAt: number | undefined;
+	const recordId = args.record?._id;
 
 	if (args.record) {
 		const user = await ctx.runQuery(components.betterAuth.users.getById, {
@@ -279,13 +279,15 @@ async function buildSessionDto(
 		const total = args.record.presentCount + args.record.absentCount;
 		stats = `${args.record.presentCount}/${total} (${Math.round((args.record.presentCount / total) * 100)}%)`;
 		description = "Marked attendance";
-		updatedAt = args.record.markedAt;
+		updatedAt = args.record.updatedAt ?? args.record.markedAt;
 	} else if (status === "ongoing" && inGracePeriod) {
 		description = "likely forgot to mark the attendance";
-	} else if (status === "ongoing") {
-		description = "in the class";
 	} else if (status === "missed") {
 		description = "Attendance was not marked in time";
+	} else if (status === "upcoming") {
+		description = "Session has not started yet";
+	} else if (status === "ongoing") {
+		description = "Session in progress";
 	}
 
 	return {
@@ -308,6 +310,7 @@ async function buildSessionDto(
 			args.occurrence.endHour,
 		),
 		status,
+		recordId,
 		actor,
 		description,
 		stats,
@@ -340,62 +343,14 @@ export async function listSessionsForRegister(
 			dayStartMs,
 			args.timezoneOffsetMinutes,
 		);
-		const weekday = weekdayFromSessionDate(
-			sessionDate,
-			args.timezoneOffsetMinutes,
-		);
 
-		const effective = await getEffectiveTimetable(ctx, {
-			classId: args.register.classId,
+		const sessions = await listSessionsForDate(ctx, {
+			register: args.register,
 			sessionDate,
+			now: args.now,
 			timezoneOffsetMinutes: args.timezoneOffsetMinutes,
 		});
-
-		if (!effective) continue;
-
-		const occurrences = filterSlotsForRegister(
-			effective.slots,
-			args.register,
-			weekday,
-		);
-		if (occurrences.length === 0) continue;
-
-		const records = await AttendanceRecord.listRecordsForRegisterOnDate(
-			ctx,
-			args.register._id,
-			sessionDate,
-		);
-		const recordByKey = new Map(
-			records.map((record) => [
-				sessionKey({
-					sessionDate: record.sessionDate,
-					day: record.day,
-					startHour: record.startHour,
-					endHour: record.endHour,
-				}),
-				record,
-			]),
-		);
-
-		const sessions = await Promise.all(
-			occurrences.map((occurrence) =>
-				buildSessionDto(ctx, {
-					register: args.register,
-					sessionDate,
-					occurrence,
-					now: args.now,
-					timezoneOffsetMinutes: args.timezoneOffsetMinutes,
-					record: recordByKey.get(
-						sessionKey({
-							sessionDate,
-							day: occurrence.day,
-							startHour: occurrence.startHour,
-							endHour: occurrence.endHour,
-						}),
-					),
-				}),
-			),
-		);
+		if (sessions.length === 0) continue;
 
 		groups.push({
 			id: sessionDate,
@@ -409,6 +364,156 @@ export async function listSessionsForRegister(
 	}
 
 	return groups;
+}
+
+export function sortSessionsForDisplay(
+	sessions: AttendanceSessionDto[],
+): AttendanceSessionDto[] {
+	return [...sessions].sort((a, b) => {
+		const aUpcoming = a.status === "upcoming";
+		const bUpcoming = b.status === "upcoming";
+		if (aUpcoming !== bUpcoming) {
+			return aUpcoming ? -1 : 1;
+		}
+		return b.startHour - a.startHour;
+	});
+}
+
+export function pickHighlightSession(
+	sessions: AttendanceSessionDto[],
+): AttendanceSessionDto | undefined {
+	if (sessions.length === 0) return undefined;
+
+	const byDescStart = (a: AttendanceSessionDto, b: AttendanceSessionDto) =>
+		b.startHour - a.startHour;
+
+	const ongoing = sessions
+		.filter((session) => session.status === "ongoing")
+		.sort(byDescStart);
+	if (ongoing[0]) return ongoing[0];
+
+	const missed = sessions
+		.filter((session) => session.status === "missed")
+		.sort(byDescStart);
+	if (missed[0]) return missed[0];
+
+	const upcoming = sessions
+		.filter((session) => session.status === "upcoming")
+		.sort((a, b) => a.startHour - b.startHour);
+	if (upcoming[0]) return upcoming[0];
+
+	const completed = sessions
+		.filter((session) => session.status === "completed")
+		.sort(byDescStart);
+	if (completed[0]) return completed[0];
+
+	return undefined;
+}
+
+async function listSessionsForDate(
+	ctx: AppQueryCtx,
+	args: {
+		register: AttendanceRegisterDto;
+		sessionDate: string;
+		now: number;
+		timezoneOffsetMinutes: number;
+	},
+): Promise<AttendanceSessionDto[]> {
+	const weekday = weekdayFromSessionDate(
+		args.sessionDate,
+		args.timezoneOffsetMinutes,
+	);
+
+	const effective = await getEffectiveTimetable(ctx, {
+		classId: args.register.classId,
+		sessionDate: args.sessionDate,
+		timezoneOffsetMinutes: args.timezoneOffsetMinutes,
+	});
+
+	if (!effective) return [];
+
+	const occurrences = filterSlotsForRegister(
+		effective.slots,
+		args.register,
+		weekday,
+	);
+	if (occurrences.length === 0) return [];
+
+	const records = await AttendanceRecord.listRecordsForRegisterOnDate(
+		ctx,
+		args.register._id,
+		args.sessionDate,
+	);
+	const recordByKey = new Map(
+		records.map((record) => [
+			sessionKey({
+				sessionDate: record.sessionDate,
+				day: record.day,
+				startHour: record.startHour,
+				endHour: record.endHour,
+			}),
+			record,
+		]),
+	);
+
+	const sessions = await Promise.all(
+		occurrences.map((occurrence) =>
+			buildSessionDto(ctx, {
+				register: args.register,
+				sessionDate: args.sessionDate,
+				occurrence,
+				now: args.now,
+				timezoneOffsetMinutes: args.timezoneOffsetMinutes,
+				record: recordByKey.get(
+					sessionKey({
+						sessionDate: args.sessionDate,
+						day: occurrence.day,
+						startHour: occurrence.startHour,
+						endHour: occurrence.endHour,
+					}),
+				),
+			}),
+		),
+	);
+
+	return sortSessionsForDisplay(sessions);
+}
+
+export async function getHighlightSessionForRegister(
+	ctx: AppQueryCtx,
+	args: {
+		register: AttendanceRegisterDto;
+		now: number;
+		timezoneOffsetMinutes: number;
+		daysBack?: number;
+	},
+): Promise<AttendanceSessionDto | undefined> {
+	const daysBack = args.daysBack ?? 7;
+	const todayDate = sessionDateFromNow(args.now, args.timezoneOffsetMinutes);
+	const todayStartMs = sessionDateToDayStartMs(
+		todayDate,
+		args.timezoneOffsetMinutes,
+	);
+
+	for (let offset = 0; offset <= daysBack; offset++) {
+		const dayStartMs = todayStartMs - offset * 24 * 60 * 60 * 1000;
+		const sessionDate = dayStartMsToSessionDate(
+			dayStartMs,
+			args.timezoneOffsetMinutes,
+		);
+		const sessions = await listSessionsForDate(ctx, {
+			register: args.register,
+			sessionDate,
+			now: args.now,
+			timezoneOffsetMinutes: args.timezoneOffsetMinutes,
+		});
+		if (sessions.length === 0) continue;
+
+		const highlight = pickHighlightSession(sessions);
+		if (highlight) return highlight;
+	}
+
+	return undefined;
 }
 
 export async function getSessionForRegister(

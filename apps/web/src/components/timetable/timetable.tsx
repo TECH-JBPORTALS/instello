@@ -20,11 +20,11 @@ import {
 	DAY_ROW_BASE_HEIGHT_PX,
 	formatHourDropId,
 	getMaxEndForResize,
-	getMinStartForResize,
 	getMaxSubRowsForDay,
+	getMinStartForResize,
 	type HourSpan,
-	type SubRowLayout,
 	isPaletteDragId,
+	type SubRowLayout,
 } from "@/components/timetable/hour-span-utils";
 import { TimetableSidePanel } from "@/components/timetable/timetable-side-panel";
 import {

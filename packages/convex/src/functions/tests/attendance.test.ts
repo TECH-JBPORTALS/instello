@@ -9,7 +9,11 @@ import {
 	weekdayFromSessionDate,
 } from "../helpers/academicSchedule";
 import { ERROR_CODES } from "../helpers/constants";
-import { computeSessionStatus } from "../model/attendanceSession";
+import {
+	computeSessionStatus,
+	pickHighlightSession,
+	sortSessionsForDisplay,
+} from "../model/attendanceSession";
 import {
 	classTest,
 	createStudentInput,
@@ -378,7 +382,174 @@ describe("attendance.mark", () => {
 		);
 	});
 
-	test("rejects marking after the grace window", async ({
+	test("allows marking after the grace window", async ({
+		t,
+		ins1,
+		programs,
+		classes,
+		subjects,
+		asOwner,
+		user1,
+	}) => {
+		const session = testSessionContext();
+		const authed = asOwner(user1, ins1);
+		await authed.mutation(
+			api.timetables.create,
+			withSlug(ins1, {
+				programId: programs.me._id,
+				classAlias: classes.class1.slug,
+				changeMessage: "Initial timetable",
+				slots: createSlots({
+					mathId: subjects.math._id,
+					scienceId: subjects.appliedScience._id,
+					day: session.day,
+				}),
+			}),
+		);
+
+		const categories = await authed.mutation(
+			api.students.ensureCategories,
+			withSlug(ins1, {}),
+		);
+
+		const studentId = await authed.mutation(
+			api.students.create,
+			withSlug(ins1, createStudentInput(classes.class1._id, categories[0]._id)),
+		);
+
+		const registers = await authed.query(
+			api.attendance.listRegisters,
+			withSlug(ins1, {
+				programId: programs.me._id,
+				classSlug: classes.class1.slug,
+			}),
+		);
+
+		// biome-ignore lint/style/noNonNullAssertion: <math register is guaranteed to be defined>
+		const mathRegister = registers.find(
+			(register) => register.subjectId === subjects.math._id,
+		)!;
+
+		const { sessionEndMs } = sessionWindowMs({
+			sessionDate: session.sessionDate,
+			startHour: 0,
+			endHour: 1,
+			timezoneOffsetMinutes: session.timezoneOffsetMinutes,
+		});
+		const now = sessionEndMs + ATTENDANCE_GRACE_PERIOD_MS + 1;
+
+		const result = await authed.mutation(
+			api.attendance.mark,
+			withSlug(ins1, {
+				registerId: mathRegister._id,
+				sessionDate: session.sessionDate,
+				day: session.day,
+				startHour: 0,
+				endHour: 1,
+				now,
+				timezoneOffsetMinutes: session.timezoneOffsetMinutes,
+				entries: [{ studentId, status: "present" }],
+			}),
+		);
+
+		expect(result.status).toBe("completed");
+
+		const logs = await t.run((ctx) =>
+			ctx.db.query("attendanceActivityLogs").collect(),
+		);
+		expect(logs).toHaveLength(1);
+		expect(logs[0]?.action).toBe("marked");
+	});
+
+	test("updates attendance and appends activity log", async ({
+		t,
+		ins1,
+		programs,
+		classes,
+		subjects,
+		asOwner,
+		user1,
+	}) => {
+		const session = testSessionContext();
+		const authed = asOwner(user1, ins1);
+		await authed.mutation(
+			api.timetables.create,
+			withSlug(ins1, {
+				programId: programs.me._id,
+				classAlias: classes.class1.slug,
+				changeMessage: "Initial timetable",
+				slots: createSlots({
+					mathId: subjects.math._id,
+					scienceId: subjects.appliedScience._id,
+					day: session.day,
+				}),
+			}),
+		);
+
+		const categories = await authed.mutation(
+			api.students.ensureCategories,
+			withSlug(ins1, {}),
+		);
+
+		const studentId = await authed.mutation(
+			api.students.create,
+			withSlug(ins1, createStudentInput(classes.class1._id, categories[0]._id)),
+		);
+
+		const registers = await authed.query(
+			api.attendance.listRegisters,
+			withSlug(ins1, {
+				programId: programs.me._id,
+				classSlug: classes.class1.slug,
+			}),
+		);
+		// biome-ignore lint/style/noNonNullAssertion: <math register is guaranteed to be defined>
+		const mathRegister = registers.find(
+			(register) => register.subjectId === subjects.math._id,
+		)!;
+
+		const markArgs = {
+			registerId: mathRegister._id,
+			sessionDate: session.sessionDate,
+			day: session.day,
+			startHour: 0,
+			endHour: 1,
+			now: session.now,
+			timezoneOffsetMinutes: session.timezoneOffsetMinutes,
+		};
+
+		await authed.mutation(
+			api.attendance.mark,
+			withSlug(ins1, {
+				...markArgs,
+				entries: [{ studentId, status: "present" }],
+			}),
+		);
+
+		await authed.mutation(
+			api.attendance.mark,
+			withSlug(ins1, {
+				...markArgs,
+				now: session.now + 60_000,
+				entries: [{ studentId, status: "absent" }],
+			}),
+		);
+
+		const logs = await t.run((ctx) =>
+			ctx.db.query("attendanceActivityLogs").collect(),
+		);
+		expect(logs).toHaveLength(2);
+		expect(logs.map((log) => log.action).sort()).toEqual(["marked", "updated"]);
+		expect(
+			logs.find((log) => log.action === "updated")?.changes[0],
+		).toMatchObject({
+			studentId,
+			previousStatus: "present",
+			newStatus: "absent",
+		});
+	});
+
+	test("rejects marking before session start", async ({
 		ins1,
 		programs,
 		classes,
@@ -409,18 +580,17 @@ describe("attendance.mark", () => {
 				classSlug: classes.class1.slug,
 			}),
 		);
-		// biome-ignore lint/style/noNonNullAssertion: <Math register is guaranteed to be defined>
+		// biome-ignore lint/style/noNonNullAssertion: <math register is guaranteed to be defined>
 		const mathRegister = registers.find(
 			(register) => register.subjectId === subjects.math._id,
 		)!;
 
-		const { sessionEndMs } = sessionWindowMs({
+		const { sessionStartMs } = sessionWindowMs({
 			sessionDate: session.sessionDate,
 			startHour: 0,
 			endHour: 1,
 			timezoneOffsetMinutes: session.timezoneOffsetMinutes,
 		});
-		const now = sessionEndMs + ATTENDANCE_GRACE_PERIOD_MS + 1;
 
 		await expectAppError(
 			authed.mutation(
@@ -431,13 +601,81 @@ describe("attendance.mark", () => {
 					day: session.day,
 					startHour: 0,
 					endHour: 1,
-					now,
+					now: sessionStartMs - 1,
 					timezoneOffsetMinutes: session.timezoneOffsetMinutes,
 					entries: [],
 				}),
 			),
 			ERROR_CODES.ATTENDANCE.SESSION_NOT_MARKABLE,
 		);
+	});
+});
+
+describe("sortSessionsForDisplay", () => {
+	it("places upcoming sessions first then sorts by descending start hour", () => {
+		const sessions = [
+			{
+				sessionKey: "a",
+				sessionDate: "2026-07-06",
+				day: 1,
+				startHour: 0,
+				endHour: 1,
+				hourLabel: "1st",
+				timeRange: "9-10",
+				status: "completed" as const,
+				description: "",
+				inGracePeriod: false,
+			},
+			{
+				sessionKey: "b",
+				sessionDate: "2026-07-06",
+				day: 1,
+				startHour: 2,
+				endHour: 3,
+				hourLabel: "3rd",
+				timeRange: "11-12",
+				status: "upcoming" as const,
+				description: "",
+				inGracePeriod: false,
+			},
+			{
+				sessionKey: "c",
+				sessionDate: "2026-07-06",
+				day: 1,
+				startHour: 1,
+				endHour: 2,
+				hourLabel: "2nd",
+				timeRange: "10-11",
+				status: "ongoing" as const,
+				description: "",
+				inGracePeriod: false,
+			},
+		];
+
+		const sorted = sortSessionsForDisplay(sessions);
+		expect(sorted.map((session) => session.startHour)).toEqual([2, 1, 0]);
+	});
+});
+
+describe("pickHighlightSession", () => {
+	it("prefers ongoing over missed and upcoming", () => {
+		const sessions = [
+			{ startHour: 0, status: "missed" },
+			{ startHour: 1, status: "ongoing" },
+			{ startHour: 2, status: "upcoming" },
+		] as Parameters<typeof pickHighlightSession>[0];
+
+		expect(pickHighlightSession(sessions)?.startHour).toBe(1);
+	});
+
+	it("prefers missed when no ongoing session", () => {
+		const sessions = [
+			{ startHour: 0, status: "completed" },
+			{ startHour: 1, status: "missed" },
+			{ startHour: 2, status: "upcoming" },
+		] as Parameters<typeof pickHighlightSession>[0];
+
+		expect(pickHighlightSession(sessions)?.startHour).toBe(1);
 	});
 });
 
