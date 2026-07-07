@@ -803,6 +803,42 @@ describe("timetables.listByProgram", () => {
 		expect(class2Entry?.timetable).toBeNull();
 	});
 
+	test("includes each class's academic stage, ordered by sequence", async ({
+		ins1,
+		programs,
+		classes,
+		academicAdoptions,
+		asOwner,
+		user1,
+	}) => {
+		const list = await asOwner(user1, ins1).query(
+			api.timetables.listByProgram,
+			withSlug(ins1, { programId: programs.me._id }),
+		);
+
+		const class1Entry = list.find(
+			(item) => item.class._id === classes.class1._id,
+		);
+		const class2Entry = list.find(
+			(item) => item.class._id === classes.class2._id,
+		);
+
+		expect(class1Entry?.class.stage._id).toBe(
+			academicAdoptions.ins1FirstStage._id,
+		);
+		expect(class2Entry?.class.stage._id).toBe(
+			academicAdoptions.ins1SecondStage._id,
+		);
+
+		const class1Index = list.findIndex(
+			(item) => item.class._id === classes.class1._id,
+		);
+		const class2Index = list.findIndex(
+			(item) => item.class._id === classes.class2._id,
+		);
+		expect(class1Index).toBeLessThan(class2Index);
+	});
+
 	test("rejects program from another institution", async ({
 		ins1,
 		programs,

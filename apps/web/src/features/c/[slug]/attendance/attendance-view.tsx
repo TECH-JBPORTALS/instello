@@ -7,6 +7,15 @@ import {
 	AvatarImage,
 } from "@instello/ui/components/avatar";
 import { Badge } from "@instello/ui/components/badge";
+import { Button } from "@instello/ui/components/button";
+import {
+	Empty,
+	EmptyContent,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "@instello/ui/components/empty";
 import {
 	InputGroup,
 	InputGroupAddon,
@@ -122,6 +131,39 @@ export function AttendanceView() {
 						<Skeleton key={index} className="h-16 w-full rounded-lg" />
 					))}
 				</div>
+			) : registers.length === 0 ? (
+				<Empty className="border border-border min-h-72 border-dashed">
+					<EmptyMedia variant="icon">
+						<IconCalendarCheck />
+					</EmptyMedia>
+					<EmptyHeader>
+						<EmptyTitle>No registers yet</EmptyTitle>
+						<EmptyDescription>
+							Attendance registers are generated from the class timetable.
+							Publish a timetable to get started.
+						</EmptyDescription>
+					</EmptyHeader>
+					<EmptyContent>
+						<Button
+							variant="outline"
+							render={
+								<Link href={classPath(programAlias, classSlug, "timetable")} />
+							}
+						>
+							Go to timetable
+						</Button>
+					</EmptyContent>
+				</Empty>
+			) : filteredRegisters.length === 0 ? (
+				<Empty className="border border-border min-h-72 border-dashed">
+					<EmptyMedia variant="icon">
+						<IconSearch />
+					</EmptyMedia>
+					<EmptyHeader>
+						<EmptyTitle>No registers found</EmptyTitle>
+						<EmptyDescription>Try a different search term.</EmptyDescription>
+					</EmptyHeader>
+				</Empty>
 			) : (
 				<ItemGroup className="bg-card" variant="stack">
 					{filteredRegisters.map((register) => {

@@ -99,6 +99,7 @@ export const ProgramTimetableListItemSchema = vv.object({
 		_id: vv.id("classes"),
 		name: vv.string(),
 		slug: vv.string(),
+		stage: Class.ClassStageSummarySchema,
 	}),
 	timetable: vv.union(TimetableDtoSchema, vv.null()),
 });
@@ -467,17 +468,35 @@ export async function listLatestByProgram(
 		.withIndex("by_program", (q) => q.eq("programId", args.programId))
 		.take(50);
 
-	return await Promise.all(
+	const items = await Promise.all(
 		classes.map(async (cls) => {
+			const stage = await ctx.db.get("academicStages", cls.currentHeadStageId);
+			if (!stage) {
+				throwAppError(ERROR_CODES.ACADEMIC_STAGE.NOT_FOUND);
+			}
+
 			const latest = await getLatest(ctx, cls._id);
 			return {
 				class: {
 					_id: cls._id,
 					name: cls.name,
 					slug: cls.slug,
+					stage: {
+						_id: stage._id,
+						name: stage.name,
+						alias: stage.alias,
+						sequenceNumber: stage.sequenceNumber,
+					},
 				},
 				timetable: latest ? await toDto(ctx, latest) : null,
 			};
 		}),
 	);
+
+	return items.sort((a, b) => {
+		if (a.class.stage.sequenceNumber !== b.class.stage.sequenceNumber) {
+			return a.class.stage.sequenceNumber - b.class.stage.sequenceNumber;
+		}
+		return a.class.name.localeCompare(b.class.name);
+	});
 }

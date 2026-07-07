@@ -113,6 +113,7 @@ export function ProgramClassTimetablePage() {
 				<PageHeader className="h-fit">
 					<PageHeaderStart>
 						<Button
+							nativeButton={false}
 							render={<Link href={programPath(programAlias, `timetables`)} />}
 							variant={"ghost"}
 							className={"rounded-full text-muted-foreground -mx-3.5"}
