@@ -1,4 +1,8 @@
+export type SidePanelTab = "subjects" | "timing";
+
 export type SidePanelState = "palette" | "properties";
+
+export type { TimetableSessionConfig } from "@instello/convex/schedule";
 
 export type TimetableSubjectType = "theory" | "practical";
 
@@ -11,7 +15,10 @@ export const TIMETABLE_SUBJECT_TYPE_LABELS: Record<
 };
 
 export interface TimetableSubjectOption {
+	/** Unique programSubjects allocation id (palette / drag key). */
 	id: string;
+	/** subjects table id persisted on timetable slots. */
+	subjectId: string;
 	name: string;
 	code?: string;
 	color: string;

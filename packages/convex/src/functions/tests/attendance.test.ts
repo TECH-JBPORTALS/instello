@@ -3,12 +3,17 @@ import { api } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import {
 	ATTENDANCE_GRACE_PERIOD_MS,
+	formatTimeRange,
 	sessionDateFromNow,
 	sessionDateToDayStartMs,
 	sessionWindowMs,
 	weekdayFromSessionDate,
 } from "../helpers/academicSchedule";
 import { ERROR_CODES } from "../helpers/constants";
+import {
+	buildDefaultPeriods,
+	DEFAULT_TIMETABLE_SESSION_CONFIG,
+} from "../helpers/timetableSchedule";
 import {
 	computeSessionStatus,
 	pickHighlightSession,
@@ -226,7 +231,66 @@ describe("attendance.listSessions", () => {
 			startHour: 0,
 			endHour: 1,
 			status: "ongoing",
+			timeRange: formatTimeRange(0, 1),
 		});
+	});
+
+	test("uses catalog time ranges from custom session config", async ({
+		ins1,
+		programs,
+		classes,
+		subjects,
+		asOwner,
+		user1,
+	}) => {
+		const session = testSessionContext();
+		const authed = asOwner(user1, ins1);
+		const sessionConfig = DEFAULT_TIMETABLE_SESSION_CONFIG;
+
+		await authed.mutation(
+			api.timetables.create,
+			withSlug(ins1, {
+				programId: programs.me._id,
+				classAlias: classes.class1.slug,
+				changeMessage: "Catalog timetable",
+				sessionConfig,
+				slots: createSlots({
+					mathId: subjects.math._id,
+					scienceId: subjects.appliedScience._id,
+					day: session.day,
+				}),
+			}),
+		);
+
+		const registers = await authed.query(
+			api.attendance.listRegisters,
+			withSlug(ins1, {
+				programId: programs.me._id,
+				classSlug: classes.class1.slug,
+			}),
+		);
+
+		const mathRegister = registers.find(
+			(register) => register.subjectId === subjects.math._id,
+		);
+		expect(mathRegister).toBeDefined();
+
+		const groups = await authed.query(
+			api.attendance.listSessions,
+			withSlug(ins1, {
+				// biome-ignore lint/style/noNonNullAssertion: mathRegister is guaranteed to be defined
+				registerId: mathRegister!._id,
+				now: session.now,
+				timezoneOffsetMinutes: session.timezoneOffsetMinutes,
+				daysBack: 0,
+			}),
+		);
+
+		const todayGroup = groups.find((group) => group.label === "Today");
+		expect(todayGroup?.sessions[0]?.timeRange).toBe(
+			formatTimeRange(0, 1, sessionConfig),
+		);
+		expect(todayGroup?.sessions[0]?.timeRange).toBe("9am to 9:45am");
 	});
 });
 
@@ -718,6 +782,98 @@ describe("computeSessionStatus", () => {
 				hasRecord: false,
 			}).status,
 		).toBe("missed");
+	});
+
+	it("uses 45-minute catalog windows for status transitions", () => {
+		const sessionConfig = DEFAULT_TIMETABLE_SESSION_CONFIG;
+		const { sessionStartMs, sessionEndMs } = sessionWindowMs({
+			config: sessionConfig,
+			sessionDate: FIXED_SESSION_DATE,
+			startHour: 0,
+			endHour: 1,
+			timezoneOffsetMinutes: TIMEZONE_OFFSET,
+		});
+
+		expect(sessionEndMs - sessionStartMs).toBe(45 * 60 * 1000);
+
+		expect(
+			computeSessionStatus({
+				now: sessionStartMs + 30 * 60 * 1000,
+				sessionDate: FIXED_SESSION_DATE,
+				startHour: 0,
+				endHour: 1,
+				timezoneOffsetMinutes: TIMEZONE_OFFSET,
+				hasRecord: false,
+				sessionConfig,
+			}),
+		).toMatchObject({ status: "ongoing", inGracePeriod: false });
+
+		expect(
+			computeSessionStatus({
+				now: sessionEndMs + ATTENDANCE_GRACE_PERIOD_MS - 1,
+				sessionDate: FIXED_SESSION_DATE,
+				startHour: 0,
+				endHour: 1,
+				timezoneOffsetMinutes: TIMEZONE_OFFSET,
+				hasRecord: false,
+				sessionConfig,
+			}),
+		).toMatchObject({ status: "ongoing", inGracePeriod: true });
+	});
+
+	it("accounts for lunch gap when computing later period status", () => {
+		const periods = buildDefaultPeriods(4);
+		const afterPeriod = 2;
+		const lunchDurationMs = 45 * 60 * 1000;
+		const lunchStart = periods[afterPeriod - 1]?.endTime;
+		const shiftedPeriods = periods.map((period, index) => {
+			if (index < afterPeriod) {
+				return period;
+			}
+			return {
+				startTime: period.startTime + lunchDurationMs,
+				endTime: period.endTime + lunchDurationMs,
+			};
+		});
+		const sessionConfig = {
+			totalHours: 4,
+			periods: shiftedPeriods,
+			lunchBreak: {
+				enabled: true,
+				afterPeriod,
+				startTime: lunchStart,
+				endTime: lunchStart + lunchDurationMs,
+			},
+		};
+
+		const beforeLunch = sessionWindowMs({
+			config: sessionConfig,
+			sessionDate: FIXED_SESSION_DATE,
+			startHour: 1,
+			endHour: 2,
+			timezoneOffsetMinutes: TIMEZONE_OFFSET,
+		});
+		const afterLunch = sessionWindowMs({
+			config: sessionConfig,
+			sessionDate: FIXED_SESSION_DATE,
+			startHour: 2,
+			endHour: 3,
+			timezoneOffsetMinutes: TIMEZONE_OFFSET,
+		});
+
+		expect(afterLunch.sessionStartMs).toBeGreaterThan(beforeLunch.sessionEndMs);
+
+		expect(
+			computeSessionStatus({
+				now: beforeLunch.sessionEndMs + 5 * 60 * 1000,
+				sessionDate: FIXED_SESSION_DATE,
+				startHour: 2,
+				endHour: 3,
+				timezoneOffsetMinutes: TIMEZONE_OFFSET,
+				hasRecord: false,
+				sessionConfig,
+			}).status,
+		).toBe("upcoming");
 	});
 });
 

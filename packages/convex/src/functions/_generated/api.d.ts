@@ -22,6 +22,7 @@ import type * as helpers_constants from "../helpers/constants.js";
 import type * as helpers_customFunctions from "../helpers/customFunctions.js";
 import type * as helpers_phone from "../helpers/phone.js";
 import type * as helpers_slug from "../helpers/slug.js";
+import type * as helpers_timetableSchedule from "../helpers/timetableSchedule.js";
 import type * as helpers_utils from "../helpers/utils.js";
 import type * as http from "../http.js";
 import type * as institutions from "../institutions.js";
@@ -78,6 +79,7 @@ declare const fullApi: ApiFromModules<{
   "helpers/customFunctions": typeof helpers_customFunctions;
   "helpers/phone": typeof helpers_phone;
   "helpers/slug": typeof helpers_slug;
+  "helpers/timetableSchedule": typeof helpers_timetableSchedule;
   "helpers/utils": typeof helpers_utils;
   http: typeof http;
   institutions: typeof institutions;

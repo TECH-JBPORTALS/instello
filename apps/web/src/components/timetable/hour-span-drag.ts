@@ -133,7 +133,7 @@ export function createSpanFromPaletteDrop(
 		day: 0,
 		start: 0,
 		end: duration,
-		subjectId: subject.id,
+		subjectId: subject.subjectId,
 		subject: subject.name,
 		room: "",
 		notes: "",
@@ -178,7 +178,7 @@ export function createSpanFromPaletteDrop(
 	return {
 		id: nanoid(),
 		...placement,
-		subjectId: subject.id,
+		subjectId: subject.subjectId,
 		subject: subject.name,
 		subjectType: subject.type,
 		room: "",

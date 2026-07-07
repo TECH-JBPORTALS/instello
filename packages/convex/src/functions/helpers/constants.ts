@@ -214,6 +214,10 @@ export const ERROR_CODES = {
 			code: "TIMETABLE_INVALID_SLOT",
 			message: "Timetable slot has invalid day or hour range",
 		},
+		INVALID_SESSION_CONFIG: {
+			code: "TIMETABLE_INVALID_SESSION_CONFIG",
+			message: "Timetable session configuration is invalid",
+		},
 	},
 	ATTENDANCE: {
 		REGISTER_NOT_FOUND: {

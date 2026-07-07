@@ -13,6 +13,8 @@ import {
 	weekdayFromSessionDate,
 } from "../helpers/academicSchedule";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
+import type { TimetableSessionConfig } from "../helpers/timetableSchedule";
+import { normalizeSessionConfig } from "../helpers/timetableSchedule";
 import { vv } from "../schema";
 import * as AttendanceRecord from "./attendanceRecord";
 import type { AttendanceRegisterDto } from "./attendanceRegister";
@@ -93,6 +95,7 @@ export function computeSessionStatus(args: {
 	endHour: number;
 	timezoneOffsetMinutes: number;
 	hasRecord: boolean;
+	sessionConfig?: TimetableSessionConfig;
 }): { status: SessionStatus; inGracePeriod: boolean } {
 	if (args.hasRecord) {
 		return { status: "completed", inGracePeriod: false };
@@ -103,6 +106,7 @@ export function computeSessionStatus(args: {
 		startHour: args.startHour,
 		endHour: args.endHour,
 		timezoneOffsetMinutes: args.timezoneOffsetMinutes,
+		config: normalizeSessionConfig(args.sessionConfig),
 	});
 
 	if (args.now < sessionStartMs) {
@@ -162,7 +166,11 @@ export async function getEffectiveTimetable(
 	}
 
 	const slots = await listSlotsForTimetable(ctx, effective._id);
-	return { timetable: effective, slots };
+	return {
+		timetable: effective,
+		slots,
+		sessionConfig: normalizeSessionConfig(effective.sessionConfig),
+	};
 }
 
 function filterSlotsForRegister(
@@ -242,6 +250,7 @@ async function buildSessionDto(
 		occurrence: SlotOccurrence;
 		now: number;
 		timezoneOffsetMinutes: number;
+		sessionConfig: TimetableSessionConfig;
 		record?: Doc<"attendanceRecords">;
 	},
 ): Promise<AttendanceSessionDto> {
@@ -252,6 +261,7 @@ async function buildSessionDto(
 		endHour: args.occurrence.endHour,
 		timezoneOffsetMinutes: args.timezoneOffsetMinutes,
 		hasRecord: args.record !== undefined,
+		sessionConfig: args.sessionConfig,
 	});
 
 	let actor:
@@ -308,6 +318,7 @@ async function buildSessionDto(
 		timeRange: formatTimeRange(
 			args.occurrence.startHour,
 			args.occurrence.endHour,
+			args.sessionConfig,
 		),
 		status,
 		recordId,
@@ -464,6 +475,7 @@ async function listSessionsForDate(
 				occurrence,
 				now: args.now,
 				timezoneOffsetMinutes: args.timezoneOffsetMinutes,
+				sessionConfig: effective.sessionConfig,
 				record: recordByKey.get(
 					sessionKey({
 						sessionDate: args.sessionDate,
@@ -528,6 +540,12 @@ export async function getSessionForRegister(
 		timezoneOffsetMinutes: number;
 	},
 ): Promise<AttendanceSessionDto> {
+	const effective = await getEffectiveTimetable(ctx, {
+		classId: args.register.classId,
+		sessionDate: args.sessionDate,
+		timezoneOffsetMinutes: args.timezoneOffsetMinutes,
+	});
+
 	const record = await AttendanceRecord.findBySessionKey(ctx, {
 		registerId: args.register._id,
 		sessionDate: args.sessionDate,
@@ -546,6 +564,7 @@ export async function getSessionForRegister(
 		},
 		now: args.now,
 		timezoneOffsetMinutes: args.timezoneOffsetMinutes,
+		sessionConfig: normalizeSessionConfig(effective?.sessionConfig),
 		record: record ?? undefined,
 	});
 }

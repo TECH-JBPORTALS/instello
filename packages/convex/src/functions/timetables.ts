@@ -12,6 +12,7 @@ export const create = insMutation({
 		classAlias: vv.string(),
 		changeMessage: vv.string(),
 		slots: vv.array(Timetable.SlotInputSchema),
+		sessionConfig: vv.optional(Timetable.TimetableSessionConfigSchema),
 	},
 	returns: Timetable.TimetableDtoSchema,
 	handler: async (ctx, args) => {
@@ -27,6 +28,7 @@ export const create = insMutation({
 			createdBy: ctx.session.userId,
 			changeMessage: args.changeMessage,
 			slots: args.slots,
+			sessionConfig: args.sessionConfig,
 		});
 	},
 });

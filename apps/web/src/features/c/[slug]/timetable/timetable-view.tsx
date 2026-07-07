@@ -182,7 +182,10 @@ export function TimetableView({ basePath }: { basePath: string }) {
 							latestHref={basePath}
 						/>
 					) : null}
-					<TimetableViewer spans={hourSpans} />
+					<TimetableViewer
+						spans={hourSpans}
+						sessionConfig={timetable.sessionConfig}
+					/>
 				</div>
 			)}
 		</Container>

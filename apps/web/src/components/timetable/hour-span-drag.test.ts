@@ -27,15 +27,19 @@ function span(overrides: Partial<HourSpan> & Pick<HourSpan, "id">): HourSpan {
 
 const subjects: TimetableSubjectOption[] = [
 	{
-		id: "subj-math",
+		id: "alloc-math",
+		subjectId: "subj-math",
 		name: "Mathematics",
 		color: "#3B82F6",
+		type: "theory",
 	},
 	{
-		id: "subj-lab",
+		id: "alloc-lab",
+		subjectId: "subj-lab",
 		name: "Lab",
 		color: "#A855F7",
 		defaultDuration: 2,
+		type: "practical",
 	},
 ];
 
@@ -133,6 +137,7 @@ describe("createSpanFromPaletteDrop", () => {
 			subjectId: "subj-math",
 			subject: "Mathematics",
 			color: "#3B82F6",
+			subjectType: "theory",
 		});
 		expect(created?.id).toBeTruthy();
 	});
@@ -166,8 +171,8 @@ describe("createSpanFromPaletteDrop", () => {
 			}),
 		];
 
-		// biome-ignore lint/style/noNonNullAssertion: <We are sure we get always subjects>
 		const created = createSpanFromPaletteDrop(
+			// biome-ignore lint/style/noNonNullAssertion: <We are sure we get always subjects>
 			subjects[0]!,
 			0,
 			0,
@@ -192,8 +197,8 @@ describe("createSpanFromPaletteDrop", () => {
 			span({ id: "b", day: 0, start: 0, end: 1, batchId: "batch-2" }),
 		];
 
-		// biome-ignore lint/style/noNonNullAssertion: <We are sure we get always subjects>
 		const created = createSpanFromPaletteDrop(
+			// biome-ignore lint/style/noNonNullAssertion: <We are sure we get always subjects>
 			subjects[0]!,
 			0,
 			0,
@@ -203,6 +208,33 @@ describe("createSpanFromPaletteDrop", () => {
 		);
 
 		expect(created).toBeNull();
+	});
+
+	it("preserves practical type when the same subject has theory and practical allocations", () => {
+		const dualSubjects: TimetableSubjectOption[] = [
+			{
+				id: "alloc-chem-theory",
+				subjectId: "subj-chem",
+				name: "Chemistry",
+				color: "#000000",
+				type: "theory",
+			},
+			{
+				id: "alloc-chem-practical",
+				subjectId: "subj-chem",
+				name: "Chemistry",
+				color: "#000000",
+				type: "practical",
+			},
+		];
+
+		// biome-ignore lint/style/noNonNullAssertion: <dualSubjects are guaranteed to be defined>
+		const created = createSpanFromPaletteDrop(dualSubjects[1]!, 0, 0, [], 7);
+
+		expect(created).toMatchObject({
+			subjectId: "subj-chem",
+			subjectType: "practical",
+		});
 	});
 });
 
@@ -277,7 +309,7 @@ describe("applyEditorDrop", () => {
 		const data = [span({ id: "math", day: 0, start: 0, end: 1 })];
 		const next = applyEditorDrop(
 			data,
-			formatPaletteDragId("subj-math"),
+			formatPaletteDragId("alloc-math"),
 			formatHourDropId(1, 2),
 			7,
 			subjects,
@@ -318,7 +350,7 @@ describe("applyEditorDrop", () => {
 
 		const next = applyEditorDrop(
 			data,
-			formatPaletteDragId("subj-math"),
+			formatPaletteDragId("alloc-math"),
 			formatHourDropId(0, 0),
 			7,
 			subjects,

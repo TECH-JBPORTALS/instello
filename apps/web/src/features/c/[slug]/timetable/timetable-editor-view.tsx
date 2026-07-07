@@ -19,11 +19,14 @@ import {
 } from "@/components/common/page-header";
 import { TimetableEditorShell } from "@/components/timetable/timetable";
 import {
+	createDefaultSessionConfig,
 	dtoToHourSpans,
+	dtoToSessionConfig,
 	hourSpansEqual,
 	hourSpansToSlotInputs,
 	mapBatches,
 	mapProgramSubjects,
+	sessionConfigEqual,
 	type TimetableDto,
 } from "@/components/timetable/timetable-mappers";
 import type {
@@ -71,8 +74,17 @@ function TimetableEditorLoaded({
 		[latestTimetable, subjects],
 	);
 
+	const initialSessionConfig = useMemo(
+		() =>
+			latestTimetable
+				? dtoToSessionConfig(latestTimetable)
+				: createDefaultSessionConfig(),
+		[latestTimetable],
+	);
+
 	const editor = useTimetableEditor({
 		initialSpans,
+		initialSessionConfig,
 		subjects,
 		batches,
 	});
@@ -80,8 +92,10 @@ function TimetableEditorLoaded({
 	const createTimetable = useInsMutation(api.timetables.create);
 
 	const hasChanges = latestTimetable
-		? !hourSpansEqual(editor.spans, initialSpans)
-		: editor.spans.length > 0;
+		? !hourSpansEqual(editor.spans, initialSpans) ||
+			!sessionConfigEqual(editor.sessionConfig, initialSessionConfig)
+		: editor.spans.length > 0 ||
+			!sessionConfigEqual(editor.sessionConfig, createDefaultSessionConfig());
 
 	async function handleSave() {
 		if (isSaving) return;
@@ -99,6 +113,12 @@ function TimetableEditorLoaded({
 			return;
 		}
 
+		if (!editor.isSessionConfigValid) {
+			toast.error("Fix session timing before saving");
+			editor.setSidePanelTab("timing");
+			return;
+		}
+
 		setIsSaving(true);
 
 		try {
@@ -107,6 +127,7 @@ function TimetableEditorLoaded({
 				classAlias: classSlug,
 				changeMessage: changeMessage.trim(),
 				slots: hourSpansToSlotInputs(editor.spans),
+				sessionConfig: editor.sessionConfig,
 			});
 			router.push(basePath);
 		} catch (error) {

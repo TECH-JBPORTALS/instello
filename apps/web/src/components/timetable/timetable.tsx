@@ -11,6 +11,7 @@ import {
 	useSensor,
 	useSensors,
 } from "@dnd-kit/core";
+import { hasLunchBreak, totalGridColumns } from "@instello/convex/schedule";
 import { Button } from "@instello/ui/components/button";
 import { IconX } from "@tabler/icons-react";
 import React from "react";
@@ -26,9 +27,18 @@ import {
 	isPaletteDragId,
 	type SubRowLayout,
 } from "@/components/timetable/hour-span-utils";
+import { createDefaultSessionConfig } from "@/components/timetable/timetable-config-utils";
+import {
+	formatLunchTimeRange,
+	getHourColumnStyle,
+	getLunchColumnStyle,
+	getPeriodHeaderLabel,
+	getSpanColumnStyle,
+} from "@/components/timetable/timetable-grid-layout";
 import { TimetableSidePanel } from "@/components/timetable/timetable-side-panel";
 import {
 	TIMETABLE_SUBJECT_TYPE_LABELS,
+	type TimetableSessionConfig,
 	type TimetableSubjectOption,
 } from "@/components/timetable/types";
 import type { TimetableEditorController } from "@/components/timetable/use-timetable-editor";
@@ -77,17 +87,26 @@ const DAYS = [
 
 export function TimetableViewer({
 	spans,
+	sessionConfig = createDefaultSessionConfig(),
 	className,
 }: {
 	spans: HourSpan[];
+	sessionConfig?: TimetableSessionConfig;
 	className?: string;
 }) {
-	return <TimetableEditor data={spans} readOnly className={className} />;
+	return (
+		<TimetableEditor
+			data={spans}
+			sessionConfig={sessionConfig}
+			readOnly
+			className={className}
+		/>
+	);
 }
 
 export function TimetableEditor({
 	days = [0, 1, 2, 3, 4, 5],
-	numberOfhours = 7,
+	sessionConfig = createDefaultSessionConfig(),
 	className,
 	data = [],
 	readOnly = false,
@@ -96,7 +115,7 @@ export function TimetableEditor({
 	selectedSpanId,
 }: {
 	days?: number[];
-	numberOfhours?: number;
+	sessionConfig?: TimetableSessionConfig;
 	className?: string;
 	data?: HourSpan[];
 	readOnly?: boolean;
@@ -104,6 +123,9 @@ export function TimetableEditor({
 	onSpanSelect?: (id: string) => void;
 	selectedSpanId?: string | null;
 }) {
+	const numberOfhours = sessionConfig.totalHours;
+	const lunchColumnStyle = getLunchColumnStyle(sessionConfig);
+
 	return (
 		<div
 			className={cn(
@@ -113,15 +135,39 @@ export function TimetableEditor({
 		>
 			<div className="flex w-full border-b bg-muted/40">
 				<div className="w-20 shrink-0 border-r p-2 text-xs font-medium text-muted-foreground" />
-				<div className="flex flex-1">
-					{Array.from({ length: numberOfhours }).map((_, index) => (
+				<div className="relative flex flex-1 py-3" style={{ minHeight: 56 }}>
+					{Array.from({ length: numberOfhours }).map((_, index) => {
+						const style = getHourColumnStyle({
+							config: sessionConfig,
+							hour: index,
+						});
+
+						return (
+							<div
+								key={`period-header-${index}`}
+								className="absolute inset-y-0 flex flex-col items-center justify-center border-r px-2 text-center last:border-r-0"
+								style={style}
+							>
+								<span className="text-sm font-medium">H{index + 1}</span>
+								<span className="text-xs text-muted-foreground">
+									{getPeriodHeaderLabel(sessionConfig, index)}
+								</span>
+							</div>
+						);
+					})}
+					{lunchColumnStyle ? (
 						<div
-							key={index}
-							className="flex-1 border-r px-2 py-3 text-center text-sm font-medium last:border-r-0"
+							className="absolute inset-y-0 flex flex-col items-center justify-center border-r bg-muted/20 px-1 text-center"
+							style={lunchColumnStyle}
 						>
-							H{index + 1}
+							<span className="text-[10px] font-medium uppercase tracking-wide">
+								Lunch
+							</span>
+							<span className="text-[10px] text-muted-foreground">
+								{formatLunchTimeRange(sessionConfig)}
+							</span>
 						</div>
-					))}
+					) : null}
 				</div>
 			</div>
 
@@ -151,6 +197,7 @@ export function TimetableEditor({
 							<DayRow
 								dayIndex={dayIndex}
 								numberOfhours={numberOfhours}
+								sessionConfig={sessionConfig}
 								rowHeight={rowHeight}
 								sessions={daySessions}
 								readOnly={readOnly}
@@ -209,6 +256,7 @@ export function TimetableEditorShell({
 interface DayRowProps {
 	dayIndex: number;
 	numberOfhours: number;
+	sessionConfig: TimetableSessionConfig;
 	rowHeight: number;
 	sessions: HourSpan[];
 	readOnly?: boolean;
@@ -234,6 +282,7 @@ function getSpanVerticalStyle(
 function DayRow({
 	dayIndex,
 	numberOfhours,
+	sessionConfig,
 	rowHeight,
 	sessions,
 	readOnly = false,
@@ -246,6 +295,11 @@ function DayRow({
 		() => computeSubRowLayout(sessions),
 		[sessions],
 	);
+	const lunchColumnStyle = getLunchColumnStyle(sessionConfig);
+	const totalColumns = totalGridColumns(
+		numberOfhours,
+		hasLunchBreak(sessionConfig),
+	);
 
 	return (
 		<div
@@ -253,13 +307,24 @@ function DayRow({
 			className="relative flex-1"
 			style={{ minHeight: rowHeight }}
 		>
-			<div className="pointer-events-none absolute inset-0 flex flex-row">
+			<div className="pointer-events-none absolute inset-0">
 				{Array.from({ length: numberOfhours }).map((_, index) => (
 					<div
 						key={index}
-						className="flex-1 border-r border-dashed border-muted-foreground/20 last:border-r-0"
+						className="absolute inset-y-0 border-r border-dashed border-muted-foreground/20 last:border-r-0"
+						style={getHourColumnStyle({ config: sessionConfig, hour: index })}
 					/>
 				))}
+				{lunchColumnStyle ? (
+					<div
+						className="absolute inset-y-0 border-r bg-muted/10"
+						style={{
+							...lunchColumnStyle,
+							backgroundImage:
+								"repeating-linear-gradient(-45deg, transparent, transparent 6px, color-mix(in oklab, var(--color-muted-foreground) 20%, transparent) 6px, color-mix(in oklab, var(--color-muted-foreground) 20%, transparent) 8px)",
+						}}
+					/>
+				) : null}
 			</div>
 
 			{readOnly
@@ -267,7 +332,7 @@ function DayRow({
 						<StaticHourSpan
 							key={session.id}
 							session={session}
-							numberOfhours={numberOfhours}
+							sessionConfig={sessionConfig}
 							verticalStyle={getSpanVerticalStyle(
 								subRowLayout.get(session.id) ?? {
 									subRowIndex: 0,
@@ -284,7 +349,7 @@ function DayRow({
 						<HourDropCell
 							key={hour}
 							id={formatHourDropId(dayIndex, hour)}
-							numberOfhours={numberOfhours}
+							sessionConfig={sessionConfig}
 							hour={hour}
 						/>
 					))
@@ -296,6 +361,8 @@ function DayRow({
 							key={session.id}
 							session={session}
 							numberOfhours={numberOfhours}
+							totalColumns={totalColumns}
+							sessionConfig={sessionConfig}
 							siblings={sessions}
 							containerRef={containerRef}
 							verticalStyle={getSpanVerticalStyle(
@@ -317,21 +384,24 @@ function DayRow({
 
 function StaticHourSpan({
 	session,
-	numberOfhours,
+	sessionConfig,
 	verticalStyle,
 }: {
 	session: HourSpan;
-	numberOfhours: number;
+	sessionConfig: TimetableSessionConfig;
 	verticalStyle: { top: number; height: number };
 }) {
-	const duration = session.end - session.start;
+	const columnStyle = getSpanColumnStyle({
+		config: sessionConfig,
+		start: session.start,
+		end: session.end,
+	});
 
 	return (
 		<div
 			className="absolute z-10 overflow-hidden rounded-md border shadow-sm"
 			style={{
-				left: `${(session.start / numberOfhours) * 100}%`,
-				width: `${(duration / numberOfhours) * 100}%`,
+				...columnStyle,
 				top: verticalStyle.top,
 				height: verticalStyle.height,
 				backgroundColor: `color-mix(in srgb, ${session.color} 20%, transparent)`,
@@ -346,11 +416,11 @@ function StaticHourSpan({
 function HourDropCell({
 	id,
 	hour,
-	numberOfhours,
+	sessionConfig,
 }: {
 	id: string;
 	hour: number;
-	numberOfhours: number;
+	sessionConfig: TimetableSessionConfig;
 }) {
 	const { setNodeRef, isOver } = useDroppable({ id });
 
@@ -358,10 +428,7 @@ function HourDropCell({
 		<div
 			ref={setNodeRef}
 			className={cn("absolute inset-y-0 z-0", isOver && "bg-primary/10")}
-			style={{
-				left: `${(hour / numberOfhours) * 100}%`,
-				width: `${(1 / numberOfhours) * 100}%`,
-			}}
+			style={getHourColumnStyle({ config: sessionConfig, hour })}
 		/>
 	);
 }
@@ -369,6 +436,8 @@ function HourDropCell({
 interface DraggableHourSpanProps {
 	session: HourSpan;
 	numberOfhours: number;
+	totalColumns: number;
+	sessionConfig: TimetableSessionConfig;
 	siblings: HourSpan[];
 	containerRef: React.RefObject<HTMLDivElement | null>;
 	verticalStyle: { top: number; height: number };
@@ -380,6 +449,8 @@ interface DraggableHourSpanProps {
 function DraggableHourSpan({
 	session,
 	numberOfhours,
+	totalColumns,
+	sessionConfig,
 	siblings,
 	containerRef,
 	verticalStyle,
@@ -395,7 +466,11 @@ function DraggableHourSpan({
 	} = useDraggable({ id: session.id });
 	const { setNodeRef: setDropRef, isOver } = useDroppable({ id: session.id });
 
-	const duration = session.end - session.start;
+	const columnStyle = getSpanColumnStyle({
+		config: sessionConfig,
+		start: session.start,
+		end: session.end,
+	});
 
 	const handleResizeStart = (
 		event: React.PointerEvent<HTMLDivElement>,
@@ -411,7 +486,7 @@ function DraggableHourSpan({
 		const startX = event.clientX;
 		const initialStart = session.start;
 		const initialEnd = session.end;
-		const hourWidth = container.getBoundingClientRect().width / numberOfhours;
+		const columnWidth = container.getBoundingClientRect().width / totalColumns;
 
 		const minStart = getMinStartForResize(siblings, session, initialEnd);
 		const maxEnd = getMaxEndForResize(
@@ -422,7 +497,7 @@ function DraggableHourSpan({
 		);
 
 		const onPointerMove = (ev: PointerEvent) => {
-			const deltaHours = Math.round((ev.clientX - startX) / hourWidth);
+			const deltaHours = Math.round((ev.clientX - startX) / columnWidth);
 
 			if (edge === "start") {
 				const newStart = Math.max(
@@ -488,8 +563,7 @@ function DraggableHourSpan({
 				isSelected && "ring-2 ring-primary",
 			)}
 			style={{
-				left: `${(session.start / numberOfhours) * 100}%`,
-				width: `${(duration / numberOfhours) * 100}%`,
+				...columnStyle,
 				top: verticalStyle.top,
 				height: verticalStyle.height,
 				backgroundColor: `color-mix(in srgb, ${session.color} 20%, transparent)`,

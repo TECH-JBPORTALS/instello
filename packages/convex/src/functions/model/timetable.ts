@@ -2,6 +2,13 @@ import type { Infer } from "convex/values";
 import { components } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
+import {
+	DEFAULT_TOTAL_HOURS,
+	MAX_TOTAL_HOURS,
+	MIN_TOTAL_HOURS,
+	normalizeSessionConfig,
+	validateSessionConfig,
+} from "../helpers/timetableSchedule";
 import { vv } from "../schema";
 import * as AttendanceRegister from "./attendanceRegister";
 import * as Class from "./class";
@@ -9,8 +16,32 @@ import * as ClassBatch from "./classBatch";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 import * as Program from "./program";
 
-export const TOTAL_HOURS = 7;
+export const MIN_TOTAL_HOURS_EXPORT = MIN_TOTAL_HOURS;
+export const DEFAULT_TOTAL_HOURS_EXPORT = DEFAULT_TOTAL_HOURS;
+export const MAX_TOTAL_HOURS_EXPORT = MAX_TOTAL_HOURS;
+/** @deprecated Use sessionConfig.totalHours from the timetable version instead. */
+export const TOTAL_HOURS = DEFAULT_TOTAL_HOURS;
 export const MAX_DAY = 5;
+
+export const PeriodTimeSchema = vv.object({
+	startTime: vv.number(),
+	endTime: vv.number(),
+});
+
+export const LunchBreakSchema = vv.object({
+	enabled: vv.boolean(),
+	afterPeriod: vv.number(),
+	startTime: vv.number(),
+	endTime: vv.number(),
+});
+
+export const TimetableSessionConfigSchema = vv.object({
+	totalHours: vv.number(),
+	periods: vv.array(PeriodTimeSchema),
+	lunchBreak: vv.optional(LunchBreakSchema),
+});
+
+export type TimetableSessionConfig = Infer<typeof TimetableSessionConfigSchema>;
 
 export const SlotInputSchema = vv.object({
 	subjectId: vv.id("subjects"),
@@ -56,6 +87,7 @@ export const TimetableDtoSchema = vv.object({
 		lastName: vv.string(),
 	}),
 	slots: vv.array(TimetableSlotDtoSchema),
+	sessionConfig: TimetableSessionConfigSchema,
 	createdAt: vv.number(),
 	updatedAt: vv.number(),
 });
@@ -96,12 +128,12 @@ type SlotRange = {
 	batchId?: Id<"classBatches">;
 };
 
-function isWithinBounds(slot: SlotRange): boolean {
+function isWithinBounds(slot: SlotRange, totalHours: number): boolean {
 	return (
 		slot.day >= 0 &&
 		slot.day <= MAX_DAY &&
 		slot.startHour >= 0 &&
-		slot.endHour <= TOTAL_HOURS &&
+		slot.endHour <= totalHours &&
 		slot.startHour < slot.endHour
 	);
 }
@@ -301,6 +333,7 @@ export async function toDto(
 			lastName,
 		},
 		slots: slotDtos,
+		sessionConfig: normalizeSessionConfig(timetable.sessionConfig),
 		createdAt: timetable.createdAt,
 		updatedAt: timetable.updatedAt,
 	};
@@ -312,10 +345,11 @@ async function validateSlots(
 		classId: Id<"classes">;
 		institutionId: string;
 		slots: SlotInput[];
+		totalHours: number;
 	},
 ) {
 	for (const slot of args.slots) {
-		if (!isWithinBounds(slot)) {
+		if (!isWithinBounds(slot, args.totalHours)) {
 			throwAppError(ERROR_CODES.TIMETABLE.INVALID_SLOT);
 		}
 	}
@@ -352,15 +386,26 @@ export async function create(
 		createdBy: string;
 		changeMessage: string;
 		slots: SlotInput[];
+		sessionConfig?: TimetableSessionConfig;
 	},
 ): Promise<TimetableDto> {
+	const latest = await getLatest(ctx, args.classId);
+	const sessionConfig = normalizeSessionConfig(
+		args.sessionConfig ?? latest?.sessionConfig,
+	);
+
+	const validationErrors = validateSessionConfig(sessionConfig);
+	if (validationErrors.length > 0) {
+		throwAppError(ERROR_CODES.TIMETABLE.INVALID_SESSION_CONFIG);
+	}
+
 	await validateSlots(ctx, {
 		classId: args.classId,
 		institutionId: args.institutionId,
 		slots: args.slots,
+		totalHours: sessionConfig.totalHours,
 	});
 
-	const latest = await getLatest(ctx, args.classId);
 	const version = latest ? latest.version + 1 : 1;
 	const now = Date.now();
 
@@ -370,6 +415,7 @@ export async function create(
 		createdBy: args.createdBy,
 		changeMessage: args.changeMessage.trim(),
 		effectiveFrom: now,
+		sessionConfig,
 		createdAt: now,
 		updatedAt: now,
 	});

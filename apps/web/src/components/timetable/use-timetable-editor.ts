@@ -1,6 +1,7 @@
 "use client";
 
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
+import { isSessionConfigValid } from "@instello/convex/schedule";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { applyEditorDrop } from "@/components/timetable/hour-span-drag";
@@ -10,31 +11,39 @@ import {
 	findConflictingSpan,
 	isPaletteDragId,
 } from "@/components/timetable/hour-span-utils";
+import { createDefaultSessionConfig } from "@/components/timetable/timetable-config-utils";
 import type {
 	SidePanelState,
+	SidePanelTab,
 	TimetableBatchOption,
+	TimetableSessionConfig,
 	TimetableSubjectOption,
 } from "@/components/timetable/types";
 
 export interface UseTimetableEditorOptions {
 	initialSpans: HourSpan[];
+	initialSessionConfig?: TimetableSessionConfig;
 	subjects: TimetableSubjectOption[];
 	batches: TimetableBatchOption[];
-	numberOfhours?: number;
 	days?: number[];
 }
 
 export function useTimetableEditor({
 	initialSpans,
+	initialSessionConfig = createDefaultSessionConfig(),
 	subjects,
 	batches,
-	numberOfhours = 7,
 	days = [0, 1, 2, 3, 4, 5],
 }: UseTimetableEditorOptions) {
 	const [spans, setSpans] = useState<HourSpan[]>(initialSpans);
+	const [sessionConfig, setSessionConfig] =
+		useState<TimetableSessionConfig>(initialSessionConfig);
+	const [sidePanelTab, setSidePanelTab] = useState<SidePanelTab>("subjects");
 	const [sidePanel, setSidePanel] = useState<SidePanelState>("palette");
 	const [selectedSpanId, setSelectedSpanId] = useState<string | null>(null);
 	const [activeDragId, setActiveDragId] = useState<string | null>(null);
+
+	const numberOfhours = sessionConfig.totalHours;
 
 	const selectedSpan = useMemo(
 		() => spans.find((span) => span.id === selectedSpanId) ?? null,
@@ -54,6 +63,7 @@ export function useTimetableEditor({
 
 	const selectSpan = useCallback((id: string) => {
 		setSelectedSpanId(id);
+		setSidePanelTab("subjects");
 		setSidePanel("properties");
 	}, []);
 
@@ -163,25 +173,36 @@ export function useTimetableEditor({
 	return {
 		spans,
 		setSpans,
+		sessionConfig,
+		setSessionConfig,
+		sidePanelTab,
+		setSidePanelTab,
 		sidePanel,
 		selectedSpan,
 		subjects,
 		batches,
 		numberOfhours,
 		days,
+		isSessionConfigValid: isSessionConfigValid(sessionConfig),
 		editorProps: {
 			data: spans,
 			days,
 			numberOfhours,
+			sessionConfig,
 			onResize: handleResize,
 			onSpanSelect: selectSpan,
 			selectedSpanId,
 		},
 		sidePanelProps: {
+			sidePanelTab,
+			setSidePanelTab,
 			sidePanel,
 			subjects,
 			batches,
 			selectedSpan,
+			sessionConfig,
+			spans,
+			onSessionConfigChange: setSessionConfig,
 			onBack: clearSelection,
 			onUpdateSpan: updateSelectedSpan,
 			onRemoveSpan: removeSelectedSpan,

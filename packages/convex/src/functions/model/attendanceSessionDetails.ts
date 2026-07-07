@@ -1,6 +1,8 @@
 import type { Infer } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import { sessionWindowMs } from "../helpers/academicSchedule";
+import type { TimetableSessionConfig } from "../helpers/timetableSchedule";
+import { normalizeSessionConfig } from "../helpers/timetableSchedule";
 import { vv } from "../schema";
 import * as AttendanceRecord from "./attendanceRecord";
 import type { AttendanceRegisterDto } from "./attendanceRegister";
@@ -56,6 +58,12 @@ export async function getSessionDetails(
 		timezoneOffsetMinutes: args.timezoneOffsetMinutes,
 	});
 
+	const effective = await AttendanceSession.getEffectiveTimetable(ctx, {
+		classId: args.register.classId,
+		sessionDate: args.sessionDate,
+		timezoneOffsetMinutes: args.timezoneOffsetMinutes,
+	});
+
 	const record = await AttendanceRecord.findBySessionKey(ctx, {
 		registerId: args.register._id,
 		sessionDate: args.sessionDate,
@@ -73,6 +81,7 @@ export async function getSessionDetails(
 		endHour: args.endHour,
 		timezoneOffsetMinutes: args.timezoneOffsetMinutes,
 		registerStatus: args.register.status,
+		sessionConfig: effective?.sessionConfig,
 	});
 
 	let presentCount: number | undefined;
@@ -135,6 +144,7 @@ function canMarkSession(args: {
 	endHour: number;
 	timezoneOffsetMinutes: number;
 	registerStatus: "active" | "archived";
+	sessionConfig?: TimetableSessionConfig;
 }): boolean {
 	if (args.registerStatus === "archived") {
 		return false;
@@ -145,6 +155,7 @@ function canMarkSession(args: {
 		startHour: args.startHour,
 		endHour: args.endHour,
 		timezoneOffsetMinutes: args.timezoneOffsetMinutes,
+		config: normalizeSessionConfig(args.sessionConfig),
 	});
 
 	return args.now >= sessionStartMs;

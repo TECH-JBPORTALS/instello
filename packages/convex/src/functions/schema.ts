@@ -288,6 +288,25 @@ const tables = {
 		createdBy: v.string(),
 		changeMessage: v.string(),
 		effectiveFrom: v.number(),
+		sessionConfig: v.optional(
+			v.object({
+				totalHours: v.number(),
+				periods: v.array(
+					v.object({
+						startTime: v.number(),
+						endTime: v.number(),
+					}),
+				),
+				lunchBreak: v.optional(
+					v.object({
+						enabled: v.boolean(),
+						afterPeriod: v.number(),
+						startTime: v.number(),
+						endTime: v.number(),
+					}),
+				),
+			}),
+		),
 		createdAt: v.number(),
 		updatedAt: v.number(),
 	}).index("by_class_and_version", ["classId", "version"]),

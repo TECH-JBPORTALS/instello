@@ -3,6 +3,10 @@ import type { Id } from "@instello/convex/dataModel";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { nanoid } from "nanoid";
 import type { HourSpan } from "@/components/timetable/hour-span-utils";
+import {
+	createDefaultSessionConfig,
+	sessionConfigsEqual,
+} from "@/components/timetable/timetable-config-utils";
 import type { TimetableItem } from "@/components/timetable/timetable-display";
 import type {
 	TimetablePublishInfoProps,
@@ -10,7 +14,9 @@ import type {
 } from "@/components/timetable/timetable-publish-info";
 import type {
 	TimetableBatchOption,
+	TimetableSessionConfig,
 	TimetableSubjectOption,
+	TimetableSubjectType,
 } from "@/components/timetable/types";
 
 export type TimetableDto = NonNullable<
@@ -33,9 +39,21 @@ export function dtoToHourSpans(
 	timetable: TimetableDto,
 	subjects: TimetableSubjectOption[] = [],
 ): HourSpan[] {
-	const subjectTypeById = new Map(
-		subjects.map((subject) => [subject.id, subject.type]),
-	);
+	const subjectTypeBySubjectId = new Map<string, TimetableSubjectType>();
+
+	for (const subject of subjects) {
+		const existing = subjectTypeBySubjectId.get(subject.subjectId);
+		if (existing === undefined) {
+			if (subject.type) {
+				subjectTypeBySubjectId.set(subject.subjectId, subject.type);
+			}
+			continue;
+		}
+		if (existing !== subject.type) {
+			// Same subject allocated as both theory and practical — ambiguous from slot alone.
+			subjectTypeBySubjectId.delete(subject.subjectId);
+		}
+	}
 
 	return timetable.slots.map((slot) => ({
 		id: nanoid(),
@@ -44,7 +62,7 @@ export function dtoToHourSpans(
 		end: slot.endHour,
 		subjectId: slot.subject._id,
 		subject: slot.subject.name,
-		subjectType: subjectTypeById.get(slot.subject._id),
+		subjectType: subjectTypeBySubjectId.get(slot.subject._id),
 		room: slot.room ?? "",
 		notes: "",
 		color: slot.subject.color,
@@ -108,7 +126,8 @@ export function mapProgramSubjects(
 	items: ProgramSubjectListItem[],
 ): TimetableSubjectOption[] {
 	return items.map((item) => ({
-		id: item.subject._id,
+		id: item._id,
+		subjectId: item.subject._id,
 		name: item.subject.name,
 		code: item.subject.code,
 		color: item.subject.color,
@@ -137,6 +156,21 @@ export function dtoToPublishInfo(
 		totalVersions: timetable.version,
 	};
 }
+
+export function sessionConfigEqual(
+	current: TimetableSessionConfig,
+	initial: TimetableSessionConfig,
+): boolean {
+	return sessionConfigsEqual(current, initial);
+}
+
+export function dtoToSessionConfig(
+	timetable: TimetableDto,
+): TimetableSessionConfig {
+	return timetable.sessionConfig;
+}
+
+export { createDefaultSessionConfig };
 
 export function mapVersionSummaries(
 	versions: TimetableVersionDto[],

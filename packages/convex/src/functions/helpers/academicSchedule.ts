@@ -1,4 +1,11 @@
-/** First period starts at this clock hour (24h). One timetable slot index = 1 hour. */
+import {
+	sessionWindowMs as catalogSessionWindowMs,
+	DEFAULT_TIMETABLE_SESSION_CONFIG,
+	formatPeriodTimeRange,
+	normalizeSessionConfig,
+} from "./timetableSchedule";
+
+/** First period starts at this clock hour (24h). Legacy default for 1-hour slots. */
 export const CLASS_START_HOUR = 9;
 
 export const ATTENDANCE_GRACE_PERIOD_MS = 30 * 60 * 1000;
@@ -73,16 +80,15 @@ export function sessionWindowMs(args: {
 	startHour: number;
 	endHour: number;
 	timezoneOffsetMinutes: number;
+	config?: ReturnType<typeof normalizeSessionConfig>;
 }): { sessionStartMs: number; sessionEndMs: number } {
-	const dayStartMs = sessionDateToDayStartMs(
-		args.sessionDate,
-		args.timezoneOffsetMinutes,
-	);
-	return {
-		sessionStartMs:
-			dayStartMs + (CLASS_START_HOUR + args.startHour) * MS_PER_HOUR,
-		sessionEndMs: dayStartMs + (CLASS_START_HOUR + args.endHour) * MS_PER_HOUR,
-	};
+	return catalogSessionWindowMs({
+		config: normalizeSessionConfig(args.config),
+		sessionDate: args.sessionDate,
+		startHour: args.startHour,
+		endHour: args.endHour,
+		timezoneOffsetMinutes: args.timezoneOffsetMinutes,
+	});
 }
 
 export function formatHourLabel(startHour: number, endHour: number): string {
@@ -92,12 +98,13 @@ export function formatHourLabel(startHour: number, endHour: number): string {
 	return `H${startHour + 1} - H${endHour}`;
 }
 
-export function formatTimeRange(startHour: number, endHour: number): string {
-	function formatClock(hourIndex: number): string {
-		const hour24 = CLASS_START_HOUR + hourIndex;
-		const period = hour24 >= 12 ? "pm" : "am";
-		const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
-		return `${hour12}:00${period}`;
-	}
-	return `${formatClock(startHour)} to ${formatClock(endHour)}`;
+export function formatTimeRange(
+	startHour: number,
+	endHour: number,
+	config = DEFAULT_TIMETABLE_SESSION_CONFIG,
+): string {
+	return formatPeriodTimeRange(config, startHour, endHour).replace(
+		" - ",
+		" to ",
+	);
 }

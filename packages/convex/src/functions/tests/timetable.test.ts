@@ -2,6 +2,7 @@ import { describe, expect } from "vitest";
 import { api } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { ERROR_CODES } from "../helpers/constants";
+import { buildDefaultPeriods, timeOfDayMs } from "../helpers/timetableSchedule";
 import {
 	classTest,
 	expectAppError,
@@ -130,11 +131,106 @@ describe("timetables.create", () => {
 			firstName: expect.any(String),
 			lastName: expect.any(String),
 		});
+		expect(result.sessionConfig.totalHours).toBe(7);
+		expect(result.sessionConfig.periods).toHaveLength(7);
 
 		const registers = await t.run((ctx) =>
 			ctx.db.query("attendanceRegisters").collect(),
 		);
 		expect(registers).toHaveLength(2);
+	});
+
+	test("stores custom session config on create", async ({
+		ins1,
+		programs,
+		classes,
+		subjects,
+		asOwner,
+		user1,
+	}) => {
+		const periods = buildDefaultPeriods(5);
+		const afterPeriod = 2;
+		const lunchDurationMs = 45 * 60 * 1000;
+		const lunchStart = periods[afterPeriod - 1]?.endTime;
+		const shiftedPeriods = periods.map((period, index) => {
+			if (index < afterPeriod) {
+				return period;
+			}
+			return {
+				startTime: period.startTime + lunchDurationMs,
+				endTime: period.endTime + lunchDurationMs,
+			};
+		});
+		const sessionConfig = {
+			totalHours: 5,
+			periods: shiftedPeriods,
+			lunchBreak: {
+				enabled: true,
+				afterPeriod,
+				startTime: lunchStart,
+				endTime: lunchStart + lunchDurationMs,
+			},
+		};
+
+		const result = await asOwner(user1, ins1).mutation(
+			api.timetables.create,
+			withSlug(ins1, {
+				...createInput({
+					programId: programs.me._id,
+					classAlias: classes.class1.slug,
+					mathId: subjects.math._id,
+					scienceId: subjects.appliedScience._id,
+				}),
+				sessionConfig,
+			}),
+		);
+
+		expect(result.sessionConfig).toMatchObject(sessionConfig);
+	});
+
+	test("rejects invalid session config", async ({
+		ins1,
+		programs,
+		classes,
+		subjects,
+		asOwner,
+		user1,
+	}) => {
+		await expectAppError(
+			asOwner(user1, ins1).mutation(
+				api.timetables.create,
+				withSlug(ins1, {
+					...createInput({
+						programId: programs.me._id,
+						classAlias: classes.class1.slug,
+						mathId: subjects.math._id,
+						scienceId: subjects.appliedScience._id,
+					}),
+					sessionConfig: {
+						totalHours: 4,
+						periods: [
+							{
+								startTime: timeOfDayMs(9, 0),
+								endTime: timeOfDayMs(10, 0),
+							},
+							{
+								startTime: timeOfDayMs(9, 30),
+								endTime: timeOfDayMs(10, 30),
+							},
+							{
+								startTime: timeOfDayMs(10, 30),
+								endTime: timeOfDayMs(11, 15),
+							},
+							{
+								startTime: timeOfDayMs(11, 15),
+								endTime: timeOfDayMs(12, 0),
+							},
+						],
+					},
+				}),
+			),
+			ERROR_CODES.TIMETABLE.INVALID_SESSION_CONFIG,
+		);
 	});
 
 	test("bumps version on second create", async ({
