@@ -1,4 +1,4 @@
-import { describe, expect } from "vitest";
+import { describe, expect, vi } from "vitest";
 import { api } from "../_generated/api";
 import { ERROR_CODES } from "../helpers/constants";
 import {
@@ -436,5 +436,81 @@ describe("programs.updateAlias", () => {
 			),
 			ERROR_CODES.PROGRAM.ALIAS_ALREADY_EXISTS,
 		);
+	});
+});
+
+describe("programs.remove", () => {
+	const test = programTest();
+
+	test("rejects unauthenticated user", async ({ t, ins1, programs }) => {
+		await expectAppError(
+			t.mutation(api.programs.remove, withSlug(ins1, { id: programs.cs._id })),
+			ERROR_CODES.BASE.UNAUTHORIZED,
+		);
+	});
+
+	test("marks program deleting and hides it from getByAlias", async ({
+		t,
+		user1,
+		ins1,
+		programs,
+		asOwner,
+	}) => {
+		await asOwner(user1, ins1).mutation(
+			api.programs.remove,
+			withSlug(ins1, { id: programs.cs._id }),
+		);
+
+		const deleted = await t.run((ctx) =>
+			ctx.db.get("programs", programs.cs._id),
+		);
+		expect(deleted?.isDeleting).toBe(true);
+
+		await expectAppError(
+			asOwner(user1, ins1).query(
+				api.programs.getByAlias,
+				withSlug(ins1, { alias: PROGRAM_CS.alias }),
+			),
+			ERROR_CODES.PROGRAM.NOT_FOUND,
+		);
+
+		await expectAppError(
+			asOwner(user1, ins1).query(
+				api.programs.getById,
+				withSlug(ins1, { id: programs.cs._id }),
+			),
+			ERROR_CODES.PROGRAM.NOT_FOUND,
+		);
+
+		const listed = await asOwner(user1, ins1).query(
+			api.programs.list,
+			withSlug(ins1, {}),
+		);
+		expect(listed.find((p) => p._id === programs.cs._id)).toBeUndefined();
+	});
+
+	test("cascade eventually deletes the program document", async ({
+		t,
+		user1,
+		ins1,
+		programs,
+		asOwner,
+	}) => {
+		vi.useFakeTimers();
+		try {
+			await asOwner(user1, ins1).mutation(
+				api.programs.remove,
+				withSlug(ins1, { id: programs.me._id }),
+			);
+
+			await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+			const gone = await t.run((ctx) =>
+				ctx.db.get("programs", programs.me._id),
+			);
+			expect(gone).toBeNull();
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 });

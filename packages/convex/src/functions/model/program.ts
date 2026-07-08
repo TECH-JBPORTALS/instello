@@ -47,6 +47,12 @@ export const ProgramListItemSchema = vv.object({
 export type ProgramDto = Infer<typeof ProgramDtoSchema>;
 export type ProgramListItem = Infer<typeof ProgramListItemSchema>;
 
+const DELETE_BATCH_SIZE = 40;
+
+export function isLive(program: Doc<"programs">) {
+	return program.isDeleting !== true;
+}
+
 export function toDto(program: Doc<"programs">): ProgramDto {
 	return {
 		_id: program._id,
@@ -76,7 +82,7 @@ export function toListItem(
 	};
 }
 
-export async function findByAlias(
+export async function findByAliasIncludingDeleting(
 	ctx: AppQueryCtx | AppMutationCtx,
 	institutionId: string,
 	alias: string,
@@ -89,12 +95,28 @@ export async function findByAlias(
 		.unique();
 }
 
+export async function findByAlias(
+	ctx: AppQueryCtx | AppMutationCtx,
+	institutionId: string,
+	alias: string,
+) {
+	const program = await findByAliasIncludingDeleting(ctx, institutionId, alias);
+
+	if (!program || !isLive(program)) return null;
+
+	return program;
+}
+
 export async function create(
 	ctx: AppMutationCtx,
 	args: Infer<typeof CreateSchema>,
 ) {
 	const alias = args.alias.trim();
-	const existing = await findByAlias(ctx, args.institutionId, alias);
+	const existing = await findByAliasIncludingDeleting(
+		ctx,
+		args.institutionId,
+		alias,
+	);
 
 	if (existing) {
 		throwAppError(ERROR_CODES.PROGRAM.ALIAS_ALREADY_EXISTS);
@@ -133,8 +155,10 @@ export async function list(
 			.take(50);
 	}
 
+	const livePrograms = programs.filter(isLive);
+
 	return await Promise.all(
-		programs.map(async (program) => {
+		livePrograms.map(async (program) => {
 			const user = await ctx.runQuery(components.betterAuth.users.getById, {
 				userId: program.createdBy,
 			});
@@ -145,7 +169,7 @@ export async function list(
 }
 
 export async function getById(
-	ctx: AppQueryCtx,
+	ctx: AppQueryCtx | AppMutationCtx,
 	id: Id<"programs">,
 	institutionId?: string,
 ) {
@@ -153,8 +177,17 @@ export async function getById(
 
 	if (!program) return null;
 	if (institutionId && program.institutionId !== institutionId) return null;
+	if (!isLive(program)) return null;
 
 	return program;
+}
+
+/** Returns the program even when `isDeleting` (for cascade workers). */
+export async function getByIdIncludingDeleting(
+	ctx: AppQueryCtx | AppMutationCtx,
+	id: Id<"programs">,
+) {
+	return await ctx.db.get("programs", id);
 }
 
 export async function patch(
@@ -163,14 +196,18 @@ export async function patch(
 	body: { name?: string; alias?: string },
 ) {
 	if (body.alias !== undefined) {
-		const program = await ctx.db.get("programs", id);
+		const program = await getById(ctx, id);
 
 		if (!program) {
 			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
 		}
 
 		const alias = body.alias.trim();
-		const existing = await findByAlias(ctx, program.institutionId, alias);
+		const existing = await findByAliasIncludingDeleting(
+			ctx,
+			program.institutionId,
+			alias,
+		);
 
 		if (existing && existing._id !== id) {
 			throwAppError(ERROR_CODES.PROGRAM.ALIAS_ALREADY_EXISTS);
@@ -180,4 +217,187 @@ export async function patch(
 	}
 
 	return await ctx.db.patch("programs", id, { ...body, updatedAt: Date.now() });
+}
+
+export async function markDeleting(ctx: AppMutationCtx, id: Id<"programs">) {
+	await ctx.db.patch("programs", id, {
+		isDeleting: true,
+		updatedAt: Date.now(),
+	});
+}
+
+async function deleteAttendanceForClass(
+	ctx: AppMutationCtx,
+	classId: Id<"classes">,
+): Promise<boolean> {
+	const registers = await ctx.db
+		.query("attendanceRegisters")
+		.withIndex("by_class_and_status", (q) => q.eq("classId", classId))
+		.take(DELETE_BATCH_SIZE);
+
+	if (registers.length === 0) return false;
+
+	for (const register of registers) {
+		const hasMoreRecords = await deleteRegisterTree(ctx, register._id);
+		if (hasMoreRecords) return true;
+		await ctx.db.delete("attendanceRegisters", register._id);
+	}
+	return true;
+}
+
+async function deleteRegisterTree(
+	ctx: AppMutationCtx,
+	registerId: Id<"attendanceRegisters">,
+): Promise<boolean> {
+	const records = await ctx.db
+		.query("attendanceRecords")
+		.withIndex("by_register_and_sessionDate", (q) =>
+			q.eq("registerId", registerId),
+		)
+		.take(DELETE_BATCH_SIZE);
+
+	if (records.length === 0) return false;
+
+	for (const record of records) {
+		const entries = await ctx.db
+			.query("attendanceEntries")
+			.withIndex("by_record", (q) => q.eq("recordId", record._id))
+			.take(DELETE_BATCH_SIZE);
+
+		if (entries.length > 0) {
+			for (const entry of entries) {
+				await ctx.db.delete("attendanceEntries", entry._id);
+			}
+			return true;
+		}
+
+		const logs = await ctx.db
+			.query("attendanceActivityLogs")
+			.withIndex("by_record", (q) => q.eq("recordId", record._id))
+			.take(DELETE_BATCH_SIZE);
+
+		if (logs.length > 0) {
+			for (const log of logs) {
+				await ctx.db.delete("attendanceActivityLogs", log._id);
+			}
+			return true;
+		}
+
+		await ctx.db.delete("attendanceRecords", record._id);
+	}
+
+	return true;
+}
+
+async function deleteTimetablesForClass(
+	ctx: AppMutationCtx,
+	classId: Id<"classes">,
+): Promise<boolean> {
+	const timetables = await ctx.db
+		.query("timetable")
+		.withIndex("by_class_and_version", (q) => q.eq("classId", classId))
+		.take(DELETE_BATCH_SIZE);
+
+	if (timetables.length === 0) return false;
+
+	for (const timetable of timetables) {
+		const slots = await ctx.db
+			.query("timetableSlots")
+			.withIndex("by_timetable", (q) => q.eq("timetableId", timetable._id))
+			.take(DELETE_BATCH_SIZE);
+
+		if (slots.length > 0) {
+			for (const slot of slots) {
+				await ctx.db.delete("timetableSlots", slot._id);
+			}
+			return true;
+		}
+
+		await ctx.db.delete("timetable", timetable._id);
+	}
+
+	return true;
+}
+
+async function deleteStudentsForClass(
+	ctx: AppMutationCtx,
+	classId: Id<"classes">,
+): Promise<boolean> {
+	const students = await ctx.db
+		.query("students")
+		.withIndex("by_class", (q) => q.eq("classId", classId))
+		.take(DELETE_BATCH_SIZE);
+
+	if (students.length === 0) return false;
+
+	for (const student of students) {
+		await ctx.db.delete("students", student._id);
+	}
+	return true;
+}
+
+async function deleteBatchesForClass(
+	ctx: AppMutationCtx,
+	classId: Id<"classes">,
+): Promise<boolean> {
+	const batches = await ctx.db
+		.query("classBatches")
+		.withIndex("by_class", (q) => q.eq("classId", classId))
+		.take(DELETE_BATCH_SIZE);
+
+	if (batches.length === 0) return false;
+
+	for (const batch of batches) {
+		await ctx.db.delete("classBatches", batch._id);
+	}
+	return true;
+}
+
+async function deleteClassTree(
+	ctx: AppMutationCtx,
+	cls: Doc<"classes">,
+): Promise<boolean> {
+	if (await deleteAttendanceForClass(ctx, cls._id)) return true;
+	if (await deleteTimetablesForClass(ctx, cls._id)) return true;
+	if (await deleteStudentsForClass(ctx, cls._id)) return true;
+	if (await deleteBatchesForClass(ctx, cls._id)) return true;
+	await ctx.db.delete("classes", cls._id);
+	return true;
+}
+
+/**
+ * Deletes program-related data in bounded batches.
+ * Returns `true` when more work remains (caller should reschedule).
+ */
+export async function deleteCascadeBatch(
+	ctx: AppMutationCtx,
+	programId: Id<"programs">,
+): Promise<boolean> {
+	const program = await getByIdIncludingDeleting(ctx, programId);
+	if (!program) return false;
+
+	const classes = await ctx.db
+		.query("classes")
+		.withIndex("by_program", (q) => q.eq("programId", programId))
+		.take(1);
+
+	if (classes[0]) {
+		await deleteClassTree(ctx, classes[0]);
+		return true;
+	}
+
+	const programSubjects = await ctx.db
+		.query("programSubjects")
+		.withIndex("by_program_and_stage", (q) => q.eq("programId", programId))
+		.take(DELETE_BATCH_SIZE);
+
+	if (programSubjects.length > 0) {
+		for (const programSubject of programSubjects) {
+			await ctx.db.delete("programSubjects", programSubject._id);
+		}
+		return true;
+	}
+
+	await ctx.db.delete("programs", programId);
+	return false;
 }

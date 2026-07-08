@@ -99,6 +99,8 @@ const tables = {
 		alias: v.string(),
 		status: v.union(v.literal("inactive"), v.literal("active")),
 		institutionId: v.string(),
+		/** Soft gate while cascade deletion runs; treated as not found by public APIs. */
+		isDeleting: v.optional(v.boolean()),
 		createdAt: v.number(),
 		updatedAt: v.number(),
 	})

@@ -1,6 +1,15 @@
 import { components } from "../_generated/api";
-import type { AppQueryCtx } from "./common.types";
+import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 import * as InstitutionAcademicPattern from "./institutionAcademicPattern";
+
+export type InstitutionPatch = {
+	name?: string;
+	addressLine?: string;
+	district?: string;
+	state?: string;
+	country?: string;
+	zipCode?: string;
+};
 
 /**
  * **List all institutions by user and role**
@@ -38,4 +47,18 @@ export async function listByUserRole(
 			),
 		})),
 	);
+}
+
+export async function patch(
+	ctx: AppMutationCtx,
+	institutionId: string,
+	body: InstitutionPatch,
+) {
+	await ctx.runMutation(components.betterAuth.adapter.updateOne, {
+		input: {
+			model: "institution",
+			where: [{ field: "_id", value: institutionId }],
+			update: body,
+		},
+	});
 }

@@ -33,6 +33,7 @@ function applyColorScheme(scheme: ColorScheme) {
 	} else {
 		document.documentElement.dataset.theme = scheme;
 	}
+	// biome-ignore lint/suspicious/noDocumentCookie: <Just setting the cross domain color scheme>
 	document.cookie = `${COLOR_SCHEME_COOKIE}=${scheme};path=/;domain=${cookieDomain};max-age=31536000;samesite=lax`;
 }
 

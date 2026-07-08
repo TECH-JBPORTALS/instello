@@ -1,3 +1,5 @@
+import { internal } from "./_generated/api";
+import { internalMutation } from "./_generated/server";
 import { ERROR_CODES, throwAppError } from "./helpers/constants";
 import { insMutation, insQuery } from "./helpers/customFunctions";
 import * as Program from "./model/program";
@@ -28,7 +30,11 @@ export const checkAlias = insQuery({
 		const alias = args.alias.trim();
 		if (!alias) return { available: false };
 
-		const existing = await Program.findByAlias(ctx, ctx.institution._id, alias);
+		const existing = await Program.findByAliasIncludingDeleting(
+			ctx,
+			ctx.institution._id,
+			alias,
+		);
 
 		return { available: existing === null };
 	},
@@ -132,6 +138,45 @@ export const updateAlias = insMutation({
 		}
 
 		await Program.patch(ctx, args.id, args.body);
+		return null;
+	},
+});
+
+/** Soft-mark program for deletion and schedule cascade cleanup */
+export const remove = insMutation({
+	permissions: ["program:delete"],
+	args: {
+		id: vv.id("programs"),
+	},
+	returns: vv.null(),
+	handler: async (ctx, args) => {
+		const program = await Program.getById(ctx, args.id, ctx.institution._id);
+
+		if (!program) {
+			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
+		}
+
+		await Program.markDeleting(ctx, args.id);
+		await ctx.scheduler.runAfter(0, internal.programs.deleteCascade, {
+			programId: args.id,
+		});
+		return null;
+	},
+});
+
+/** Batched cascade deletion for a program marked with `isDeleting` */
+export const deleteCascade = internalMutation({
+	args: {
+		programId: vv.id("programs"),
+	},
+	returns: vv.null(),
+	handler: async (ctx, args) => {
+		const hasMore = await Program.deleteCascadeBatch(ctx, args.programId);
+		if (hasMore) {
+			await ctx.scheduler.runAfter(0, internal.programs.deleteCascade, {
+				programId: args.programId,
+			});
+		}
 		return null;
 	},
 });

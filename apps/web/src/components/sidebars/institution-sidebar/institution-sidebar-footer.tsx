@@ -21,7 +21,13 @@ import {
 	SidebarMenuItem,
 } from "@instello/ui/components/sidebar";
 import { Skeleton } from "@instello/ui/components/skeleton";
-import { IconChevronDown, IconLogout, IconSettings } from "@tabler/icons-react";
+import {
+	IconBuilding,
+	IconChevronDown,
+	IconLogout,
+	IconSettings,
+} from "@tabler/icons-react";
+import { useRouter } from "next/navigation";
 import { formatInstitutionRole } from "@/components/sidebars/institution-sidebar/nav-items";
 import { useInsQuery } from "@/hooks/convex-react";
 import { protocol, rootDomain } from "@/lib/utils";
@@ -41,6 +47,7 @@ function getInitials(name: string) {
 }
 
 export function InstitutionSidebarFooter() {
+	const router = useRouter();
 	const user = useInsQuery(api.users.getCurrentUserInInstitution);
 
 	async function handleLogout() {
@@ -93,6 +100,14 @@ export function InstitutionSidebarFooter() {
 							align="end"
 							sideOffset={4}
 						>
+							<DropdownMenuItem
+								onClick={() => {
+									router.push("/institution-settings");
+								}}
+							>
+								<IconBuilding className="size-4" />
+								Institution settings
+							</DropdownMenuItem>
 							<DropdownMenuItem
 								onClick={() => {
 									window.location.href = settingsUrl();

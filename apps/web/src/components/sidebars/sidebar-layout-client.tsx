@@ -18,6 +18,7 @@ const OFFSET = 120;
 
 const SIDEBAR_MODE_DEPTH: Record<SidebarMode, number> = {
 	institution: 0,
+	"institution-settings": 0,
 	program: 1,
 	class: 2,
 };
@@ -67,10 +68,12 @@ export function SidebarLayoutClient({ sidebar }: { sidebar: ReactNode }) {
 		prevModeRef.current = mode;
 	}, [mode]);
 
+	const showSwitchers = mode === "program" || mode === "class";
+
 	return (
 		<Sidebar>
 			<AppSidebarHeader />
-			{mode !== "institution" ? (
+			{showSwitchers ? (
 				<SidebarHeader>
 					<ProgramSwitcher />
 					<ClassSwitcher />
