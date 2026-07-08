@@ -3,7 +3,12 @@ import { getToken } from "@instello/convex/better-auth/server";
 import { cn } from "@instello/ui/lib/utils";
 import type { Metadata } from "next";
 import { Source_Sans_3 } from "next/font/google";
+import { cookies } from "next/headers";
 import { AppProviders } from "@/components/app-providers";
+import {
+	COLOR_SCHEME_COOKIE,
+	parseColorScheme,
+} from "@/features/settings/theme-config";
 
 const sourceSans3 = Source_Sans_3({
 	subsets: ["latin"],
@@ -24,11 +29,29 @@ export default async function RootLayout({
 	children: React.ReactNode;
 }) {
 	const token = await getToken();
+	const cookieStore = await cookies();
+	const colorScheme = parseColorScheme(
+		cookieStore.get(COLOR_SCHEME_COOKIE)?.value,
+	);
 
 	return (
-		<html lang="en" className={cn("font-sans dark", sourceSans3.variable)}>
+		<html
+			lang="en"
+			suppressHydrationWarning
+			className={cn("font-sans", sourceSans3.variable)}
+			{...(colorScheme !== "default" ? { "data-theme": colorScheme } : {})}
+		>
 			<body className={cn(sourceSans3.variable)}>
-				<AppProviders initialToken={token}>{children}</AppProviders>
+				{/* Seed next-themes storage from the cross-subdomain cookie before it
+				    initializes, so the selected mode is shared across all subdomains. */}
+				<script
+					dangerouslySetInnerHTML={{
+						__html: `try{var m=document.cookie.match(/(?:^|; )instello-theme=([^;]+)/);if(m){localStorage.setItem('theme',decodeURIComponent(m[1]));}}catch(e){}`,
+					}}
+				/>
+				<AppProviders initialToken={token} initialColorScheme={colorScheme}>
+					{children}
+				</AppProviders>
 			</body>
 		</html>
 	);

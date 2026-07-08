@@ -1,6 +1,5 @@
 "use client";
 
-import { api } from "@instello/convex/api";
 import { authClient } from "@instello/convex/better-auth/client";
 import {
 	Avatar,
@@ -22,8 +21,6 @@ import {
 } from "@instello/ui/components/sidebar";
 import { Skeleton } from "@instello/ui/components/skeleton";
 import { IconChevronDown, IconLogout, IconSettings } from "@tabler/icons-react";
-import { formatInstitutionRole } from "@/components/sidebars/institution-sidebar/nav-items";
-import { useInsQuery } from "@/hooks/convex-react";
 import { protocol, rootDomain } from "@/lib/utils";
 
 function settingsUrl() {
@@ -40,8 +37,9 @@ function getInitials(name: string) {
 		.toUpperCase();
 }
 
-export function InstitutionSidebarFooter() {
-	const user = useInsQuery(api.users.getCurrentUserInInstitution);
+export function OrganizationSidebarFooter() {
+	const { data: session, isPending } = authClient.useSession();
+	const user = session?.user;
 
 	async function handleLogout() {
 		await authClient.signOut();
@@ -61,7 +59,7 @@ export function InstitutionSidebarFooter() {
 								/>
 							}
 						>
-							{user === undefined ? (
+							{isPending || !user ? (
 								<>
 									<Skeleton className="size-8 rounded-full" />
 									<div className="grid flex-1 gap-1 text-left">
@@ -80,7 +78,7 @@ export function InstitutionSidebarFooter() {
 									<div className="grid flex-1 text-left text-sm leading-tight">
 										<span className="truncate font-semibold">{user.name}</span>
 										<span className="truncate text-xs text-muted-foreground">
-											{formatInstitutionRole(user.role)}
+											Owner
 										</span>
 									</div>
 								</>

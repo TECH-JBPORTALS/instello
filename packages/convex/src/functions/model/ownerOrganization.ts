@@ -1,4 +1,5 @@
 import type { Infer } from "convex/values";
+import type { Id } from "../_generated/dataModel";
 import { vv } from "../schema";
 import * as AcademicPattern from "./academicPattern";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
@@ -10,6 +11,19 @@ export const OwnerOrgCreateSchema = vv
 export const OwnerOrgSchema = vv
 	.doc("ownerOrganizations")
 	.omit("_creationTime", "_id", "createdAt", "updatedAt");
+
+export const OwnerOrgUpdateSchema = vv
+	.doc("ownerOrganizations")
+	.omit("_creationTime", "_id", "createdAt", "updatedAt", "ownerId", "slug");
+
+export const OwnerOrgPatchSchema = vv.object({
+	name: vv.optional(vv.string()),
+	addressLine: vv.optional(vv.string()),
+	city: vv.optional(vv.string()),
+	state: vv.optional(vv.string()),
+	postalCode: vv.optional(vv.string()),
+	country: vv.optional(vv.string()),
+});
 
 /** Create organization for owner */
 export async function create(
@@ -25,6 +39,18 @@ export async function create(
 	await AcademicPattern.seedDefaults(ctx, orgId);
 
 	return orgId;
+}
+
+/** Update owner organization fields (slug is not editable) */
+export async function patch(
+	ctx: AppMutationCtx,
+	id: Id<"ownerOrganizations">,
+	body: Infer<typeof OwnerOrgPatchSchema>,
+) {
+	await ctx.db.patch("ownerOrganizations", id, {
+		...body,
+		updatedAt: Date.now(),
+	});
 }
 
 /** Get owner organization by current user */

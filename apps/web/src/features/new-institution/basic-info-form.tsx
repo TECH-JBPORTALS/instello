@@ -36,6 +36,7 @@ import {
 	IconUpload,
 } from "@tabler/icons-react";
 import { useConvex } from "convex/react";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import * as v from "valibot";
 import { withForm } from "@/hooks/form";
@@ -170,6 +171,7 @@ export const BasicInfoForm = withForm({
 	},
 	render: function Render({ form, step, setStep }) {
 		const convex = useConvex();
+		const router = useRouter();
 
 		return (
 			<form.FormGroup
@@ -421,7 +423,13 @@ export const BasicInfoForm = withForm({
 							<CardFooter className="mt-auto shrink-0 border-t-0 bg-transparent">
 								<form.AppForm>
 									<Field orientation={"horizontal"} className="justify-end">
-										<Button variant={"outline"}>Cancel</Button>
+										<Button
+											type="button"
+											variant={"outline"}
+											onClick={() => router.back()}
+										>
+											Cancel
+										</Button>
 										<form.SubscribeButton label="Continue" />
 									</Field>
 								</form.AppForm>

@@ -12,6 +12,7 @@ import { IconBuildings, IconCircleDottedLetterP } from "@tabler/icons-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { AppSidebarHeader } from "@/components/common/app-sidebar-header";
+import { OrganizationSidebarFooter } from "@/components/sidebars/organization-sidebar/organization-sidebar-footer";
 
 const items = (orgSlug: string) => [
 	{
@@ -58,6 +59,7 @@ export function OrganizationSidebar() {
 					</SidebarMenu>
 				</SidebarGroup>
 			</SidebarContent>
+			<OrganizationSidebarFooter />
 		</Sidebar>
 	);
 }

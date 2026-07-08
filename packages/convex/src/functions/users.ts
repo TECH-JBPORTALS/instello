@@ -1,6 +1,7 @@
+import { v } from "convex/values";
 import type { InsRole } from "../better-auth/ins-permissions";
 import { components } from "./_generated/api";
-import { insQuery, userQuery } from "./helpers/customFunctions";
+import { insQuery, userMutation, userQuery } from "./helpers/customFunctions";
 import { formInstitutionUrl } from "./helpers/utils";
 import * as OwnerOrganizations from "./model/ownerOrganization";
 import { vv } from "./schema";
@@ -45,6 +46,28 @@ export const resolveLandingPath = userQuery({
 		return {
 			redirectUrl: "/not-part-of-any-institution",
 		};
+	},
+});
+
+/** Returns a short-lived URL for uploading a user profile image */
+export const generateProfileImageUploadUrl = userMutation({
+	args: {},
+	returns: vv.string(),
+	handler: async (ctx) => {
+		return await ctx.storage.generateUploadUrl();
+	},
+});
+
+/** Resolves a Convex storage ID to a public URL for use in Better Auth user.image */
+export const resolveStorageUrl = userMutation({
+	args: { storageId: v.id("_storage") },
+	returns: vv.string(),
+	handler: async (ctx, args) => {
+		const url = await ctx.storage.getUrl(args.storageId);
+		if (!url) {
+			throw new Error("Failed to resolve storage URL");
+		}
+		return url;
 	},
 });
 

@@ -37,6 +37,11 @@ export const getByUser = userQuery({
 			_id: vv.id("ownerOrganizations"),
 			name: vv.string(),
 			slug: vv.string(),
+			addressLine: vv.string(),
+			city: vv.string(),
+			state: vv.string(),
+			postalCode: vv.string(),
+			country: vv.string(),
 		}),
 	),
 	handler: async (ctx) => {
@@ -50,6 +55,31 @@ export const getByUser = userQuery({
 			_id: ownerOrg._id,
 			name: ownerOrg.name,
 			slug: ownerOrg.slug,
+			addressLine: ownerOrg.addressLine,
+			city: ownerOrg.city,
+			state: ownerOrg.state,
+			postalCode: ownerOrg.postalCode,
+			country: ownerOrg.country,
 		};
+	},
+});
+
+/** Update the current user's owner organization (slug is not editable) */
+export const update = userMutation({
+	args: {
+		body: OwnerOrganization.OwnerOrgPatchSchema,
+	},
+	returns: vv.null(),
+	handler: async (ctx, args) => {
+		const ownerOrg = await OwnerOrganization.getByUserId(ctx, {
+			userId: ctx.session.userId,
+		});
+
+		if (!ownerOrg) {
+			throwAppError(ERROR_CODES.OWNER_ORGANIZATION.NOT_FOUND);
+		}
+
+		await OwnerOrganization.patch(ctx, ownerOrg._id, args.body);
+		return null;
 	},
 });
