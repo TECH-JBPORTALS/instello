@@ -7,12 +7,12 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@instello/ui/components/select";
+import { Skeleton } from "@instello/ui/components/skeleton";
 import { IconDeviceDesktop, IconMoon, IconSun } from "@tabler/icons-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { cookieDomain } from "@/lib/utils";
 import { THEME_MODE_COOKIE, type ThemeMode } from "./theme-config";
-import { Skeleton } from "@instello/ui/components/skeleton";
 
 const MODE_ICONS = {
 	light: IconSun,

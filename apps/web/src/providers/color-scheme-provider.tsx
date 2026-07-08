@@ -8,8 +8,8 @@ import {
 	useState,
 } from "react";
 import {
-	type ColorScheme,
 	COLOR_SCHEME_COOKIE,
+	type ColorScheme,
 } from "@/features/settings/theme-config";
 import { cookieDomain } from "@/lib/utils";
 
