@@ -1,4 +1,4 @@
-import { describe, expect } from "vitest";
+import { describe, expect, vi } from "vitest";
 import { api } from "../_generated/api";
 import { ERROR_CODES } from "../helpers/constants";
 import {
@@ -530,5 +530,93 @@ describe("classes.getBySlug", () => {
 			),
 			ERROR_CODES.CLASS.NOT_FOUND,
 		);
+	});
+});
+
+describe("classes.remove", () => {
+	const test = classTest();
+
+	test("rejects unauthenticated user", async ({ t, ins1, classes }) => {
+		await expectAppError(
+			t.mutation(
+				api.classes.remove,
+				withSlug(ins1, { id: classes.class1._id }),
+			),
+			ERROR_CODES.BASE.UNAUTHORIZED,
+		);
+	});
+
+	test("marks class deleting and hides it from getBySlug", async ({
+		t,
+		user1,
+		ins1,
+		programs,
+		classes,
+		asOwner,
+	}) => {
+		await asOwner(user1, ins1).mutation(
+			api.classes.remove,
+			withSlug(ins1, { id: classes.class2._id }),
+		);
+
+		const deleted = await t.run((ctx) =>
+			ctx.db.get("classes", classes.class2._id),
+		);
+		expect(deleted?.isDeleting).toBe(true);
+
+		await expectAppError(
+			asOwner(user1, ins1).query(
+				api.classes.getBySlug,
+				withSlug(ins1, {
+					programId: programs.me._id,
+					classSlug: classes.class2.slug,
+				}),
+			),
+			ERROR_CODES.CLASS.NOT_FOUND,
+		);
+
+		await expectAppError(
+			asOwner(user1, ins1).query(
+				api.classes.getById,
+				withSlug(ins1, { id: classes.class2._id }),
+			),
+			ERROR_CODES.CLASS.NOT_FOUND,
+		);
+
+		const listed = await asOwner(user1, ins1).query(
+			api.classes.list,
+			withSlug(ins1, {
+				programId: programs.me._id,
+				paginationOpts: { numItems: 10, cursor: null },
+			}),
+		);
+		expect(
+			listed.page.find((c) => c._id === classes.class2._id),
+		).toBeUndefined();
+	});
+
+	test("cascade eventually deletes the class document", async ({
+		t,
+		user1,
+		ins1,
+		classes,
+		asOwner,
+	}) => {
+		vi.useFakeTimers();
+		try {
+			await asOwner(user1, ins1).mutation(
+				api.classes.remove,
+				withSlug(ins1, { id: classes.class1._id }),
+			);
+
+			await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+			const gone = await t.run((ctx) =>
+				ctx.db.get("classes", classes.class1._id),
+			);
+			expect(gone).toBeNull();
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 });

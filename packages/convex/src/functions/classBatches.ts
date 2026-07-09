@@ -1,5 +1,7 @@
 import { ERROR_CODES, throwAppError } from "./helpers/constants";
 import { insMutation, insQuery } from "./helpers/customFunctions";
+import { internal } from "./_generated/api";
+import { internalMutation } from "./_generated/server";
 import * as Class from "./model/class";
 import * as ClassBatch from "./model/classBatch";
 import * as Student from "./model/student";
@@ -121,6 +123,79 @@ export const splitIntoNewBatch = insMutation({
 				newBatch.numIdx,
 				cls.batchNamingConvention,
 			),
+			studentCount: args.studentIds.length,
 		};
+	},
+});
+
+/** Preview what happens when deleting a batch (student count and move target). */
+export const getRemovePreview = insQuery({
+	permissions: ["class:view"],
+	args: {
+		batchId: vv.id("classBatches"),
+	},
+	returns: ClassBatch.RemovePreviewSchema,
+	handler: async (ctx, args) => {
+		const batch = await ClassBatch.getByIdIncludingDeleting(ctx, args.batchId);
+		if (!batch) {
+			throwAppError(ERROR_CODES.BATCH.NOT_FOUND);
+		}
+
+		const cls = await Class.ensureInInstitution(
+			ctx,
+			batch.classId,
+			ctx.institution._id,
+		);
+
+		if (!cls.isGroupsEnabled) {
+			throwAppError(ERROR_CODES.CLASS.BATCHES_NOT_ENABLED);
+		}
+
+		return await ClassBatch.getRemovePreview(
+			ctx,
+			batch,
+			cls.batchNamingConvention ?? "numeric",
+		);
+	},
+});
+
+/** Soft-mark batch for deletion and schedule cascade cleanup */
+export const remove = insMutation({
+	permissions: ["class:update"],
+	args: {
+		batchId: vv.id("classBatches"),
+	},
+	returns: vv.null(),
+	handler: async (ctx, args) => {
+		const batch = await ClassBatch.getByIdIncludingDeleting(ctx, args.batchId);
+		if (!batch) {
+			throwAppError(ERROR_CODES.BATCH.NOT_FOUND);
+		}
+
+		await Class.ensureInInstitution(ctx, batch.classId, ctx.institution._id);
+
+		await ClassBatch.assertCanRemove(ctx, batch);
+		await ClassBatch.markDeleting(ctx, args.batchId);
+		await ctx.scheduler.runAfter(0, internal.classBatches.deleteCascade, {
+			batchId: args.batchId,
+		});
+		return null;
+	},
+});
+
+/** Batched cascade deletion for a batch marked with `isDeleting` */
+export const deleteCascade = internalMutation({
+	args: {
+		batchId: vv.id("classBatches"),
+	},
+	returns: vv.null(),
+	handler: async (ctx, args) => {
+		const hasMore = await ClassBatch.deleteCascadeBatch(ctx, args.batchId);
+		if (hasMore) {
+			await ctx.scheduler.runAfter(0, internal.classBatches.deleteCascade, {
+				batchId: args.batchId,
+			});
+		}
+		return null;
 	},
 });

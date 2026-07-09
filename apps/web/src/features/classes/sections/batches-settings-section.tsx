@@ -34,6 +34,7 @@ import {
 } from "@instello/ui/components/select";
 import { Switch } from "@instello/ui/components/switch";
 import { useState } from "react";
+import { toast } from "sonner";
 import { useInsMutation, useInsQuery } from "@/hooks/convex-react";
 import { getConvexErrorMessage } from "@/lib/convex-error";
 
@@ -52,13 +53,21 @@ type BatchesSettingsSectionProps = {
 	};
 };
 
+function formatStudentCount(count: number) {
+	return count === 1 ? "1 student" : `${count} students`;
+}
+
 export function BatchesSettingsSection({ cls }: BatchesSettingsSectionProps) {
-	const [confirmOpen, setConfirmOpen] = useState(false);
+	const [disableConfirmOpen, setDisableConfirmOpen] = useState(false);
+	const [batchToDelete, setBatchToDelete] = useState<Id<"classBatches"> | null>(
+		null,
+	);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
 	const enableBatches = useInsMutation(api.classes.enableSectionGroups);
 	const disableBatches = useInsMutation(api.classes.disableSectionGroups);
+	const removeBatch = useInsMutation(api.classBatches.remove);
 	const updateNamingConvention = useInsMutation(
 		api.classBatches.updateNamingConvention,
 	);
@@ -67,6 +76,13 @@ export function BatchesSettingsSection({ cls }: BatchesSettingsSectionProps) {
 		api.classBatches.list,
 		cls.isGroupsEnabled ? { classId: cls._id } : "skip",
 	);
+
+	const removePreview = useInsQuery(
+		api.classBatches.getRemovePreview,
+		batchToDelete ? { batchId: batchToDelete } : "skip",
+	);
+
+	const canDeleteBatch = (batches?.length ?? 0) > 1;
 
 	async function handleEnable() {
 		setIsSubmitting(true);
@@ -85,9 +101,50 @@ export function BatchesSettingsSection({ cls }: BatchesSettingsSectionProps) {
 		setError(null);
 		try {
 			await disableBatches({ id: cls._id });
-			setConfirmOpen(false);
+			setDisableConfirmOpen(false);
 		} catch (submitError) {
 			setError(getConvexErrorMessage(submitError, "Failed to disable batches"));
+		} finally {
+			setIsSubmitting(false);
+		}
+	}
+
+	async function handleDeleteBatch() {
+		if (!batchToDelete) {
+			toast.error("No batch selected for deletion");
+			return;
+		}
+		if (!removePreview) {
+			toast.error("Delete preview is still loading");
+			return;
+		}
+		if (!removePreview.canDelete) {
+			toast.error(
+				"This is the only batch left in this class. Disable batches for the class instead.",
+			);
+			return;
+		}
+		if (removePreview.hasTimetableConflict) {
+			toast.error(
+				removePreview.blockedReason ??
+					"This batch has timetable conflicts with the destination batch. Resolve conflicts before deleting.",
+			);
+			return;
+		}
+
+		setIsSubmitting(true);
+		setError(null);
+		try {
+			await removeBatch({ batchId: batchToDelete });
+			setBatchToDelete(null);
+			toast.success("Batch has been deleted");
+		} catch (submitError) {
+			const message = getConvexErrorMessage(
+				submitError,
+				"Failed to delete batch",
+			);
+			setError(message);
+			toast.error(message);
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -109,6 +166,45 @@ export function BatchesSettingsSection({ cls }: BatchesSettingsSectionProps) {
 				),
 			);
 		}
+	}
+
+	function renderDeleteDescription() {
+		if (!removePreview) {
+			return "Loading delete preview…";
+		}
+
+		if (!removePreview.canDelete) {
+			return "This is the only batch left in this class. Disable batches for the class instead of deleting it.";
+		}
+
+		if (removePreview.hasTimetableConflict) {
+			return (
+				removePreview.blockedReason ??
+				"This batch has timetable conflicts with the destination batch. Resolve conflicts before deleting."
+			);
+		}
+
+		if (removePreview.studentCount > 0 && removePreview.moveToBatch) {
+			return (
+				<>
+					Delete <b>{removePreview.batchLabel}</b>?{" "}
+					<b>{formatStudentCount(removePreview.studentCount)}</b> in this batch
+					will be moved to <b>{removePreview.moveToBatch.label}</b>. Related
+					timetable slots will be moved to{" "}
+					<b>{removePreview.moveToBatch.label}</b> and attendance history will
+					be archived. This can&apos;t be undone.
+				</>
+			);
+		}
+
+		return (
+			<>
+				Delete <b>{removePreview.batchLabel}</b>? Timetable slots for this batch
+				will be moved to{" "}
+				<b>{removePreview.moveToBatch?.label ?? "another batch"}</b> and
+				attendance history will be archived. This can&apos;t be undone.
+			</>
+		);
 	}
 
 	return (
@@ -139,7 +235,7 @@ export function BatchesSettingsSection({ cls }: BatchesSettingsSectionProps) {
 									if (checked) {
 										void handleEnable();
 									} else {
-										setConfirmOpen(true);
+										setDisableConfirmOpen(true);
 									}
 								}}
 							/>
@@ -183,22 +279,36 @@ export function BatchesSettingsSection({ cls }: BatchesSettingsSectionProps) {
 						</Item>
 					)}
 
-					{cls.isGroupsEnabled && batches && batches.length > 0 && (
-						<Item variant="outline">
-							<ItemContent>
-								<ItemTitle>Current batches</ItemTitle>
-								<ItemDescription>
-									{batches.map((batch) => batch.label).join(", ")}
-								</ItemDescription>
-							</ItemContent>
-						</Item>
-					)}
+					{cls.isGroupsEnabled &&
+						batches?.map((batch) => (
+							<Item key={batch._id} variant="outline">
+								<ItemContent>
+									<ItemTitle>{batch.label}</ItemTitle>
+									<ItemDescription>
+										{formatStudentCount(batch.studentCount)}
+									</ItemDescription>
+								</ItemContent>
+								<ItemActions>
+									<Button
+										variant="destructive"
+										size="sm"
+										disabled={!canDeleteBatch || isSubmitting}
+										onClick={() => {
+											setError(null);
+											setBatchToDelete(batch._id);
+										}}
+									>
+										Delete
+									</Button>
+								</ItemActions>
+							</Item>
+						))}
 				</ItemGroup>
 
 				{error && <p className="text-sm text-destructive">{error}</p>}
 			</Card>
 
-			<Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+			<Dialog open={disableConfirmOpen} onOpenChange={setDisableConfirmOpen}>
 				<DialogContent className="sm:max-w-md" showCloseButton={false}>
 					<DialogHeader>
 						<DialogTitle>Disable batches?</DialogTitle>
@@ -211,7 +321,7 @@ export function BatchesSettingsSection({ cls }: BatchesSettingsSectionProps) {
 					<DialogFooter>
 						<Button
 							variant="outline"
-							onClick={() => setConfirmOpen(false)}
+							onClick={() => setDisableConfirmOpen(false)}
 							disabled={isSubmitting}
 						>
 							Cancel
@@ -222,6 +332,42 @@ export function BatchesSettingsSection({ cls }: BatchesSettingsSectionProps) {
 							onClick={() => void handleDisable()}
 						>
 							Disable batches
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			<Dialog
+				open={batchToDelete !== null}
+				onOpenChange={(open) => {
+					if (!open) {
+						setBatchToDelete(null);
+						setError(null);
+					}
+				}}
+			>
+				<DialogContent className="sm:max-w-md" showCloseButton={false}>
+					<DialogHeader>
+						<DialogTitle>
+							Delete {removePreview?.batchLabel ?? "batch"}?
+						</DialogTitle>
+						<DialogDescription>{renderDeleteDescription()}</DialogDescription>
+					</DialogHeader>
+					{error && <p className="text-sm text-destructive">{error}</p>}
+					<DialogFooter>
+						<Button
+							variant="outline"
+							onClick={() => setBatchToDelete(null)}
+							disabled={isSubmitting}
+						>
+							Cancel
+						</Button>
+						<Button
+							variant="destructive"
+							disabled={isSubmitting || !removePreview}
+							onClick={() => void handleDeleteBatch()}
+						>
+							{isSubmitting ? "Deleting…" : "Delete batch"}
 						</Button>
 					</DialogFooter>
 				</DialogContent>

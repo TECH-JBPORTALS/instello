@@ -124,6 +124,8 @@ const tables = {
 		),
 		currentHeadStageId: v.id("academicStages"),
 		status: v.union(v.literal("inactive"), v.literal("active")),
+		/** Soft gate while cascade deletion runs; treated as not found by public APIs. */
+		isDeleting: v.optional(v.boolean()),
 		createdAt: v.number(),
 		updatedAt: v.optional(v.number()),
 	})
@@ -139,6 +141,8 @@ const tables = {
 	classBatches: defineTable({
 		classId: v.id("classes"),
 		numIdx: v.number(),
+		/** Soft gate while cascade deletion runs; hidden from public APIs. */
+		isDeleting: v.optional(v.boolean()),
 		createdAt: v.number(),
 		updatedAt: v.optional(v.number()),
 	}).index("by_class", ["classId"]),

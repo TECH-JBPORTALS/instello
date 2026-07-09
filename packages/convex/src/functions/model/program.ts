@@ -4,6 +4,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import { vv } from "../schema";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
+import * as Class from "./class";
 
 export const CreateSchema = vv
 	.doc("programs")
@@ -226,145 +227,6 @@ export async function markDeleting(ctx: AppMutationCtx, id: Id<"programs">) {
 	});
 }
 
-async function deleteAttendanceForClass(
-	ctx: AppMutationCtx,
-	classId: Id<"classes">,
-): Promise<boolean> {
-	const registers = await ctx.db
-		.query("attendanceRegisters")
-		.withIndex("by_class_and_status", (q) => q.eq("classId", classId))
-		.take(DELETE_BATCH_SIZE);
-
-	if (registers.length === 0) return false;
-
-	for (const register of registers) {
-		const hasMoreRecords = await deleteRegisterTree(ctx, register._id);
-		if (hasMoreRecords) return true;
-		await ctx.db.delete("attendanceRegisters", register._id);
-	}
-	return true;
-}
-
-async function deleteRegisterTree(
-	ctx: AppMutationCtx,
-	registerId: Id<"attendanceRegisters">,
-): Promise<boolean> {
-	const records = await ctx.db
-		.query("attendanceRecords")
-		.withIndex("by_register_and_sessionDate", (q) =>
-			q.eq("registerId", registerId),
-		)
-		.take(DELETE_BATCH_SIZE);
-
-	if (records.length === 0) return false;
-
-	for (const record of records) {
-		const entries = await ctx.db
-			.query("attendanceEntries")
-			.withIndex("by_record", (q) => q.eq("recordId", record._id))
-			.take(DELETE_BATCH_SIZE);
-
-		if (entries.length > 0) {
-			for (const entry of entries) {
-				await ctx.db.delete("attendanceEntries", entry._id);
-			}
-			return true;
-		}
-
-		const logs = await ctx.db
-			.query("attendanceActivityLogs")
-			.withIndex("by_record", (q) => q.eq("recordId", record._id))
-			.take(DELETE_BATCH_SIZE);
-
-		if (logs.length > 0) {
-			for (const log of logs) {
-				await ctx.db.delete("attendanceActivityLogs", log._id);
-			}
-			return true;
-		}
-
-		await ctx.db.delete("attendanceRecords", record._id);
-	}
-
-	return true;
-}
-
-async function deleteTimetablesForClass(
-	ctx: AppMutationCtx,
-	classId: Id<"classes">,
-): Promise<boolean> {
-	const timetables = await ctx.db
-		.query("timetable")
-		.withIndex("by_class_and_version", (q) => q.eq("classId", classId))
-		.take(DELETE_BATCH_SIZE);
-
-	if (timetables.length === 0) return false;
-
-	for (const timetable of timetables) {
-		const slots = await ctx.db
-			.query("timetableSlots")
-			.withIndex("by_timetable", (q) => q.eq("timetableId", timetable._id))
-			.take(DELETE_BATCH_SIZE);
-
-		if (slots.length > 0) {
-			for (const slot of slots) {
-				await ctx.db.delete("timetableSlots", slot._id);
-			}
-			return true;
-		}
-
-		await ctx.db.delete("timetable", timetable._id);
-	}
-
-	return true;
-}
-
-async function deleteStudentsForClass(
-	ctx: AppMutationCtx,
-	classId: Id<"classes">,
-): Promise<boolean> {
-	const students = await ctx.db
-		.query("students")
-		.withIndex("by_class", (q) => q.eq("classId", classId))
-		.take(DELETE_BATCH_SIZE);
-
-	if (students.length === 0) return false;
-
-	for (const student of students) {
-		await ctx.db.delete("students", student._id);
-	}
-	return true;
-}
-
-async function deleteBatchesForClass(
-	ctx: AppMutationCtx,
-	classId: Id<"classes">,
-): Promise<boolean> {
-	const batches = await ctx.db
-		.query("classBatches")
-		.withIndex("by_class", (q) => q.eq("classId", classId))
-		.take(DELETE_BATCH_SIZE);
-
-	if (batches.length === 0) return false;
-
-	for (const batch of batches) {
-		await ctx.db.delete("classBatches", batch._id);
-	}
-	return true;
-}
-
-async function deleteClassTree(
-	ctx: AppMutationCtx,
-	cls: Doc<"classes">,
-): Promise<boolean> {
-	if (await deleteAttendanceForClass(ctx, cls._id)) return true;
-	if (await deleteTimetablesForClass(ctx, cls._id)) return true;
-	if (await deleteStudentsForClass(ctx, cls._id)) return true;
-	if (await deleteBatchesForClass(ctx, cls._id)) return true;
-	await ctx.db.delete("classes", cls._id);
-	return true;
-}
-
 /**
  * Deletes program-related data in bounded batches.
  * Returns `true` when more work remains (caller should reschedule).
@@ -382,7 +244,7 @@ export async function deleteCascadeBatch(
 		.take(1);
 
 	if (classes[0]) {
-		await deleteClassTree(ctx, classes[0]);
+		await Class.deleteCascadeBatch(ctx, classes[0]._id);
 		return true;
 	}
 

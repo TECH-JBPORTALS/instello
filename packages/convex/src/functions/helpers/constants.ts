@@ -80,6 +80,20 @@ export const ERROR_CODES = {
 			code: "BATCH_NOT_FOUND",
 			message: "Batch not found in this class",
 		},
+		LAST_REMAINING: {
+			code: "BATCH_LAST_REMAINING",
+			message:
+				"Cannot delete the only batch. Disable batches for this class instead.",
+		},
+		ALREADY_DELETING: {
+			code: "BATCH_ALREADY_DELETING",
+			message: "This batch is already being deleted",
+		},
+		TIMETABLE_CONFLICT: {
+			code: "BATCH_TIMETABLE_CONFLICT",
+			message:
+				"Cannot delete this batch because its timetable conflicts with the destination batch. Resolve timetable clashes first.",
+		},
 	},
 	FACULTY: {
 		NOT_FOUND: {

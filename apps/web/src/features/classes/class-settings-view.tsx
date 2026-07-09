@@ -13,6 +13,7 @@ import { useInsQuery } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
 import { BatchesSettingsSection } from "./sections/batches-settings-section";
+import { ClassDangerZoneSection } from "./sections/class-danger-zone-section";
 import { GeneralSettingsSection } from "./sections/general-settings-section";
 
 export function ClassSettingsView() {
@@ -47,6 +48,10 @@ export function ClassSettingsView() {
 							key={`batches-${cls._id}-${cls.updatedAt}`}
 							cls={cls}
 						/>
+						<ClassDangerZoneSection
+							key={`danger-${cls._id}-${cls.updatedAt}`}
+							cls={cls}
+						/>
 					</>
 				) : (
 					<ClassSettingsSkeleton />
@@ -59,7 +64,7 @@ export function ClassSettingsView() {
 function ClassSettingsSkeleton() {
 	return (
 		<div className="space-y-8">
-			{Array.from({ length: 2 }).map((_, sectionIndex) => (
+			{Array.from({ length: 3 }).map((_, sectionIndex) => (
 				<div key={sectionIndex} className="space-y-2">
 					<Skeleton className="h-4 w-24" />
 					<Skeleton className="h-3 w-56" />

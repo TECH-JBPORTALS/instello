@@ -1,6 +1,8 @@
 import { paginationOptsValidator } from "convex/server";
 import { ERROR_CODES, throwAppError } from "./helpers/constants";
 import { insMutation, insQuery } from "./helpers/customFunctions";
+import { internal } from "./_generated/api";
+import { internalMutation } from "./_generated/server";
 import * as Class from "./model/class";
 import * as ClassBatch from "./model/classBatch";
 import * as Program from "./model/program";
@@ -285,5 +287,44 @@ export const disableSectionGroups = insMutation({
 		await ClassBatch.disableForClass(ctx, cls._id);
 
 		return { _id: cls._id, isGroupsEnabled: false };
+	},
+});
+
+/** Soft-mark class for deletion and schedule cascade cleanup */
+export const remove = insMutation({
+	permissions: ["class:delete"],
+	args: {
+		id: vv.id("classes"),
+	},
+	returns: vv.null(),
+	handler: async (ctx, args) => {
+		const cls = await Class.ensureInInstitution(
+			ctx,
+			args.id,
+			ctx.institution._id,
+		);
+
+		await Class.markDeleting(ctx, cls._id);
+		await ctx.scheduler.runAfter(0, internal.classes.deleteCascade, {
+			classId: cls._id,
+		});
+		return null;
+	},
+});
+
+/** Batched cascade deletion for a class marked with `isDeleting` */
+export const deleteCascade = internalMutation({
+	args: {
+		classId: vv.id("classes"),
+	},
+	returns: vv.null(),
+	handler: async (ctx, args) => {
+		const hasMore = await Class.deleteCascadeBatch(ctx, args.classId);
+		if (hasMore) {
+			await ctx.scheduler.runAfter(0, internal.classes.deleteCascade, {
+				classId: args.classId,
+			});
+		}
+		return null;
 	},
 });
