@@ -1,52 +1,24 @@
 import type { Infer } from "convex/values";
-import { components } from "../_generated/api";
-import type { Doc, Id } from "../_generated/dataModel";
-import { ERROR_CODES, throwAppError } from "../helpers/constants";
-import { vv } from "../schema";
-import type { AppMutationCtx, AppQueryCtx } from "./common.types";
-import * as Class from "./class";
+import { components } from "../../_generated/api";
+import type { Doc, Id } from "../../_generated/dataModel";
+import { ERROR_CODES, throwAppError } from "../../helpers/constants";
+import * as Class from "../../model/class";
+import type { AppMutationCtx, AppQueryCtx } from "../../model/common.types";
+import { vv } from "../../schema";
+import type { ProgramDto, ProgramListItem } from "../validator/program";
+
+export type { ProgramDto, ProgramListItem } from "../validator/program";
+export {
+	CreateInputSchema,
+	PatchAliasSchema,
+	PatchNameSchema,
+	ProgramDtoSchema,
+	ProgramListItemSchema,
+} from "../validator/program";
 
 export const CreateSchema = vv
 	.doc("programs")
 	.pick("name", "alias", "createdBy", "institutionId");
-
-export const CreateInputSchema = {
-	name: vv.string(),
-	alias: vv.string(),
-};
-
-export const PatchNameSchema = vv.object({
-	name: vv.string(),
-});
-
-export const PatchAliasSchema = vv.object({
-	alias: vv.string(),
-});
-
-export const ProgramDtoSchema = vv.object({
-	_id: vv.id("programs"),
-	name: vv.string(),
-	alias: vv.string(),
-	status: vv.union(vv.literal("active"), vv.literal("inactive")),
-	createdAt: vv.number(),
-});
-
-export const ProgramListItemSchema = vv.object({
-	_id: vv.id("programs"),
-	name: vv.string(),
-	alias: vv.string(),
-	createdAt: vv.number(),
-	status: vv.union(vv.literal("active"), vv.literal("inactive")),
-	user: vv.object({
-		_id: vv.string(),
-		name: vv.string(),
-		email: vv.string(),
-		image: vv.nullable(vv.string()),
-	}),
-});
-
-export type ProgramDto = Infer<typeof ProgramDtoSchema>;
-export type ProgramListItem = Infer<typeof ProgramListItemSchema>;
 
 const DELETE_BATCH_SIZE = 40;
 

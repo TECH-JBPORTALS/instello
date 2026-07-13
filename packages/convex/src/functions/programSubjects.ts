@@ -2,8 +2,8 @@ import * as AcademicStage from "./academicPattern/model/academicStage";
 import { ERROR_CODES, throwAppError } from "./helpers/constants";
 import { insMutation, insQuery } from "./helpers/customFunctions";
 import * as InstitutionAcademicPattern from "./institution/model/institutionAcademicPattern";
-import * as Program from "./model/program";
 import * as ProgramSubject from "./model/programSubject";
+import * as Program from "./program/model/program";
 import { vv } from "./schema";
 
 /** Lists subjects allocated to a program for a given academic stage.

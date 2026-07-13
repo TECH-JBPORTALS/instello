@@ -9,12 +9,12 @@ import {
 	normalizeSessionConfig,
 	validateSessionConfig,
 } from "../helpers/timetableSchedule";
+import * as Program from "../program/model/program";
 import { vv } from "../schema";
 import * as AttendanceRegister from "./attendanceRegister";
 import * as Class from "./class";
 import * as ClassBatch from "./classBatch";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
-import * as Program from "./program";
 
 export const MIN_TOTAL_HOURS_EXPORT = MIN_TOTAL_HOURS;
 export const DEFAULT_TOTAL_HOURS_EXPORT = DEFAULT_TOTAL_HOURS;

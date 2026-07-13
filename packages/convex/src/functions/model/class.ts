@@ -1,14 +1,14 @@
 import type { PaginationOptions } from "convex/server";
 import type { Infer } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
+import * as AcademicStage from "../academicPattern/model/academicStage";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import { slugifyName } from "../helpers/slug";
+import * as InstitutionAcademicPattern from "../institution/model/institutionAcademicPattern";
+import * as Program from "../program/model/program";
 import { vv } from "../schema";
-import * as AcademicStage from "../academicPattern/model/academicStage";
 import { BatchNamingConventionSchema } from "./classBatch";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
-import * as InstitutionAcademicPattern from "../institution/model/institutionAcademicPattern";
-import * as Program from "./program";
 
 export const ClassStageSummarySchema = vv.object({
 	_id: vv.id("academicStages"),

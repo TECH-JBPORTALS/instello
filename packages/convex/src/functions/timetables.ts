@@ -1,7 +1,7 @@
 import { ERROR_CODES, throwAppError } from "./helpers/constants";
 import { insMutation, insQuery } from "./helpers/customFunctions";
-import * as Program from "./model/program";
 import * as Timetable from "./model/timetable";
+import * as Program from "./program/model/program";
 import { vv } from "./schema";
 
 /** Create a new timetable version for the class */

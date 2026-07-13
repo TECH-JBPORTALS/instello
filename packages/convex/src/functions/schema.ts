@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { typedV } from "convex-helpers/validators";
 import { academicPatternTables } from "./academicPattern/schema";
 import { institutionTables } from "./institution/schema";
+import { programTables } from "./program/schema";
 
 const tables = {
 	/** This model is only for owner who owns an organization.
@@ -45,25 +46,7 @@ const tables = {
 
 	...academicPatternTables,
 	...institutionTables,
-
-	/** It's normally known as Branches in the realworld which students enrolled in the institution */
-	programs: defineTable({
-		createdBy: v.string(),
-		name: v.string(),
-		alias: v.string(),
-		status: v.union(v.literal("inactive"), v.literal("active")),
-		institutionId: v.string(),
-		/** Soft gate while cascade deletion runs; treated as not found by public APIs. */
-		isDeleting: v.optional(v.boolean()),
-		createdAt: v.number(),
-		updatedAt: v.number(),
-	})
-		.index("by_institution_name", ["institutionId", "name"])
-		.index("by_institution_and_alias", ["institutionId", "alias"])
-		.searchIndex("search_by_name", {
-			searchField: "name",
-			filterFields: ["institutionId"],
-		}),
+	...programTables,
 
 	/** Classes are batches of students in a program which they go through in a semester cycle to complete their academics */
 	classes: defineTable({

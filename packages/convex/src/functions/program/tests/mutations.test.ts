@@ -1,23 +1,24 @@
 import { describe, expect, vi } from "vitest";
-import { api } from "../_generated/api";
-import { ERROR_CODES } from "../helpers/constants";
+import { api } from "../../_generated/api";
+import { ERROR_CODES } from "../../helpers/constants";
 import {
 	createProgramInput,
-	EXPECTED_PROGRAMS_INS1,
 	expectAppError,
 	institutionTest,
-	OWNER_1_NAME,
 	PROGRAM_CS,
 	programTest,
 	withSlug,
-} from "./fixtures/index.setup";
+} from "../../tests/fixtures/index.setup";
 
 describe("programs.create", () => {
 	const test = institutionTest();
 
 	test("rejects unthencticated user", async ({ t, ins1 }) => {
 		await expectAppError(
-			t.mutation(api.programs.create, withSlug(ins1, createProgramInput())),
+			t.mutation(
+				api.program.mutations.create,
+				withSlug(ins1, createProgramInput()),
+			),
 			ERROR_CODES.BASE.UNAUTHORIZED,
 		);
 	});
@@ -29,7 +30,7 @@ describe("programs.create", () => {
 		asOwner,
 	}) => {
 		const programId = await asOwner(user1, ins1).mutation(
-			api.programs.create,
+			api.program.mutations.create,
 			withSlug(ins1, createProgramInput()),
 		);
 
@@ -51,13 +52,13 @@ describe("programs.create", () => {
 		asOwner,
 	}) => {
 		await asOwner(user1, ins1).mutation(
-			api.programs.create,
+			api.program.mutations.create,
 			withSlug(ins1, createProgramInput()),
 		);
 
 		await expectAppError(
 			asOwner(user1, ins1).mutation(
-				api.programs.create,
+				api.program.mutations.create,
 				withSlug(
 					ins1,
 					createProgramInput({
@@ -76,224 +77,13 @@ describe("programs.create", () => {
 	});
 });
 
-describe("programs.checkAlias", () => {
-	const test = programTest();
-
-	test("rejects unthencticated user", async ({ t, ins1 }) => {
-		await expectAppError(
-			t.query(api.programs.checkAlias, withSlug(ins1, { alias: "CS" })),
-			ERROR_CODES.BASE.UNAUTHORIZED,
-		);
-	});
-
-	test("returns available when alias is not taken", async ({
-		user1,
-		ins1,
-		asOwner,
-		programs: _programs,
-	}) => {
-		const result = await asOwner(user1, ins1).query(
-			api.programs.checkAlias,
-			withSlug(ins1, { alias: "unique-alias" }),
-		);
-
-		expect(result).toEqual({ available: true });
-	});
-
-	test("returns unavailable when alias already exists", async ({
-		user1,
-		ins1,
-		asOwner,
-		programs,
-	}) => {
-		const result = await asOwner(user1, ins1).query(
-			api.programs.checkAlias,
-			withSlug(ins1, { alias: programs.cs.alias }),
-		);
-
-		expect(result).toEqual({ available: false });
-	});
-});
-
-describe("programs.getByAlias", () => {
-	const test = programTest();
-
-	test("rejects unthencticated user", async ({ t, ins1, programs }) => {
-		await expectAppError(
-			t.query(
-				api.programs.getByAlias,
-				withSlug(ins1, { alias: programs.cs.alias }),
-			),
-			ERROR_CODES.BASE.UNAUTHORIZED,
-		);
-	});
-
-	test("gets program by alias", async ({ user1, ins1, programs, asOwner }) => {
-		const program = await asOwner(user1, ins1).query(
-			api.programs.getByAlias,
-			withSlug(ins1, { alias: programs.cs.alias }),
-		);
-
-		expect(program).toMatchObject({
-			_id: programs.cs._id,
-			name: PROGRAM_CS.name,
-			alias: PROGRAM_CS.alias,
-			status: "active",
-		});
-	});
-
-	test("throws error if program alias doesn't exist", async ({
-		user1,
-		ins1,
-		asOwner,
-	}) => {
-		await expectAppError(
-			asOwner(user1, ins1).query(
-				api.programs.getByAlias,
-				withSlug(ins1, { alias: "nonexistent" }),
-			),
-			ERROR_CODES.PROGRAM.NOT_FOUND,
-		);
-	});
-
-	test("rejects program from another institution", async ({
-		user1,
-		ins1,
-		programs,
-		asOwner,
-	}) => {
-		await expectAppError(
-			asOwner(user1, ins1).query(
-				api.programs.getByAlias,
-				withSlug(ins1, { alias: programs.ce.alias }),
-			),
-			ERROR_CODES.PROGRAM.NOT_FOUND,
-		);
-	});
-});
-
-describe("programs.list", () => {
-	const test = programTest();
-
-	test("rejects unthencticated user", async ({ t, ins1 }) => {
-		await expectAppError(
-			t.query(api.programs.list, withSlug(ins1, {})),
-			ERROR_CODES.BASE.UNAUTHORIZED,
-		);
-	});
-
-	test("lists programs for the active institution ordered by name", async ({
-		user1,
-		ins1,
-		asOwner,
-		programs: _programs,
-	}) => {
-		const result = await asOwner(user1, ins1).query(
-			api.programs.list,
-			withSlug(ins1, {}),
-		);
-
-		expect(result).toHaveLength(2);
-		expect(result).toMatchObject(EXPECTED_PROGRAMS_INS1);
-	});
-
-	test("lists programs by name for given query", async ({
-		user1,
-		ins1,
-		asOwner,
-		programs: _programs,
-	}) => {
-		const query1 = await asOwner(user1, ins1).query(
-			api.programs.list,
-			withSlug(ins1, { query: "computer" }),
-		);
-
-		expect(query1).toHaveLength(1);
-		expect(query1).toMatchObject([
-			{
-				name: PROGRAM_CS.name,
-				alias: PROGRAM_CS.alias,
-				status: "active",
-				user: { name: OWNER_1_NAME },
-			},
-		]);
-
-		const query2 = await asOwner(user1, ins1).query(
-			api.programs.list,
-			withSlug(ins1, { query: "some rubbish!" }),
-		);
-		expect(query2).toHaveLength(0);
-		expect(query2).toMatchObject([]);
-	});
-});
-
-describe("programs.getById", () => {
-	const test = programTest();
-
-	test("rejects unthencticated user", async ({ t, ins1, programs }) => {
-		await expectAppError(
-			t.query(api.programs.getById, withSlug(ins1, { id: programs.me._id })),
-			ERROR_CODES.BASE.UNAUTHORIZED,
-		);
-	});
-
-	test("gets program by id", async ({ user1, ins1, programs, asOwner }) => {
-		const program = await asOwner(user1, ins1).query(
-			api.programs.getById,
-			withSlug(ins1, { id: programs.cs._id }),
-		);
-
-		expect(program).toMatchObject({
-			name: PROGRAM_CS.name,
-			alias: PROGRAM_CS.alias,
-			status: "active",
-		});
-	});
-
-	test("throws error if program doesn't exists", async ({
-		t,
-		user1,
-		ins1,
-		programs,
-		asOwner,
-	}) => {
-		const programId = await t.run(async (ctx) => {
-			await ctx.db.delete("programs", programs.me._id);
-			return programs.me._id;
-		});
-
-		await expectAppError(
-			asOwner(user1, ins1).query(
-				api.programs.getById,
-				withSlug(ins1, { id: programId }),
-			),
-			ERROR_CODES.PROGRAM.NOT_FOUND,
-		);
-	});
-
-	test("rejects program from another institution", async ({
-		user1,
-		ins1,
-		programs,
-		asOwner,
-	}) => {
-		await expectAppError(
-			asOwner(user1, ins1).query(
-				api.programs.getById,
-				withSlug(ins1, { id: programs.ce._id }),
-			),
-			ERROR_CODES.PROGRAM.NOT_FOUND,
-		);
-	});
-});
-
 describe("programs.updateName", () => {
 	const test = programTest();
 
 	test("rejects unthencticated user", async ({ t, ins1, programs }) => {
 		await expectAppError(
 			t.mutation(
-				api.programs.updateName,
+				api.program.mutations.updateName,
 				withSlug(ins1, {
 					id: programs.me._id,
 					body: { name: "New program name" },
@@ -311,7 +101,7 @@ describe("programs.updateName", () => {
 		asOwner,
 	}) => {
 		await asOwner(user1, ins1).mutation(
-			api.programs.updateName,
+			api.program.mutations.updateName,
 			withSlug(ins1, {
 				id: programs.cs._id,
 				body: { name: "Computer Science & Engineering" },
@@ -343,7 +133,7 @@ describe("programs.updateName", () => {
 
 		await expectAppError(
 			asOwner(user1, ins1).mutation(
-				api.programs.updateName,
+				api.program.mutations.updateName,
 				withSlug(ins1, {
 					id: programId,
 					body: { name: "Computer Science & Engineering" },
@@ -360,7 +150,7 @@ describe("programs.updateAlias", () => {
 	test("rejects unthencticated user", async ({ t, ins1, programs }) => {
 		await expectAppError(
 			t.mutation(
-				api.programs.updateName,
+				api.program.mutations.updateName,
 				withSlug(ins1, {
 					id: programs.me._id,
 					body: { name: "New program name" },
@@ -378,7 +168,7 @@ describe("programs.updateAlias", () => {
 		asOwner,
 	}) => {
 		await asOwner(user1, ins1).mutation(
-			api.programs.updateAlias,
+			api.program.mutations.updateAlias,
 			withSlug(ins1, {
 				id: programs.cs._id,
 				body: { alias: "CSE" },
@@ -410,7 +200,7 @@ describe("programs.updateAlias", () => {
 
 		await expectAppError(
 			asOwner(user1, ins1).mutation(
-				api.programs.updateAlias,
+				api.program.mutations.updateAlias,
 				withSlug(ins1, {
 					id: programId,
 					body: { alias: "CSE" },
@@ -428,7 +218,7 @@ describe("programs.updateAlias", () => {
 	}) => {
 		await expectAppError(
 			asOwner(user1, ins1).mutation(
-				api.programs.updateAlias,
+				api.program.mutations.updateAlias,
 				withSlug(ins1, {
 					id: programs.cs._id,
 					body: { alias: programs.me.alias },
@@ -444,7 +234,10 @@ describe("programs.remove", () => {
 
 	test("rejects unauthenticated user", async ({ t, ins1, programs }) => {
 		await expectAppError(
-			t.mutation(api.programs.remove, withSlug(ins1, { id: programs.cs._id })),
+			t.mutation(
+				api.program.mutations.remove,
+				withSlug(ins1, { id: programs.cs._id }),
+			),
 			ERROR_CODES.BASE.UNAUTHORIZED,
 		);
 	});
@@ -457,7 +250,7 @@ describe("programs.remove", () => {
 		asOwner,
 	}) => {
 		await asOwner(user1, ins1).mutation(
-			api.programs.remove,
+			api.program.mutations.remove,
 			withSlug(ins1, { id: programs.cs._id }),
 		);
 
@@ -468,7 +261,7 @@ describe("programs.remove", () => {
 
 		await expectAppError(
 			asOwner(user1, ins1).query(
-				api.programs.getByAlias,
+				api.program.queries.getByAlias,
 				withSlug(ins1, { alias: PROGRAM_CS.alias }),
 			),
 			ERROR_CODES.PROGRAM.NOT_FOUND,
@@ -476,14 +269,14 @@ describe("programs.remove", () => {
 
 		await expectAppError(
 			asOwner(user1, ins1).query(
-				api.programs.getById,
+				api.program.queries.getById,
 				withSlug(ins1, { id: programs.cs._id }),
 			),
 			ERROR_CODES.PROGRAM.NOT_FOUND,
 		);
 
 		const listed = await asOwner(user1, ins1).query(
-			api.programs.list,
+			api.program.queries.list,
 			withSlug(ins1, {}),
 		);
 		expect(listed.find((p) => p._id === programs.cs._id)).toBeUndefined();
@@ -499,7 +292,7 @@ describe("programs.remove", () => {
 		vi.useFakeTimers();
 		try {
 			await asOwner(user1, ins1).mutation(
-				api.programs.remove,
+				api.program.mutations.remove,
 				withSlug(ins1, { id: programs.me._id }),
 			);
 
