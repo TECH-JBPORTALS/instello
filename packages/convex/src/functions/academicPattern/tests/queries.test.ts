@@ -8,7 +8,7 @@ describe("academicPatterns.list", () => {
 
 	test("rejects unauthenticated user", async ({ t }) => {
 		await expectAppError(
-			t.query(api.academicPatterns.list),
+			t.query(api.academicPattern.queries.list),
 			ERROR_CODES.BASE.UNAUTHORIZED,
 		);
 	});
@@ -17,7 +17,9 @@ describe("academicPatterns.list", () => {
 		user1,
 		asOwnerUser,
 	}) => {
-		const patterns = await asOwnerUser(user1).query(api.academicPatterns.list);
+		const patterns = await asOwnerUser(user1).query(
+			api.academicPattern.queries.list,
+		);
 
 		expect(patterns).toHaveLength(2);
 		expect(patterns[0]?.stageCount).toBeGreaterThan(0);
@@ -32,13 +34,15 @@ describe("academicPatterns.getById", () => {
 		user1,
 		asOwnerUser,
 	}) => {
-		const patterns = await asOwnerUser(user1).query(api.academicPatterns.list);
+		const patterns = await asOwnerUser(user1).query(
+			api.academicPattern.queries.list,
+		);
 		const engineering = patterns.find((p) => p.templateKey === "engineering");
 
 		expect(engineering).toBeDefined();
 
 		const detail = await asOwnerUser(user1).query(
-			api.academicPatterns.getById,
+			api.academicPattern.queries.getById,
 			// biome-ignore lint/style/noNonNullAssertion: <No need to assert here>
 			{ id: engineering!._id },
 		);
@@ -54,11 +58,11 @@ describe("academicPatterns.getById", () => {
 		asOwnerUser,
 	}) => {
 		const user2Patterns = await asOwnerUser(user2).query(
-			api.academicPatterns.list,
+			api.academicPattern.queries.list,
 		);
 
 		await expectAppError(
-			asOwnerUser(user1).query(api.academicPatterns.getById, {
+			asOwnerUser(user1).query(api.academicPattern.queries.getById, {
 				id: user2Patterns[0]?._id,
 			}),
 			ERROR_CODES.ACADEMIC_PATTERN.NOT_FOUND,

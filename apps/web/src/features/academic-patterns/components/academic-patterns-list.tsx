@@ -23,10 +23,10 @@ import { useQuery } from "convex-helpers/react/cache/hooks";
 import { isEmpty, isUndefined } from "lodash";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { formatPatternSummary } from "./constants";
+import { formatPatternSummary } from "../constants";
+import { academicPatternPath } from "../pattern-path";
 import { PatternAvatar } from "./pattern-avatar";
 import { LockBadge, TemplateBadge } from "./pattern-badges";
-import { academicPatternPath } from "./pattern-path";
 
 function AcademicPatternsListSkeleton({ count }: { count: number }) {
 	return (
@@ -71,7 +71,7 @@ function AcademicPatternsListEmpty() {
 
 export function AcademicPatternsList() {
 	const { orgSlug } = useParams<{ orgSlug: string }>();
-	const patterns = useQuery(api.academicPatterns.list);
+	const patterns = useQuery(api.academicPattern.queries.list);
 
 	if (isUndefined(patterns)) {
 		return <AcademicPatternsListSkeleton count={4} />;

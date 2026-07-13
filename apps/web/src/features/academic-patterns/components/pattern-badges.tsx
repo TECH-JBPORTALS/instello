@@ -2,7 +2,7 @@
 
 import { Badge } from "@instello/ui/components/badge";
 import { IconLock } from "@tabler/icons-react";
-import { TEMPLATE_KEY_LABELS, type TemplateKey } from "./constants";
+import { TEMPLATE_KEY_LABELS, type TemplateKey } from "../constants";
 
 export function TemplateBadge({ templateKey }: { templateKey?: TemplateKey }) {
 	if (!templateKey) return null;

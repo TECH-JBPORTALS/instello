@@ -74,7 +74,7 @@ export function NewClassDialog({
 	const convex = useConvex();
 	const createClass = useInsMutation(api.classes.create);
 	const adoptedPattern = useInsQuery(
-		api.academicPatterns.getAdoptedForActiveInstitution,
+		api.academicPattern.queries.getAdoptedForActiveInstitution,
 		open ? {} : "skip",
 	);
 	const [globalError, setGlobalError] = useState<string | null>(null);

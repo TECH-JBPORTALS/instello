@@ -1,6 +1,5 @@
 "use client";
 
-import type { Id } from "@instello/convex/dataModel";
 import {
 	Card,
 	CardDescription,
@@ -16,21 +15,24 @@ import {
 	ItemTitle,
 } from "@instello/ui/components/item";
 import { cn } from "@instello/ui/lib/utils";
-import type { SystemType } from "../constants";
-import { PatternDescriptionField } from "./fields/pattern-description-field";
-import { PatternDurationField } from "./fields/pattern-duration-field";
-import { PatternNameField } from "./fields/pattern-name-field";
-import { PatternSystemTypeField } from "./fields/pattern-system-type-field";
+import type { AcademicPatternDetailDto } from "../types";
+import {
+	PatternDescriptionField,
+	PatternDurationField,
+	PatternNameField,
+	PatternSystemTypeField,
+} from "./pattern-fields";
 
 type PatternSettingsSectionProps = {
-	pattern: {
-		_id: Id<"academicPatterns">;
-		name: string;
-		description?: string;
-		systemType: SystemType;
-		durationInYears: number;
-		canBeEdited: boolean;
-	};
+	pattern: Pick<
+		AcademicPatternDetailDto,
+		| "_id"
+		| "name"
+		| "description"
+		| "systemType"
+		| "durationInYears"
+		| "canBeEdited"
+	>;
 };
 
 export function PatternSettingsSection({

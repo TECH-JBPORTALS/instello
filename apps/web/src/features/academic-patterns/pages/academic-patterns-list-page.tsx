@@ -7,9 +7,9 @@ import {
 	PageHeaderStart,
 	PageHeaderTitle,
 } from "@/components/common/page-header";
-import { AcademicPatternsList } from "./academic-patterns-list";
+import { AcademicPatternsList } from "../components/academic-patterns-list";
 
-export default function AcademicPatternsView() {
+export function AcademicPatternsListPage() {
 	return (
 		<Container>
 			<PageHeader className="h-auto flex-col items-start gap-4 sm:flex-row sm:items-center">

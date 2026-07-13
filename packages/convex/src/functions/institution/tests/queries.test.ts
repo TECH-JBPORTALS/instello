@@ -17,7 +17,7 @@ describe("institutions.listMyOwned", () => {
 
 	test("rejects unthencticated user", async ({ t }) => {
 		await expectAppError(
-			t.query(api.institutions.listMyOwned),
+			t.query(api.institution.queries.listMyOwned),
 			ERROR_CODES.BASE.UNAUTHORIZED,
 		);
 	});
@@ -38,7 +38,7 @@ describe("institutions.listMyOwned", () => {
 				activeInstitutionId: "ins-1",
 				sessionId: "ses-1",
 			})
-			.query(api.institutions.listMyOwned);
+			.query(api.institution.queries.listMyOwned);
 
 		expect(myInstitutions).toHaveLength(expectedUser1Institutions.length);
 		expect(myInstitutions).toEqual(expectedUser1Institutions);
@@ -60,7 +60,7 @@ describe("institutions.listMyOwned", () => {
 				activeInstitutionId: "ins-1",
 				sessionId: "ses-1",
 			})
-			.query(api.institutions.listMyOwned);
+			.query(api.institution.queries.listMyOwned);
 
 		expect(myInstitutions).toHaveLength(expectedUser2Institutions.length);
 		expect(myInstitutions).toEqual(expectedUser2Institutions);
@@ -72,17 +72,19 @@ describe("institutions.listMyOwned adopted pattern", () => {
 
 	test("includes adopted pattern summary", async ({ t, user1, ins1 }) => {
 		const client = t.withIdentity(ownerUserIdentity(user1._id));
-		const patterns = await client.query(api.academicPatterns.list);
+		const patterns = await client.query(api.academicPattern.queries.list);
 		const pattern = patterns[0];
 
 		if (!pattern) throw new Error("Expected at least one academic pattern");
 
-		await client.mutation(api.academicPatterns.adopt, {
+		await client.mutation(api.academicPattern.mutations.adopt, {
 			institutionId: ins1._id,
 			academicPatternId: pattern._id,
 		});
 
-		const myInstitutions = await client.query(api.institutions.listMyOwned);
+		const myInstitutions = await client.query(
+			api.institution.queries.listMyOwned,
+		);
 		const institution = myInstitutions.find((item) => item._id === ins1._id);
 
 		expect(institution?.adoptedPattern).toEqual({
@@ -99,7 +101,7 @@ describe("institutions.checkCode", () => {
 
 		test("rejects unauthenticated user", async ({ t }) => {
 			await expectAppError(
-				t.query(api.institutions.checkCode, { code: "364" }),
+				t.query(api.institution.queries.checkCode, { code: "364" }),
 				ERROR_CODES.BASE.UNAUTHORIZED,
 			);
 		});
@@ -115,7 +117,7 @@ describe("institutions.checkCode", () => {
 					activeInstitutionId: "ins-1",
 					sessionId: "ses-1",
 				})
-				.query(api.institutions.checkCode, { code: "unique-code-123" });
+				.query(api.institution.queries.checkCode, { code: "unique-code-123" });
 
 			expect(result).toEqual({ available: true });
 		});
@@ -136,7 +138,7 @@ describe("institutions.checkCode", () => {
 					activeInstitutionId: "ins-1",
 					sessionId: "ses-1",
 				})
-				.query(api.institutions.checkCode, { code });
+				.query(api.institution.queries.checkCode, { code });
 
 			expect(result).toEqual({ available: false });
 		});

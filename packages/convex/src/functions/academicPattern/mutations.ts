@@ -8,31 +8,10 @@ import { vv } from "../schema";
 import * as AcademicPattern from "./model/academicPattern";
 import * as AcademicStage from "./model/academicStage";
 import {
-	CreateInputSchema,
 	PatchCoreSchema,
 	PatchMetadataSchema,
 } from "./validator/academicPattern";
 import { PatchMetadataSchema as StagePatchMetadataSchema } from "./validator/academicStage";
-
-/** Creates a custom academic pattern with its initial stages for the authenticated owner organization. */
-export const create = userMutation({
-	args: CreateInputSchema,
-	returns: vv.id("academicPatterns"),
-	handler: async (ctx, args) => {
-		const ownerOrg = await OwnerOrganization.getByUserId(ctx, {
-			userId: ctx.session.userId,
-		});
-
-		if (!ownerOrg) {
-			throwAppError(ERROR_CODES.OWNER_ORGANIZATION.NOT_FOUND);
-		}
-
-		return await AcademicPattern.create(ctx, {
-			...args,
-			ownerOrganizationId: ownerOrg._id,
-		});
-	},
-});
 
 /** Updates pattern name and description. Allowed even when core structure is locked. */
 export const patchMetadata = userMutation({
@@ -130,40 +109,6 @@ export const adopt = userMutation({
 		await StudentCategory.seedDefaults(ctx, args.institutionId);
 
 		return adoptionId;
-	},
-});
-
-/** Releases an institution's adopted pattern and unlocks the pattern when no adoptions remain. */
-export const release = userMutation({
-	args: { institutionId: vv.string() },
-	returns: vv.null(),
-	handler: async (ctx, args) => {
-		const ownerOrg = await OwnerOrganization.getByUserId(ctx, {
-			userId: ctx.session.userId,
-		});
-
-		if (!ownerOrg) {
-			throwAppError(ERROR_CODES.OWNER_ORGANIZATION.NOT_FOUND);
-		}
-
-		const membership = await ctx.runQuery(
-			components.betterAuth.institutions.getMembership,
-			{
-				organizationId: args.institutionId,
-				userId: ctx.session.userId,
-			},
-		);
-
-		if (membership?.role !== "owner") {
-			throwAppError(ERROR_CODES.BASE.ACCESS_DENIED);
-		}
-
-		await InstitutionAcademicPattern.release(ctx, {
-			institutionId: args.institutionId,
-			ownerOrganizationId: ownerOrg._id,
-		});
-
-		return null;
 	},
 });
 

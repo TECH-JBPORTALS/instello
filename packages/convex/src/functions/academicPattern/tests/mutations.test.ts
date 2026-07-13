@@ -61,21 +61,26 @@ describe("academicPatterns.patchMetadata", () => {
 		ins1,
 		asOwnerUser,
 	}) => {
-		const patterns = await asOwnerUser(user1).query(api.academicPatterns.list);
+		const patterns = await asOwnerUser(user1).query(
+			api.academicPattern.queries.list,
+		);
 		const pattern = patterns[0];
 
-		await asOwnerUser(user1).mutation(api.academicPatterns.adopt, {
+		await asOwnerUser(user1).mutation(api.academicPattern.mutations.adopt, {
 			institutionId: ins1._id,
 			academicPatternId: pattern._id,
 		});
 
-		await asOwnerUser(user1).mutation(api.academicPatterns.patchMetadata, {
-			id: pattern._id,
-			body: { name: "Updated Engineering Pattern" },
-		});
+		await asOwnerUser(user1).mutation(
+			api.academicPattern.mutations.patchMetadata,
+			{
+				id: pattern._id,
+				body: { name: "Updated Engineering Pattern" },
+			},
+		);
 
 		const updated = await asOwnerUser(user1).query(
-			api.academicPatterns.getById,
+			api.academicPattern.queries.getById,
 			{ id: pattern._id },
 		);
 
@@ -92,16 +97,18 @@ describe("academicPatterns.patchCore", () => {
 		ins1,
 		asOwnerUser,
 	}) => {
-		const patterns = await asOwnerUser(user1).query(api.academicPatterns.list);
+		const patterns = await asOwnerUser(user1).query(
+			api.academicPattern.queries.list,
+		);
 		const pattern = patterns[0];
 
-		await asOwnerUser(user1).mutation(api.academicPatterns.adopt, {
+		await asOwnerUser(user1).mutation(api.academicPattern.mutations.adopt, {
 			institutionId: ins1._id,
 			academicPatternId: pattern._id,
 		});
 
 		await expectAppError(
-			asOwnerUser(user1).mutation(api.academicPatterns.patchCore, {
+			asOwnerUser(user1).mutation(api.academicPattern.mutations.patchCore, {
 				id: pattern._id,
 				body: { durationInYears: 5 },
 			}),
@@ -113,21 +120,23 @@ describe("academicPatterns.patchCore", () => {
 		user1,
 		asOwnerUser,
 	}) => {
-		const patterns = await asOwnerUser(user1).query(api.academicPatterns.list);
+		const patterns = await asOwnerUser(user1).query(
+			api.academicPattern.queries.list,
+		);
 		const diploma = patterns.find(
 			(pattern) => pattern.templateKey === "diploma",
 		);
 
 		expect(diploma).toBeDefined();
 
-		await asOwnerUser(user1).mutation(api.academicPatterns.patchCore, {
+		await asOwnerUser(user1).mutation(api.academicPattern.mutations.patchCore, {
 			// biome-ignore lint/style/noNonNullAssertion: diploma is defined above
 			id: diploma!._id,
 			body: { durationInYears: 2 },
 		});
 
 		const detail = await asOwnerUser(user1).query(
-			api.academicPatterns.getById,
+			api.academicPattern.queries.getById,
 			{
 				// biome-ignore lint/style/noNonNullAssertion: diploma is defined above
 				id: diploma!._id,
@@ -143,21 +152,23 @@ describe("academicPatterns.patchCore", () => {
 		user1,
 		asOwnerUser,
 	}) => {
-		const patterns = await asOwnerUser(user1).query(api.academicPatterns.list);
+		const patterns = await asOwnerUser(user1).query(
+			api.academicPattern.queries.list,
+		);
 		const diploma = patterns.find(
 			(pattern) => pattern.templateKey === "diploma",
 		);
 
 		expect(diploma).toBeDefined();
 
-		await asOwnerUser(user1).mutation(api.academicPatterns.patchCore, {
+		await asOwnerUser(user1).mutation(api.academicPattern.mutations.patchCore, {
 			// biome-ignore lint/style/noNonNullAssertion: diploma is defined above
 			id: diploma!._id,
 			body: { durationInYears: 4 },
 		});
 
 		const detail = await asOwnerUser(user1).query(
-			api.academicPatterns.getById,
+			api.academicPattern.queries.getById,
 			{
 				// biome-ignore lint/style/noNonNullAssertion: diploma is defined above
 				id: diploma!._id,
@@ -178,7 +189,9 @@ describe("academicPatterns.patchCore", () => {
 		user1,
 		asOwnerUser,
 	}) => {
-		const patterns = await asOwnerUser(user1).query(api.academicPatterns.list);
+		const patterns = await asOwnerUser(user1).query(
+			api.academicPattern.queries.list,
+		);
 		const diploma = patterns.find(
 			(pattern) => pattern.templateKey === "diploma",
 		);
@@ -186,7 +199,7 @@ describe("academicPatterns.patchCore", () => {
 		expect(diploma).toBeDefined();
 
 		const detail = await asOwnerUser(user1).query(
-			api.academicPatterns.getById,
+			api.academicPattern.queries.getById,
 			{
 				// biome-ignore lint/style/noNonNullAssertion: diploma is defined above
 				id: diploma!._id,
@@ -196,20 +209,23 @@ describe("academicPatterns.patchCore", () => {
 
 		expect(firstStage).toBeDefined();
 
-		await asOwnerUser(user1).mutation(api.academicStages.patchMetadata, {
-			// biome-ignore lint/style/noNonNullAssertion: first stage is defined above
-			id: firstStage!._id,
-			body: { name: "Custom Semester", alias: "custom" },
-		});
+		await asOwnerUser(user1).mutation(
+			api.academicPattern.mutations.patchStageMetadata,
+			{
+				// biome-ignore lint/style/noNonNullAssertion: first stage is defined above
+				id: firstStage!._id,
+				body: { name: "Custom Semester", alias: "custom" },
+			},
+		);
 
-		await asOwnerUser(user1).mutation(api.academicPatterns.patchCore, {
+		await asOwnerUser(user1).mutation(api.academicPattern.mutations.patchCore, {
 			// biome-ignore lint/style/noNonNullAssertion: diploma is defined above
 			id: diploma!._id,
 			body: { durationInYears: 4 },
 		});
 
 		const updated = await asOwnerUser(user1).query(
-			api.academicPatterns.getById,
+			api.academicPattern.queries.getById,
 			{
 				// biome-ignore lint/style/noNonNullAssertion: diploma is defined above
 				id: diploma!._id,
@@ -230,21 +246,23 @@ describe("academicPatterns.patchCore", () => {
 		user1,
 		asOwnerUser,
 	}) => {
-		const patterns = await asOwnerUser(user1).query(api.academicPatterns.list);
+		const patterns = await asOwnerUser(user1).query(
+			api.academicPattern.queries.list,
+		);
 		const diploma = patterns.find(
 			(pattern) => pattern.templateKey === "diploma",
 		);
 
 		expect(diploma).toBeDefined();
 
-		await asOwnerUser(user1).mutation(api.academicPatterns.patchCore, {
+		await asOwnerUser(user1).mutation(api.academicPattern.mutations.patchCore, {
 			// biome-ignore lint/style/noNonNullAssertion: diploma is defined above
 			id: diploma!._id,
 			body: { systemType: "annual" },
 		});
 
 		const detail = await asOwnerUser(user1).query(
-			api.academicPatterns.getById,
+			api.academicPattern.queries.getById,
 			{
 				// biome-ignore lint/style/noNonNullAssertion: diploma is defined above
 				id: diploma!._id,
@@ -281,17 +299,20 @@ describe("academicPatterns.adopt", () => {
 
 	test("locks pattern and creates adoption row", async ({ t, user1, ins1 }) => {
 		const client = t.withIdentity(ownerUserIdentity(user1._id));
-		const patterns = await client.query(api.academicPatterns.list);
+		const patterns = await client.query(api.academicPattern.queries.list);
 		const pattern = patterns[0];
 
-		const adoptionId = await client.mutation(api.academicPatterns.adopt, {
-			institutionId: ins1._id,
-			academicPatternId: pattern._id,
-		});
+		const adoptionId = await client.mutation(
+			api.academicPattern.mutations.adopt,
+			{
+				institutionId: ins1._id,
+				academicPatternId: pattern._id,
+			},
+		);
 
 		expect(adoptionId).toBeDefined();
 
-		const locked = await client.query(api.academicPatterns.getById, {
+		const locked = await client.query(api.academicPattern.queries.getById, {
 			id: pattern._id,
 		});
 
@@ -313,48 +334,19 @@ describe("academicPatterns.adopt", () => {
 		ins1,
 	}) => {
 		const client = t.withIdentity(ownerUserIdentity(user1._id));
-		const patterns = await client.query(api.academicPatterns.list);
+		const patterns = await client.query(api.academicPattern.queries.list);
 
-		await client.mutation(api.academicPatterns.adopt, {
+		await client.mutation(api.academicPattern.mutations.adopt, {
 			institutionId: ins1._id,
 			academicPatternId: patterns[0]?._id,
 		});
 
 		await expectAppError(
-			client.mutation(api.academicPatterns.adopt, {
+			client.mutation(api.academicPattern.mutations.adopt, {
 				institutionId: ins1._id,
 				academicPatternId: patterns[1]?._id,
 			}),
 			ERROR_CODES.INSTITUTION_ACADEMIC_PATTERN.ALREADY_ADOPTED,
 		);
-	});
-});
-
-describe("academicPatterns.release", () => {
-	const test = ownerOrgInstitutionTest();
-
-	test("unlocks pattern when last adoption is removed", async ({
-		t,
-		user1,
-		ins1,
-	}) => {
-		const client = t.withIdentity(ownerUserIdentity(user1._id));
-		const patterns = await client.query(api.academicPatterns.list);
-		const pattern = patterns[0];
-
-		await client.mutation(api.academicPatterns.adopt, {
-			institutionId: ins1._id,
-			academicPatternId: pattern._id,
-		});
-
-		await client.mutation(api.academicPatterns.release, {
-			institutionId: ins1._id,
-		});
-
-		const unlocked = await client.query(api.academicPatterns.getById, {
-			id: pattern._id,
-		});
-
-		expect(unlocked.canBeEdited).toBe(true);
 	});
 });

@@ -16,21 +16,21 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import Container from "@/components/common/container";
 import { PageHeader, PageHeaderStart } from "@/components/common/page-header";
-import { formatPatternSummary } from "./constants";
-import { PatternAvatar } from "./pattern-avatar";
-import { LockBadge, TemplateBadge } from "./pattern-badges";
-import { academicPatternsListPath } from "./pattern-path";
-import { PatternSettingsSection } from "./sections/pattern-settings-section";
-import { StagesSection } from "./sections/stages-section";
+import { PatternAvatar } from "../components/pattern-avatar";
+import { LockBadge, TemplateBadge } from "../components/pattern-badges";
+import { PatternSettingsSection } from "../components/pattern-settings-section";
+import { StagesSection } from "../components/stages-section";
+import { formatPatternSummary } from "../constants";
+import { academicPatternsListPath } from "../pattern-path";
 
-export function AcademicPatternDetailPage() {
+export function PatternDetailPage() {
 	const { orgSlug, patternId } = useParams<{
 		orgSlug: string;
 		patternId: string;
 	}>();
 
 	const pattern = useQuery(
-		api.academicPatterns.getById,
+		api.academicPattern.queries.getById,
 		patternId ? { id: patternId as Id<"academicPatterns"> } : "skip",
 	);
 
@@ -60,7 +60,6 @@ export function AcademicPatternDetailPage() {
 			</PageHeader>
 			<div className="mx-auto max-w-3xl space-y-4">
 				<div className="space-y-6">
-					{/** Header **/}
 					<div className="flex items-start gap-4">
 						<PatternAvatar name={pattern.name} size="xl" />
 						<div className="min-w-0 space-y-1.5">

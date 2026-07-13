@@ -30,9 +30,9 @@ import { Skeleton } from "@instello/ui/components/skeleton";
 import { IconCalendarEvent, IconCircleCheckFilled } from "@tabler/icons-react";
 import { useQuery } from "convex-helpers/react/cache/hooks";
 import { isEmpty, isUndefined } from "lodash";
+import { PatternAvatar } from "@/features/academic-patterns/components/pattern-avatar";
+import { TemplateBadge } from "@/features/academic-patterns/components/pattern-badges";
 import { formatPatternSummary } from "@/features/academic-patterns/constants";
-import { PatternAvatar } from "@/features/academic-patterns/pattern-avatar";
-import { TemplateBadge } from "@/features/academic-patterns/pattern-badges";
 import { withForm } from "@/hooks/form";
 import { cn } from "@/lib/utils";
 import { newInstitutionFormOpt, PatternSchema } from "./shared-form";
@@ -60,7 +60,7 @@ export const PatternForm = withForm({
 		setStep: (_step: number) => {},
 	},
 	render: function Render({ form, step, setStep }) {
-		const patterns = useQuery(api.academicPatterns.list);
+		const patterns = useQuery(api.academicPattern.queries.list);
 
 		return (
 			<form.FormGroup

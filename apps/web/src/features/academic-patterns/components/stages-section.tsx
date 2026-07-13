@@ -19,7 +19,7 @@ import {
 } from "@instello/ui/components/item";
 import { IconPencil } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
-import { EditStageDialog } from "../dialogs/edit-stage-dialog";
+import { EditStageDialog } from "./edit-stage-dialog";
 
 type Stage = {
 	_id: Id<"academicStages">;

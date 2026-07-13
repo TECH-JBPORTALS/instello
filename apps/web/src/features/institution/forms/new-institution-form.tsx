@@ -39,7 +39,7 @@ export function NewInstitutionForm() {
 	const [step, setStep] = useState(0);
 	const [globalError, setGlobalError] = useState<string | null>(null);
 	const convex = useConvex();
-	const adoptPattern = useMutation(api.academicPatterns.adopt);
+	const adoptPattern = useMutation(api.academicPattern.mutations.adopt);
 
 	const form = useAppForm({
 		...newInstitutionFormOpt,

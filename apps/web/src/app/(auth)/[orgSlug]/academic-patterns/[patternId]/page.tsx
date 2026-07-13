@@ -1,5 +1,5 @@
-import { AcademicPatternDetailPage } from "@/features/academic-patterns/pattern-detail-page";
+import { PatternDetailPage } from "@/features/academic-patterns/pages/pattern-detail-page";
 
 export default function Page() {
-	return <AcademicPatternDetailPage />;
+	return <PatternDetailPage />;
 }

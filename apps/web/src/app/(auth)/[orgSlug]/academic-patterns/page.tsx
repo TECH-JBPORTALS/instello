@@ -1,5 +1,5 @@
-import AcademicPatternsView from "@/features/academic-patterns/academic-patterns-view";
+import { AcademicPatternsListPage } from "@/features/academic-patterns/pages/academic-patterns-list-page";
 
 export default function Page() {
-	return <AcademicPatternsView />;
+	return <AcademicPatternsListPage />;
 }

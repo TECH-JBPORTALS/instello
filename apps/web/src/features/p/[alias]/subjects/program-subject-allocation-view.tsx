@@ -35,7 +35,7 @@ export function ProgramSubjectAllocationView() {
 		alias: programAlias,
 	});
 	const pattern = useInsQuery(
-		api.academicPatterns.getAdoptedForActiveInstitution,
+		api.academicPattern.queries.getAdoptedForActiveInstitution,
 		{},
 	);
 	const [commandOpen, setCommandOpen] = useState(false);

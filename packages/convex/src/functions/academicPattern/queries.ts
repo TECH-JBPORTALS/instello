@@ -1,4 +1,3 @@
-import { components } from "../_generated/api";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import { insQuery, userQuery } from "../helpers/customFunctions";
 import * as InstitutionAcademicPattern from "../institution/model/institutionAcademicPattern";
@@ -45,50 +44,6 @@ export const getById = userQuery({
 		if (!pattern) {
 			throwAppError(ERROR_CODES.ACADEMIC_PATTERN.NOT_FOUND);
 		}
-
-		return await AcademicPattern.toDetailDto(ctx, pattern);
-	},
-});
-
-/** Returns the academic pattern adopted by an institution, if any. */
-export const getByInstitution = userQuery({
-	args: { institutionId: vv.string() },
-	returns: vv.nullable(AcademicPatternDetailDtoSchema),
-	handler: async (ctx, args) => {
-		const ownerOrg = await OwnerOrganization.getByUserId(ctx, {
-			userId: ctx.session.userId,
-		});
-
-		if (!ownerOrg) {
-			throwAppError(ERROR_CODES.OWNER_ORGANIZATION.NOT_FOUND);
-		}
-
-		const membership = await ctx.runQuery(
-			components.betterAuth.institutions.getMembership,
-			{
-				organizationId: args.institutionId,
-				userId: ctx.session.userId,
-			},
-		);
-
-		if (membership?.role !== "owner") {
-			throwAppError(ERROR_CODES.BASE.ACCESS_DENIED);
-		}
-
-		const adoption = await InstitutionAcademicPattern.getByInstitution(
-			ctx,
-			args.institutionId,
-		);
-
-		if (!adoption) return null;
-
-		const pattern = await AcademicPattern.getById(
-			ctx,
-			adoption.academicPatternId,
-			ownerOrg._id,
-		);
-
-		if (!pattern) return null;
 
 		return await AcademicPattern.toDetailDto(ctx, pattern);
 	},

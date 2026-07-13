@@ -14,8 +14,6 @@ import type * as academicPattern_mutations from "../academicPattern/mutations.js
 import type * as academicPattern_queries from "../academicPattern/queries.js";
 import type * as academicPattern_validator_academicPattern from "../academicPattern/validator/academicPattern.js";
 import type * as academicPattern_validator_academicStage from "../academicPattern/validator/academicStage.js";
-import type * as academicPatterns from "../academicPatterns.js";
-import type * as academicStages from "../academicStages.js";
 import type * as attendance from "../attendance.js";
 import type * as auth from "../auth.js";
 import type * as classBatches from "../classBatches.js";
@@ -39,7 +37,6 @@ import type * as institution_queries from "../institution/queries.js";
 import type * as institution_validator_institution from "../institution/validator/institution.js";
 import type * as institution_validator_institutionAcademicPattern from "../institution/validator/institutionAcademicPattern.js";
 import type * as institution_validator_studentCategory from "../institution/validator/studentCategory.js";
-import type * as institutions from "../institutions.js";
 import type * as model_attendanceActivityLog from "../model/attendanceActivityLog.js";
 import type * as model_attendanceRecord from "../model/attendanceRecord.js";
 import type * as model_attendanceRegister from "../model/attendanceRegister.js";
@@ -80,8 +77,6 @@ declare const fullApi: ApiFromModules<{
   "academicPattern/queries": typeof academicPattern_queries;
   "academicPattern/validator/academicPattern": typeof academicPattern_validator_academicPattern;
   "academicPattern/validator/academicStage": typeof academicPattern_validator_academicStage;
-  academicPatterns: typeof academicPatterns;
-  academicStages: typeof academicStages;
   attendance: typeof attendance;
   auth: typeof auth;
   classBatches: typeof classBatches;
@@ -105,7 +100,6 @@ declare const fullApi: ApiFromModules<{
   "institution/validator/institution": typeof institution_validator_institution;
   "institution/validator/institutionAcademicPattern": typeof institution_validator_institutionAcademicPattern;
   "institution/validator/studentCategory": typeof institution_validator_studentCategory;
-  institutions: typeof institutions;
   "model/attendanceActivityLog": typeof model_attendanceActivityLog;
   "model/attendanceRecord": typeof model_attendanceRecord;
   "model/attendanceRegister": typeof model_attendanceRegister;

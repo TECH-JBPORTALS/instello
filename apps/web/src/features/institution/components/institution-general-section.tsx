@@ -26,7 +26,7 @@ import {
 	InstitutionNameField,
 	InstitutionStateField,
 	InstitutionZipCodeField,
-} from "../fields/institution-fields";
+} from "./institution-fields";
 import type { InstitutionDto } from "../types";
 
 export function InstitutionGeneralSection({
