@@ -1,9 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { classPath } from "@/features/classes/class-path";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
-import { classPath } from "@/lib/class-path";
 
 export function useClassRouter() {
 	const router = useRouter();

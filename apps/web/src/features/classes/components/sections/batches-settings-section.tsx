@@ -65,20 +65,22 @@ export function BatchesSettingsSection({ cls }: BatchesSettingsSectionProps) {
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
-	const enableBatches = useInsMutation(api.classes.enableSectionGroups);
-	const disableBatches = useInsMutation(api.classes.disableSectionGroups);
-	const removeBatch = useInsMutation(api.classBatches.remove);
+	const enableBatches = useInsMutation(api.class.mutations.enableSectionGroups);
+	const disableBatches = useInsMutation(
+		api.class.mutations.disableSectionGroups,
+	);
+	const removeBatch = useInsMutation(api.class.mutations.removeBatch);
 	const updateNamingConvention = useInsMutation(
-		api.classBatches.updateNamingConvention,
+		api.class.mutations.updateBatchNamingConvention,
 	);
 
 	const batches = useInsQuery(
-		api.classBatches.list,
+		api.class.queries.listBatches,
 		cls.isGroupsEnabled ? { classId: cls._id } : "skip",
 	);
 
 	const removePreview = useInsQuery(
-		api.classBatches.getRemovePreview,
+		api.class.queries.getBatchRemovePreview,
 		batchToDelete ? { batchId: batchToDelete } : "skip",
 	);
 

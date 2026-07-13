@@ -44,7 +44,7 @@ type ClassDangerZoneSectionProps = {
 export function ClassDangerZoneSection({ cls }: ClassDangerZoneSectionProps) {
 	const router = useRouter();
 	const programAlias = useProgramAlias();
-	const removeClass = useInsMutation(api.classes.remove);
+	const removeClass = useInsMutation(api.class.mutations.remove);
 	const [confirmOpen, setConfirmOpen] = useState(false);
 	const [confirmation, setConfirmation] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);

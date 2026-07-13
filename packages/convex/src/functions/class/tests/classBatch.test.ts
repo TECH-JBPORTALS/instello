@@ -1,12 +1,12 @@
 import { describe, expect, vi } from "vitest";
-import { api } from "../_generated/api";
-import { ERROR_CODES } from "../helpers/constants";
+import { api } from "../../_generated/api";
+import { ERROR_CODES } from "../../helpers/constants";
 import {
 	classTest,
 	createStudentInput,
 	expectAppError,
 	withSlug,
-} from "./fixtures/index.setup";
+} from "../../tests/fixtures/index.setup";
 
 const test = classTest();
 
@@ -14,7 +14,7 @@ describe("classes.enableSectionGroups", () => {
 	test("requires authentication", async ({ t, ins1, classes }) => {
 		await expectAppError(
 			t.mutation(
-				api.classes.enableSectionGroups,
+				api.class.mutations.enableSectionGroups,
 				withSlug(ins1, { id: classes.class1._id }),
 			),
 			ERROR_CODES.BASE.UNAUTHORIZED,
@@ -30,7 +30,7 @@ describe("classes.enableSectionGroups", () => {
 		const authed = asOwner(user1, ins1);
 
 		const result = await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 
@@ -40,7 +40,7 @@ describe("classes.enableSectionGroups", () => {
 		});
 
 		const batches = await authed.query(
-			api.classBatches.list,
+			api.class.queries.listBatches,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 
@@ -48,7 +48,7 @@ describe("classes.enableSectionGroups", () => {
 		expect(batches.map((b) => b.label)).toEqual(["B01", "B02"]);
 
 		const cls = await authed.query(
-			api.classes.getById,
+			api.class.queries.getById,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 		expect(cls.isGroupsEnabled).toBe(true);
@@ -81,7 +81,7 @@ describe("classes.enableSectionGroups", () => {
 		}
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 
@@ -112,13 +112,13 @@ describe("classes.enableSectionGroups", () => {
 		const authed = asOwner(user1, ins1);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 
 		await expectAppError(
 			authed.mutation(
-				api.classes.enableSectionGroups,
+				api.class.mutations.enableSectionGroups,
 				withSlug(ins1, { id: classes.class1._id }),
 			),
 			ERROR_CODES.CLASS.BATCHES_ALREADY_ENABLED,
@@ -133,7 +133,7 @@ describe("classes.enableSectionGroups", () => {
 	}) => {
 		await expectAppError(
 			asOwner(user1, ins1).mutation(
-				api.classes.enableSectionGroups,
+				api.class.mutations.enableSectionGroups,
 				withSlug(ins1, { id: classes.class3._id }),
 			),
 			ERROR_CODES.CLASS.NOT_FOUND,
@@ -145,7 +145,7 @@ describe("classes.disableSectionGroups", () => {
 	test("requires authentication", async ({ t, ins1, classes }) => {
 		await expectAppError(
 			t.mutation(
-				api.classes.disableSectionGroups,
+				api.class.mutations.disableSectionGroups,
 				withSlug(ins1, { id: classes.class1._id }),
 			),
 			ERROR_CODES.BASE.UNAUTHORIZED,
@@ -160,7 +160,7 @@ describe("classes.disableSectionGroups", () => {
 	}) => {
 		await expectAppError(
 			asOwner(user1, ins1).mutation(
-				api.classes.disableSectionGroups,
+				api.class.mutations.disableSectionGroups,
 				withSlug(ins1, { id: classes.class1._id }),
 			),
 			ERROR_CODES.CLASS.BATCHES_NOT_ENABLED,
@@ -186,12 +186,12 @@ describe("classes.disableSectionGroups", () => {
 		);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 
 		const result = await authed.mutation(
-			api.classes.disableSectionGroups,
+			api.class.mutations.disableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 
@@ -236,12 +236,12 @@ describe("classBatches.updateNamingConvention", () => {
 		const authed = asOwner(user1, ins1);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 
 		await authed.mutation(
-			api.classBatches.updateNamingConvention,
+			api.class.mutations.updateBatchNamingConvention,
 			withSlug(ins1, {
 				classId: classes.class1._id,
 				namingConvention: "alphabetic",
@@ -249,7 +249,7 @@ describe("classBatches.updateNamingConvention", () => {
 		);
 
 		const batches = await authed.query(
-			api.classBatches.list,
+			api.class.queries.listBatches,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 
@@ -264,7 +264,7 @@ describe("classBatches.updateNamingConvention", () => {
 	}) => {
 		await expectAppError(
 			asOwner(user1, ins1).mutation(
-				api.classBatches.updateNamingConvention,
+				api.class.mutations.updateBatchNamingConvention,
 				withSlug(ins1, {
 					classId: classes.class1._id,
 					namingConvention: "alphabetic",
@@ -275,7 +275,7 @@ describe("classBatches.updateNamingConvention", () => {
 	});
 });
 
-describe("students.create with batches", () => {
+describe("students.create (with batch assignment)", () => {
 	test("auto-assigns to least-populated batch when omitted", async ({
 		user1,
 		ins1,
@@ -289,12 +289,12 @@ describe("students.create with batches", () => {
 		);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 
 		const batches = await authed.query(
-			api.classBatches.list,
+			api.class.queries.listBatches,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 
@@ -324,12 +324,12 @@ describe("students.create with batches", () => {
 		);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 
 		const batches = await authed.query(
-			api.classBatches.list,
+			api.class.queries.listBatches,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 		const targetBatch = batches[1];
@@ -366,16 +366,16 @@ describe("students.create with batches", () => {
 		);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class2._id }),
 		);
 
 		const otherClassBatches = await authed.query(
-			api.classBatches.list,
+			api.class.queries.listBatches,
 			withSlug(ins1, { classId: classes.class2._id }),
 		);
 
@@ -406,11 +406,11 @@ describe("students.create with batches", () => {
 		);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class2._id }),
 		);
 		const otherClassBatches = await authed.query(
-			api.classBatches.list,
+			api.class.queries.listBatches,
 			withSlug(ins1, { classId: classes.class2._id }),
 		);
 
@@ -441,17 +441,17 @@ describe("classBatches.getRemovePreview", () => {
 		const authed = asOwner(user1, ins1);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 
 		const batches = await authed.query(
-			api.classBatches.list,
+			api.class.queries.listBatches,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 
 		const preview = await authed.query(
-			api.classBatches.getRemovePreview,
+			api.class.queries.getBatchRemovePreview,
 			withSlug(ins1, { batchId: batches[0]._id }),
 		);
 
@@ -476,12 +476,12 @@ describe("classBatches.getRemovePreview", () => {
 		);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 
 		const batches = await authed.query(
-			api.classBatches.list,
+			api.class.queries.listBatches,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 		const batchToDelete = batches[0];
@@ -502,7 +502,7 @@ describe("classBatches.getRemovePreview", () => {
 		}
 
 		const preview = await authed.query(
-			api.classBatches.getRemovePreview,
+			api.class.queries.getBatchRemovePreview,
 			withSlug(ins1, { batchId: batchToDelete._id }),
 		);
 
@@ -527,19 +527,19 @@ describe("classBatches.getRemovePreview", () => {
 		const authed = asOwner(user1, ins1);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 
 		const batches = await authed.query(
-			api.classBatches.list,
+			api.class.queries.listBatches,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 
 		vi.useFakeTimers();
 		try {
 			await authed.mutation(
-				api.classBatches.remove,
+				api.class.mutations.removeBatch,
 				withSlug(ins1, { batchId: batches[1]._id }),
 			);
 
@@ -549,13 +549,13 @@ describe("classBatches.getRemovePreview", () => {
 		}
 
 		const remaining = await authed.query(
-			api.classBatches.list,
+			api.class.queries.listBatches,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 		expect(remaining).toHaveLength(1);
 
 		const preview = await authed.query(
-			api.classBatches.getRemovePreview,
+			api.class.queries.getBatchRemovePreview,
 			withSlug(ins1, { batchId: remaining[0]._id }),
 		);
 
@@ -576,19 +576,19 @@ describe("classBatches.remove", () => {
 		const authed = asOwner(user1, ins1);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 
 		const batches = await authed.query(
-			api.classBatches.list,
+			api.class.queries.listBatches,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 
 		vi.useFakeTimers();
 		try {
 			await authed.mutation(
-				api.classBatches.remove,
+				api.class.mutations.removeBatch,
 				withSlug(ins1, { batchId: batches[1]._id }),
 			);
 
@@ -598,13 +598,13 @@ describe("classBatches.remove", () => {
 		}
 
 		const remaining = await authed.query(
-			api.classBatches.list,
+			api.class.queries.listBatches,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 
 		await expectAppError(
 			authed.mutation(
-				api.classBatches.remove,
+				api.class.mutations.removeBatch,
 				withSlug(ins1, { batchId: remaining[0]._id }),
 			),
 			ERROR_CODES.BATCH.LAST_REMAINING,
@@ -625,12 +625,12 @@ describe("classBatches.remove", () => {
 		);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 
 		const batches = await authed.query(
-			api.classBatches.list,
+			api.class.queries.listBatches,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 		const batchToDelete = batches[0];
@@ -646,14 +646,14 @@ describe("classBatches.remove", () => {
 		);
 
 		const preview = await authed.query(
-			api.classBatches.getRemovePreview,
+			api.class.queries.getBatchRemovePreview,
 			withSlug(ins1, { batchId: batchToDelete._id }),
 		);
 
 		vi.useFakeTimers();
 		try {
 			await authed.mutation(
-				api.classBatches.remove,
+				api.class.mutations.removeBatch,
 				withSlug(ins1, { batchId: batchToDelete._id }),
 			);
 
@@ -671,7 +671,7 @@ describe("classBatches.remove", () => {
 		expect(student.batchLabel).toBe(preview.moveToBatch?.label);
 
 		const remainingBatches = await authed.query(
-			api.classBatches.list,
+			api.class.queries.listBatches,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 		expect(
@@ -693,17 +693,17 @@ describe("classBatches.remove", () => {
 		);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 
 		const batches = await authed.query(
-			api.classBatches.list,
+			api.class.queries.listBatches,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 		const batchToDelete = batches[0];
 		const preview = await authed.query(
-			api.classBatches.getRemovePreview,
+			api.class.queries.getBatchRemovePreview,
 			withSlug(ins1, { batchId: batchToDelete._id }),
 		);
 		const targetBatchId = preview.moveToBatch?._id;
@@ -808,7 +808,7 @@ describe("classBatches.remove", () => {
 		vi.useFakeTimers();
 		try {
 			await authed.mutation(
-				api.classBatches.remove,
+				api.class.mutations.removeBatch,
 				withSlug(ins1, { batchId: batchToDelete._id }),
 			);
 			await t.finishAllScheduledFunctions(vi.runAllTimers);
@@ -854,12 +854,12 @@ describe("classBatches.remove", () => {
 		const authed = asOwner(user1, ins1);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 
 		const batches = await authed.query(
-			api.classBatches.list,
+			api.class.queries.listBatches,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 		const sourceBatchId = batches[0]._id;
@@ -909,7 +909,7 @@ describe("classBatches.remove", () => {
 		});
 
 		const preview = await authed.query(
-			api.classBatches.getRemovePreview,
+			api.class.queries.getBatchRemovePreview,
 			withSlug(ins1, { batchId: sourceBatchId }),
 		);
 		expect(preview.hasTimetableConflict).toBe(true);
@@ -919,7 +919,7 @@ describe("classBatches.remove", () => {
 
 		await expectAppError(
 			authed.mutation(
-				api.classBatches.remove,
+				api.class.mutations.removeBatch,
 				withSlug(ins1, { batchId: sourceBatchId }),
 			),
 			ERROR_CODES.BATCH.TIMETABLE_CONFLICT,
@@ -936,12 +936,12 @@ describe("classBatches.remove", () => {
 		const authed = asOwner(user1, ins1);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 
 		const batches = await authed.query(
-			api.classBatches.list,
+			api.class.queries.listBatches,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 		const sourceBatchId = batches[0]._id;
@@ -1008,7 +1008,7 @@ describe("classBatches.remove", () => {
 		});
 
 		const preview = await authed.query(
-			api.classBatches.getRemovePreview,
+			api.class.queries.getBatchRemovePreview,
 			withSlug(ins1, { batchId: sourceBatchId }),
 		);
 		expect(preview.hasTimetableConflict).toBe(false);
@@ -1016,7 +1016,7 @@ describe("classBatches.remove", () => {
 		vi.useFakeTimers();
 		try {
 			await authed.mutation(
-				api.classBatches.remove,
+				api.class.mutations.removeBatch,
 				withSlug(ins1, { batchId: sourceBatchId }),
 			);
 			await t.finishAllScheduledFunctions(vi.runAllTimers);
@@ -1025,7 +1025,7 @@ describe("classBatches.remove", () => {
 		}
 
 		const remainingBatches = await authed.query(
-			api.classBatches.list,
+			api.class.queries.listBatches,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 		expect(
@@ -1042,22 +1042,22 @@ describe("classBatches.remove", () => {
 		const authed = asOwner(user1, ins1);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 
 		const batches = await authed.query(
-			api.classBatches.list,
+			api.class.queries.listBatches,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 
 		await authed.mutation(
-			api.classBatches.remove,
+			api.class.mutations.removeBatch,
 			withSlug(ins1, { batchId: batches[0]._id }),
 		);
 
 		const listed = await authed.query(
-			api.classBatches.list,
+			api.class.queries.listBatches,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 

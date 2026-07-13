@@ -206,7 +206,7 @@ export function TimetableEditorView({ basePath }: { basePath: string }) {
 		alias: programAlias,
 	});
 	const cls = useInsQuery(
-		api.classes.getBySlug,
+		api.class.queries.getBySlug,
 		program && classSlug ? { programId: program._id, classSlug } : "skip",
 	);
 
@@ -228,7 +228,7 @@ export function TimetableEditorView({ basePath }: { basePath: string }) {
 	);
 
 	const batches = useInsQuery(
-		api.classBatches.list,
+		api.class.queries.listBatches,
 		cls?.isGroupsEnabled ? { classId: cls._id } : "skip",
 	);
 

@@ -18,7 +18,6 @@ import {
 import { UpcomingFeaturePreview } from "@/components/common/upcoming-feature-preview/upcoming-feature-preview";
 import { TimetableHistoryView } from "@/features/c/[slug]/timetable/timetable-history-view";
 import { TimetableView } from "@/features/c/[slug]/timetable/timetable-view";
-import ClassesView from "@/features/classes/classes-view";
 import { ProgramTimetablesView } from "@/features/p/[alias]/timetable/program-timetables-view";
 import { programPath } from "@/features/programs/program-path";
 import { useInsQuery, useInstitutionSlug } from "@/hooks/convex-react";
@@ -84,10 +83,6 @@ function ProgramSectionPage({
 			) : null}
 		</Container>
 	);
-}
-
-export function ClassesPage() {
-	return <ClassesView />;
 }
 
 export function FacultyPage() {

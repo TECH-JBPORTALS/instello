@@ -18,12 +18,11 @@ import { AttendanceView } from "@/features/c/[slug]/attendance/attendance-view";
 import { TimetableEditorView } from "@/features/c/[slug]/timetable/timetable-editor-view";
 import { TimetableHistoryView } from "@/features/c/[slug]/timetable/timetable-history-view";
 import { TimetableView } from "@/features/c/[slug]/timetable/timetable-view";
-import { ClassSettingsView } from "@/features/classes/class-settings-view";
+import { classPath } from "@/features/classes/class-path";
 import { StudentsView } from "@/features/students/students-view";
 import { useInsQuery, useInstitutionSlug } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
-import { classPath } from "@/lib/class-path";
 
 function ClassSectionPage({
 	title,
@@ -44,7 +43,7 @@ function ClassSectionPage({
 		if (!programAlias || !classSlug || !institutionSlug || !program) return;
 
 		convex
-			.query(api.classes.getBySlug, {
+			.query(api.class.queries.getBySlug, {
 				slug: institutionSlug,
 				programId: program._id,
 				classSlug,
@@ -82,7 +81,7 @@ export function SubjectsPage() {
 		alias: programAlias,
 	});
 	const cls = useInsQuery(
-		api.classes.getBySlug,
+		api.class.queries.getBySlug,
 		program && classSlug ? { programId: program._id, classSlug } : "skip",
 	);
 
@@ -143,6 +142,4 @@ export function AttendanceRegisterDetailPage() {
 	return <AttendanceRegisterView />;
 }
 
-export function ClassSettingsPage() {
-	return <ClassSettingsView />;
-}
+export { ClassSettingsPage } from "@/features/classes/pages/class-settings-page";

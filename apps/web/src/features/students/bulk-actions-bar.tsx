@@ -57,11 +57,13 @@ export function BulkActionsBar({
 	);
 
 	const moveTargets = useInsQuery(
-		api.classBatches.listMoveTargets,
+		api.class.queries.listBatchMoveTargets,
 		commandOpen ? { classId } : "skip",
 	);
 
-	const splitIntoNewBatch = useInsMutation(api.classBatches.splitIntoNewBatch);
+	const splitIntoNewBatch = useInsMutation(
+		api.class.mutations.splitIntoNewBatch,
+	);
 	const bulkMove = useInsMutation(api.students.bulkMove);
 
 	const selectedCount = selectedStudents.length;

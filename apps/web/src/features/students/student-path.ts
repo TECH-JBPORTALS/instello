@@ -1,4 +1,4 @@
-import { classPath } from "@/lib/class-path";
+import { classPath } from "@/features/classes/class-path";
 
 export function studentPath(
 	programAlias: string,

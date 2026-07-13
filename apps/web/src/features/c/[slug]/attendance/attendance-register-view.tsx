@@ -54,10 +54,10 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Fragment, useMemo, useState } from "react";
 import Container from "@/components/common/container";
+import { classPath } from "@/features/classes/class-path";
 import { useInsQuery } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
-import { classPath } from "@/lib/class-path";
 import { getAttendanceTimeContext } from "./attendance-time";
 import { MarkAttendanceSheet } from "./mark-attendance-sheet";
 import {

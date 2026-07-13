@@ -1,13 +1,13 @@
 import type { Infer } from "convex/values";
 import { components } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
+import * as Class from "../class/model/class";
+import * as ClassBatch from "../class/model/classBatch";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import * as ProgramSubject from "../program/model/programSubject";
 import { vv } from "../schema";
 import * as AttendanceActivityLog from "./attendanceActivityLog";
 import * as AttendanceSession from "./attendanceSession";
-import * as Class from "./class";
-import * as ClassBatch from "./classBatch";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 import type { SlotInput } from "./timetable";
 

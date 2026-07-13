@@ -12,18 +12,18 @@ import {
 import { useInsQuery } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
-import { BatchesSettingsSection } from "./sections/batches-settings-section";
-import { ClassDangerZoneSection } from "./sections/class-danger-zone-section";
-import { GeneralSettingsSection } from "./sections/general-settings-section";
+import { BatchesSettingsSection } from "../components/sections/batches-settings-section";
+import { ClassDangerZoneSection } from "../components/sections/class-danger-zone-section";
+import { GeneralSettingsSection } from "../components/sections/general-settings-section";
 
-export function ClassSettingsView() {
+export function ClassSettingsPage() {
 	const programAlias = useProgramAlias();
 	const classSlug = useClassSlug();
 	const program = useInsQuery(api.program.queries.getByAlias, {
 		alias: programAlias,
 	});
 	const cls = useInsQuery(
-		api.classes.getBySlug,
+		api.class.queries.getBySlug,
 		program && classSlug ? { programId: program._id, classSlug } : "skip",
 	);
 

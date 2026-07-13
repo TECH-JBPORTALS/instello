@@ -1,6 +1,9 @@
 import type { Infer } from "convex/values";
 import { components } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
+import * as Class from "../class/model/class";
+import * as ClassBatch from "../class/model/classBatch";
+import { ClassStageSummarySchema } from "../class/validator/class";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import {
 	DEFAULT_TOTAL_HOURS,
@@ -12,8 +15,6 @@ import {
 import * as Program from "../program/model/program";
 import { vv } from "../schema";
 import * as AttendanceRegister from "./attendanceRegister";
-import * as Class from "./class";
-import * as ClassBatch from "./classBatch";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 
 export const MIN_TOTAL_HOURS_EXPORT = MIN_TOTAL_HOURS;
@@ -99,7 +100,7 @@ export const ProgramTimetableListItemSchema = vv.object({
 		_id: vv.id("classes"),
 		name: vv.string(),
 		slug: vv.string(),
-		stage: Class.ClassStageSummarySchema,
+		stage: ClassStageSummarySchema,
 	}),
 	timetable: vv.union(TimetableDtoSchema, vv.null()),
 });

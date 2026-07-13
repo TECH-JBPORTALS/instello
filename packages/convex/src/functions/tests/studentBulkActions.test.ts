@@ -14,7 +14,7 @@ describe("classBatches.listMoveTargets", () => {
 	test("requires authentication", async ({ t, ins1, classes }) => {
 		await expectAppError(
 			t.query(
-				api.classBatches.listMoveTargets,
+				api.class.queries.listBatchMoveTargets,
 				withSlug(ins1, { classId: classes.class1._id }),
 			),
 			ERROR_CODES.BASE.UNAUTHORIZED,
@@ -30,7 +30,7 @@ describe("classBatches.listMoveTargets", () => {
 		const authed = asOwner(user1, ins1);
 
 		const targets = await authed.query(
-			api.classBatches.listMoveTargets,
+			api.class.queries.listBatchMoveTargets,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 
@@ -48,12 +48,12 @@ describe("classBatches.listMoveTargets", () => {
 		const authed = asOwner(user1, ins1);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class2._id }),
 		);
 
 		const targets = await authed.query(
-			api.classBatches.listMoveTargets,
+			api.class.queries.listBatchMoveTargets,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 
@@ -77,12 +77,12 @@ describe("classBatches.listMoveTargets", () => {
 		const authed = asOwner(user1, ins1);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 
 		const targets = await authed.query(
-			api.classBatches.listMoveTargets,
+			api.class.queries.listBatchMoveTargets,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 
@@ -107,16 +107,16 @@ describe("classBatches.listMoveTargets", () => {
 		const authed = asOwner(user1, ins1);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class2._id }),
 		);
 
 		const targets = await authed.query(
-			api.classBatches.listMoveTargets,
+			api.class.queries.listBatchMoveTargets,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 
@@ -143,12 +143,12 @@ describe("classBatches.listMoveTargets", () => {
 		const authed = asOwner(user1, ins1);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 
 		const targets = await authed.query(
-			api.classBatches.listMoveTargets,
+			api.class.queries.listBatchMoveTargets,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 
@@ -176,12 +176,12 @@ describe("classBatches.listMoveTargets", () => {
 		const authed = asOwner(user1, ins1);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 
 		const targets = await authed.query(
-			api.classBatches.listMoveTargets,
+			api.class.queries.listBatchMoveTargets,
 			withSlug(ins1, { classId: classes.class1._id }),
 		);
 
@@ -195,7 +195,7 @@ describe("classBatches.splitIntoNewBatch", () => {
 	test("requires authentication", async ({ t, ins1, classes }) => {
 		await expectAppError(
 			t.mutation(
-				api.classBatches.splitIntoNewBatch,
+				api.class.mutations.splitIntoNewBatch,
 				withSlug(ins1, { classId: classes.class1._id, studentIds: [] }),
 			),
 			ERROR_CODES.BASE.UNAUTHORIZED,
@@ -210,7 +210,7 @@ describe("classBatches.splitIntoNewBatch", () => {
 	}) => {
 		await expectAppError(
 			asOwner(user1, ins1).mutation(
-				api.classBatches.splitIntoNewBatch,
+				api.class.mutations.splitIntoNewBatch,
 				withSlug(ins1, { classId: classes.class1._id, studentIds: [] }),
 			),
 			ERROR_CODES.CLASS.BATCHES_NOT_ENABLED,
@@ -230,7 +230,7 @@ describe("classBatches.splitIntoNewBatch", () => {
 		);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 
@@ -250,7 +250,7 @@ describe("classBatches.splitIntoNewBatch", () => {
 		}
 
 		const newBatch = await authed.mutation(
-			api.classBatches.splitIntoNewBatch,
+			api.class.mutations.splitIntoNewBatch,
 			withSlug(ins1, { classId: classes.class1._id, studentIds }),
 		);
 
@@ -280,7 +280,7 @@ describe("classBatches.splitIntoNewBatch", () => {
 		);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 
@@ -297,7 +297,7 @@ describe("classBatches.splitIntoNewBatch", () => {
 
 		await expectAppError(
 			authed.mutation(
-				api.classBatches.splitIntoNewBatch,
+				api.class.mutations.splitIntoNewBatch,
 				withSlug(ins1, {
 					classId: classes.class1._id,
 					studentIds: [otherClassStudentId],
@@ -335,11 +335,11 @@ describe("students.bulkMove", () => {
 		);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class2._id }),
 		);
 
@@ -355,7 +355,7 @@ describe("students.bulkMove", () => {
 		);
 
 		const targetBatches = await authed.query(
-			api.classBatches.list,
+			api.class.queries.listBatches,
 			withSlug(ins1, { classId: classes.class2._id }),
 		);
 		const targetBatch = targetBatches[0];
@@ -392,7 +392,7 @@ describe("students.bulkMove", () => {
 		);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 
@@ -438,11 +438,11 @@ describe("students.bulkMove", () => {
 		);
 
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class1._id }),
 		);
 		await authed.mutation(
-			api.classes.enableSectionGroups,
+			api.class.mutations.enableSectionGroups,
 			withSlug(ins1, { id: classes.class2._id }),
 		);
 

@@ -23,7 +23,7 @@ export function StudentsView() {
 		alias: programAlias,
 	});
 	const cls = useInsQuery(
-		api.classes.getBySlug,
+		api.class.queries.getBySlug,
 		program && classSlug ? { programId: program._id, classSlug } : "skip",
 	);
 	const ensureCategories = useInsMutation(api.students.ensureCategories);

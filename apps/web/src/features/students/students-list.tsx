@@ -166,7 +166,7 @@ function FlatStudentsList({ classId }: { classId: Id<"classes"> }) {
 function BatchedStudentsList({ classId }: { classId: Id<"classes"> }) {
 	const programAlias = useProgramAlias();
 	const classSlug = useClassSlug();
-	const batches = useInsQuery(api.classBatches.list, { classId });
+	const batches = useInsQuery(api.class.queries.listBatches, { classId });
 
 	const [activeBatch, setActiveBatch] = useQueryState("batch", {
 		defaultValue: ALL_BATCHES_TAB,

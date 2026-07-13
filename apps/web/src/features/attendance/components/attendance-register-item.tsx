@@ -19,8 +19,8 @@ import { IconCalendarCheck, IconPencil, IconUser } from "@tabler/icons-react";
 import type { FunctionReturnType } from "convex/server";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
+import { classPath } from "@/features/classes/class-path";
 import { subjectColorStyles } from "@/features/subjects/constants";
-import { classPath } from "@/lib/class-path";
 
 type AttendanceRegister = FunctionReturnType<
 	typeof api.attendance.listRegisters

@@ -1,8 +1,8 @@
 import type { Infer } from "convex/values";
 import { components } from "../../_generated/api";
 import type { Doc, Id } from "../../_generated/dataModel";
+import * as Class from "../../class/model/class";
 import { ERROR_CODES, throwAppError } from "../../helpers/constants";
-import * as Class from "../../model/class";
 import type { AppMutationCtx, AppQueryCtx } from "../../model/common.types";
 import { vv } from "../../schema";
 import type { ProgramDto, ProgramListItem } from "../validator/program";

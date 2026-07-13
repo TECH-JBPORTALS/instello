@@ -1,41 +1,25 @@
-import type { Infer } from "convex/values";
-import type { Doc, Id } from "../_generated/dataModel";
-import { ERROR_CODES, throwAppError } from "../helpers/constants";
-import { vv } from "../schema";
-import type { AppMutationCtx, AppQueryCtx } from "./common.types";
+import type { Doc, Id } from "../../_generated/dataModel";
+import { ERROR_CODES, throwAppError } from "../../helpers/constants";
+import type { AppMutationCtx, AppQueryCtx } from "../../model/common.types";
+import type {
+	BatchDto,
+	BatchNamingConvention,
+	MoveTargetDto,
+	RemovePreview,
+} from "../validator/classBatch";
 
-export const BatchNamingConventionSchema = vv.union(
-	vv.literal("numeric"),
-	vv.literal("alphabetic"),
-);
-
-export type BatchNamingConvention = Infer<typeof BatchNamingConventionSchema>;
-
-export const BatchDtoSchema = vv.object({
-	_id: vv.id("classBatches"),
-	classId: vv.id("classes"),
-	numIdx: vv.number(),
-	label: vv.string(),
-	studentCount: vv.number(),
-});
-
-export type BatchDto = Infer<typeof BatchDtoSchema>;
-
-export const RemovePreviewSchema = vv.object({
-	batchLabel: vv.string(),
-	studentCount: vv.number(),
-	canDelete: vv.boolean(),
-	hasTimetableConflict: vv.boolean(),
-	blockedReason: vv.optional(vv.string()),
-	moveToBatch: vv.optional(
-		vv.object({
-			_id: vv.id("classBatches"),
-			label: vv.string(),
-		}),
-	),
-});
-
-export type RemovePreview = Infer<typeof RemovePreviewSchema>;
+export type {
+	BatchDto,
+	BatchNamingConvention,
+	MoveTargetDto,
+	RemovePreview,
+} from "../validator/classBatch";
+export {
+	BatchDtoSchema,
+	BatchNamingConventionSchema,
+	MoveTargetDtoSchema,
+	RemovePreviewSchema,
+} from "../validator/classBatch";
 
 const DELETE_BATCH_SIZE = 40;
 
@@ -358,18 +342,6 @@ export async function setBatch(
 	});
 }
 
-/** Moves a student into a class and clears any batch assignment. */
-export async function clearBatch(
-	ctx: AppMutationCtx,
-	args: { studentId: Id<"students">; classId: Id<"classes"> },
-) {
-	await ctx.db.patch("students", args.studentId, {
-		classId: args.classId,
-		batchId: undefined,
-		updatedAt: Date.now(),
-	});
-}
-
 /** Creates two batches for a class, splitting any existing students evenly between them. */
 export async function enableForClass(ctx: AppMutationCtx, cls: Doc<"classes">) {
 	const now = Date.now();
@@ -412,7 +384,9 @@ export async function enableForClass(ctx: AppMutationCtx, cls: Doc<"classes">) {
 	});
 }
 
-/** Deletes all batches for a class and clears each member's batchId. Students themselves are untouched. */
+/** Disables batches for a class by id. Deletes all batches and batch
+ * assignments; students remain in the class without a batch.
+ */
 export async function disableForClass(
 	ctx: AppMutationCtx,
 	classId: Id<"classes">,
@@ -448,6 +422,7 @@ export async function disableForClass(
 	});
 }
 
+/** Updates the batch naming convention for a class. */
 export async function updateNamingConvention(
 	ctx: AppMutationCtx,
 	classId: Id<"classes">,
@@ -486,15 +461,15 @@ export async function createNextBatch(
 	return batch;
 }
 
-export const MoveTargetDtoSchema = vv.object({
-	classId: vv.id("classes"),
-	className: vv.string(),
-	batchId: vv.optional(vv.id("classBatches")),
-	batchLabel: vv.optional(vv.string()),
-	isCurrentClass: vv.boolean(),
-});
-
-export type MoveTargetDto = Infer<typeof MoveTargetDtoSchema>;
+export async function clearBatch(
+	ctx: AppMutationCtx,
+	studentId: Id<"students">,
+) {
+	await ctx.db.patch("students", studentId, {
+		batchId: undefined,
+		updatedAt: Date.now(),
+	});
+}
 
 /**
  * Lists every valid bulk-move destination across the program that `currentClass`
@@ -684,6 +659,10 @@ export async function deleteCascadeBatch(
 	return false;
 }
 
+/**
+ * Asserts weather the batch can be removed in the current state.
+ * Also verifies that the batch has no timetable conflicts with the target batch.
+ */
 export async function assertCanRemove(
 	ctx: AppQueryCtx | AppMutationCtx,
 	batch: Doc<"classBatches">,

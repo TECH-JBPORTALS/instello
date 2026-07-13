@@ -17,12 +17,12 @@ import { IconPlus } from "@tabler/icons-react";
 import { isEmpty, isUndefined } from "lodash";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { ClassAvatar } from "@/features/classes/class-avatar";
-import { NewClassDialog } from "@/features/classes/new-class-dialog";
+import { classPath } from "@/features/classes/class-path";
+import { ClassAvatar } from "@/features/classes/components/class-avatar";
+import { NewClassDialog } from "@/features/classes/components/new-class-dialog";
 import { useInsQuery } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
-import { classPath } from "@/lib/class-path";
 import { getClassSegment } from "@/lib/sidebar-mode";
 
 export function ClassSwitcher() {
@@ -36,7 +36,7 @@ export function ClassSwitcher() {
 	const [createOpen, setCreateOpen] = useState(false);
 	const [selectOpen, setSelectOpen] = useState(false);
 	const classes = useInsQuery(
-		api.classes.listForSwitcher,
+		api.class.queries.listForSwitcher,
 		program ? { programId: program._id } : "skip",
 	);
 

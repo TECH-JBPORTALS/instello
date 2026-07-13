@@ -1,12 +1,20 @@
 import { paginationOptsValidator } from "convex/server";
-import { internal } from "./_generated/api";
-import { internalMutation } from "./_generated/server";
-import { ERROR_CODES, throwAppError } from "./helpers/constants";
-import { insMutation, insQuery } from "./helpers/customFunctions";
+import { ERROR_CODES, throwAppError } from "../helpers/constants";
+import { insQuery } from "../helpers/customFunctions";
+import * as Program from "../program/model/program";
+import { vv } from "../schema";
 import * as Class from "./model/class";
 import * as ClassBatch from "./model/classBatch";
-import * as Program from "./program/model/program";
-import { vv } from "./schema";
+import {
+	ClassDtoSchema,
+	ClassListItemSchema,
+	PaginatedClassListSchema,
+} from "./validator/class";
+import {
+	BatchDtoSchema,
+	MoveTargetDtoSchema,
+	RemovePreviewSchema,
+} from "./validator/classBatch";
 
 /** Check if a class name is available in the current program */
 export const checkName = insQuery({
@@ -82,7 +90,7 @@ export const getBySlug = insQuery({
 		programId: vv.id("programs"),
 		classSlug: vv.string(),
 	},
-	returns: Class.ClassDtoSchema,
+	returns: ClassDtoSchema,
 	handler: async (ctx, args) => {
 		const classSlug = args.classSlug.trim();
 		const program = await Program.getById(
@@ -105,39 +113,7 @@ export const getBySlug = insQuery({
 	},
 });
 
-/** Creates class in the current program
- * @returns class id
- */
-export const create = insMutation({
-	permissions: ["class:create"],
-	args: Class.CreateInputSchema,
-	returns: vv.id("classes"),
-	handler: async (ctx, args) => {
-		const program = await Program.getById(
-			ctx,
-			args.programId,
-			ctx.institution._id,
-		);
-
-		if (!program) {
-			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
-		}
-
-		await Class.validateHeadStage(ctx, {
-			institutionId: ctx.institution._id,
-			stageId: args.body.currentHeadStageId,
-		});
-
-		return await Class.create(ctx, {
-			programId: args.programId,
-			body: args.body,
-		});
-	},
-});
-
-/** List classes in the current program (paginated, searchable)
- * @returns paginated classes
- */
+/** List classes in the current program (paginated, searchable) */
 export const list = insQuery({
 	permissions: ["class:view"],
 	args: {
@@ -145,7 +121,7 @@ export const list = insQuery({
 		paginationOpts: paginationOptsValidator,
 		searchQuery: vv.optional(vv.nullable(vv.string())),
 	},
-	returns: Class.PaginatedClassListSchema,
+	returns: PaginatedClassListSchema,
 	handler: async (ctx, args) => {
 		const program = await Program.getById(
 			ctx,
@@ -171,7 +147,7 @@ export const listForSwitcher = insQuery({
 	args: {
 		programId: vv.id("programs"),
 	},
-	returns: vv.array(Class.ClassListItemSchema),
+	returns: vv.array(ClassListItemSchema),
 	handler: async (ctx, args) => {
 		const program = await Program.getById(
 			ctx,
@@ -189,15 +165,13 @@ export const listForSwitcher = insQuery({
 	},
 });
 
-/** Get class by id
- * @returns class
- */
+/** Get class by id */
 export const getById = insQuery({
 	permissions: ["class:view"],
 	args: {
 		id: vv.id("classes"),
 	},
-	returns: Class.ClassDtoSchema,
+	returns: ClassDtoSchema,
 	handler: async (ctx, args) => {
 		const cls = await Class.ensureInInstitution(
 			ctx,
@@ -209,74 +183,62 @@ export const getById = insQuery({
 	},
 });
 
-/** Update class Name and Description class by id
- */
-export const updateBasicInfo = insMutation({
-	permissions: ["class:update"],
+/** Lists the batches for a class, with labels computed from the class's naming convention. */
+export const listBatches = insQuery({
+	permissions: ["class:view"],
 	args: {
-		id: vv.id("classes"),
-		body: Class.PatchBasicInfoSchema,
+		classId: vv.id("classes"),
 	},
-	returns: vv.null(),
+	returns: vv.array(BatchDtoSchema),
 	handler: async (ctx, args) => {
 		const cls = await Class.ensureInInstitution(
 			ctx,
-			args.id,
+			args.classId,
 			ctx.institution._id,
 		);
 
-		await Class.patch(ctx, args.id, args.body, cls);
-		return null;
+		return await ClassBatch.listByClass(
+			ctx,
+			cls._id,
+			cls.batchNamingConvention,
+		);
 	},
 });
 
-/** Enable batches for a class by id. Splits any existing students evenly across
- * two new batches, or leaves them empty if the class has no students yet.
- * @returns class
- */
-export const enableSectionGroups = insMutation({
-	permissions: ["class:update"],
+/** Lists every valid bulk-move destination (batch or class) across the class's program. */
+export const listBatchMoveTargets = insQuery({
+	permissions: ["student:update"],
 	args: {
-		id: vv.id("classes"),
+		classId: vv.id("classes"),
 	},
-	returns: vv.object({
-		_id: vv.id("classes"),
-		isGroupsEnabled: vv.boolean(),
-	}),
+	returns: vv.array(MoveTargetDtoSchema),
 	handler: async (ctx, args) => {
 		const cls = await Class.ensureInInstitution(
 			ctx,
-			args.id,
+			args.classId,
 			ctx.institution._id,
 		);
 
-		if (cls.isGroupsEnabled) {
-			throwAppError(ERROR_CODES.CLASS.BATCHES_ALREADY_ENABLED);
+		return await ClassBatch.listMoveTargets(ctx, cls);
+	},
+});
+
+/** Preview what happens when deleting a batch (student count and move target). */
+export const getBatchRemovePreview = insQuery({
+	permissions: ["class:view"],
+	args: {
+		batchId: vv.id("classBatches"),
+	},
+	returns: RemovePreviewSchema,
+	handler: async (ctx, args) => {
+		const batch = await ClassBatch.getByIdIncludingDeleting(ctx, args.batchId);
+		if (!batch) {
+			throwAppError(ERROR_CODES.BATCH.NOT_FOUND);
 		}
 
-		await ClassBatch.enableForClass(ctx, cls);
-
-		return { _id: cls._id, isGroupsEnabled: true };
-	},
-});
-
-/** Disable batches for a class by id. Deletes all batches and batch
- * assignments; students remain in the class without a batch.
- * @returns class
- */
-export const disableSectionGroups = insMutation({
-	permissions: ["class:update"],
-	args: {
-		id: vv.id("classes"),
-	},
-	returns: vv.object({
-		_id: vv.id("classes"),
-		isGroupsEnabled: vv.boolean(),
-	}),
-	handler: async (ctx, args) => {
 		const cls = await Class.ensureInInstitution(
 			ctx,
-			args.id,
+			batch.classId,
 			ctx.institution._id,
 		);
 
@@ -284,47 +246,10 @@ export const disableSectionGroups = insMutation({
 			throwAppError(ERROR_CODES.CLASS.BATCHES_NOT_ENABLED);
 		}
 
-		await ClassBatch.disableForClass(ctx, cls._id);
-
-		return { _id: cls._id, isGroupsEnabled: false };
-	},
-});
-
-/** Soft-mark class for deletion and schedule cascade cleanup */
-export const remove = insMutation({
-	permissions: ["class:delete"],
-	args: {
-		id: vv.id("classes"),
-	},
-	returns: vv.null(),
-	handler: async (ctx, args) => {
-		const cls = await Class.ensureInInstitution(
+		return await ClassBatch.getRemovePreview(
 			ctx,
-			args.id,
-			ctx.institution._id,
+			batch,
+			cls.batchNamingConvention ?? "numeric",
 		);
-
-		await Class.markDeleting(ctx, cls._id);
-		await ctx.scheduler.runAfter(0, internal.classes.deleteCascade, {
-			classId: cls._id,
-		});
-		return null;
-	},
-});
-
-/** Batched cascade deletion for a class marked with `isDeleting` */
-export const deleteCascade = internalMutation({
-	args: {
-		classId: vv.id("classes"),
-	},
-	returns: vv.null(),
-	handler: async (ctx, args) => {
-		const hasMore = await Class.deleteCascadeBatch(ctx, args.classId);
-		if (hasMore) {
-			await ctx.scheduler.runAfter(0, internal.classes.deleteCascade, {
-				classId: args.classId,
-			});
-		}
-		return null;
 	},
 });

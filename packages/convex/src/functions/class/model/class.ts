@@ -1,71 +1,35 @@
 import type { PaginationOptions } from "convex/server";
 import type { Infer } from "convex/values";
-import type { Doc, Id } from "../_generated/dataModel";
-import * as AcademicStage from "../academicPattern/model/academicStage";
-import { ERROR_CODES, throwAppError } from "../helpers/constants";
-import { slugifyName } from "../helpers/slug";
-import * as InstitutionAcademicPattern from "../institution/model/institutionAcademicPattern";
-import * as Program from "../program/model/program";
-import { vv } from "../schema";
-import { BatchNamingConventionSchema } from "./classBatch";
-import type { AppMutationCtx, AppQueryCtx } from "./common.types";
+import type { Doc, Id } from "../../_generated/dataModel";
+import * as AcademicStage from "../../academicPattern/model/academicStage";
+import { ERROR_CODES, throwAppError } from "../../helpers/constants";
+import { slugifyName } from "../../helpers/slug";
+import * as InstitutionAcademicPattern from "../../institution/model/institutionAcademicPattern";
+import type { AppMutationCtx, AppQueryCtx } from "../../model/common.types";
+import * as Program from "../../program/model/program";
+import type {
+	ClassDto,
+	ClassListItem,
+	ClassStageSummary,
+	CreateBodySchema,
+	PaginatedClassList,
+	PatchBasicInfoSchema,
+} from "../validator/class";
 
-export const ClassStageSummarySchema = vv.object({
-	_id: vv.id("academicStages"),
-	name: vv.string(),
-	alias: vv.string(),
-	sequenceNumber: vv.number(),
-});
-
-export const CreateBodySchema = vv.object({
-	name: vv.string(),
-	slug: vv.string(),
-	description: vv.optional(vv.string()),
-	currentHeadStageId: vv.id("academicStages"),
-});
-
-export const CreateInputSchema = {
-	programId: vv.id("programs"),
-	body: CreateBodySchema,
-};
-
-export const PatchBasicInfoSchema = vv.object({
-	name: vv.optional(vv.string()),
-	description: vv.optional(vv.string()),
-});
-
-export const ClassListItemSchema = vv.object({
-	_id: vv.id("classes"),
-	name: vv.string(),
-	slug: vv.string(),
-	description: vv.optional(vv.string()),
-	status: vv.union(vv.literal("inactive"), vv.literal("active")),
-	currentHeadStage: ClassStageSummarySchema,
-});
-
-export const ClassDtoSchema = vv.object({
-	_id: vv.id("classes"),
-	name: vv.string(),
-	slug: vv.string(),
-	description: vv.optional(vv.string()),
-	isGroupsEnabled: vv.boolean(),
-	batchNamingConvention: vv.optional(BatchNamingConventionSchema),
-	status: vv.union(vv.literal("inactive"), vv.literal("active")),
-	currentHeadStage: ClassStageSummarySchema,
-	createdAt: vv.number(),
-	updatedAt: vv.optional(vv.number()),
-});
-
-export const PaginatedClassListSchema = vv.object({
-	page: vv.array(ClassListItemSchema),
-	isDone: vv.boolean(),
-	continueCursor: vv.string(),
-});
-
-export type ClassStageSummary = Infer<typeof ClassStageSummarySchema>;
-export type ClassDto = Infer<typeof ClassDtoSchema>;
-export type ClassListItem = Infer<typeof ClassListItemSchema>;
-export type PaginatedClassList = Infer<typeof PaginatedClassListSchema>;
+export type {
+	ClassDto,
+	ClassListItem,
+	ClassStageSummary,
+	PaginatedClassList,
+} from "../validator/class";
+export {
+	ClassDtoSchema,
+	ClassListItemSchema,
+	CreateBodySchema,
+	CreateInputSchema,
+	PaginatedClassListSchema,
+	PatchBasicInfoSchema,
+} from "../validator/class";
 
 const DELETE_BATCH_SIZE = 40;
 
@@ -82,6 +46,7 @@ function toStageSummary(stage: Doc<"academicStages">): ClassStageSummary {
 	};
 }
 
+/** Converts a class to a DTO. */
 export async function toDto(
 	ctx: AppQueryCtx,
 	cls: Doc<"classes">,
@@ -156,6 +121,7 @@ export async function validateHeadStage(
 	return stage;
 }
 
+/** Find class by slug and programId */
 export async function findBySlug(
 	ctx: AppQueryCtx | AppMutationCtx,
 	programId: Id<"programs">,
@@ -173,6 +139,7 @@ export async function findBySlug(
 	return cls;
 }
 
+/** Find programs by name */
 export async function findByName(
 	ctx: AppQueryCtx | AppMutationCtx,
 	programId: Id<"programs">,
@@ -201,10 +168,12 @@ function normalizeClassSlug(slug: string): string {
 	}
 }
 
+/** Normalize class slug for check */
 export function normalizeClassSlugForCheck(slug: string): string {
 	return slugifyName(slug);
 }
 
+/** Assert name and slug are available */
 async function assertNameAndSlugAvailable(
 	ctx: AppMutationCtx,
 	programId: Id<"programs">,
@@ -226,6 +195,7 @@ async function assertNameAndSlugAvailable(
 	return { name: trimmedName, slug };
 }
 
+/** Create class */
 export async function create(
 	ctx: AppMutationCtx,
 	args: {
@@ -252,6 +222,7 @@ export async function create(
 	});
 }
 
+/** List classes */
 export async function list(
 	ctx: AppQueryCtx,
 	args: {
@@ -312,13 +283,14 @@ export async function listForSwitcher(
 	return Promise.all(classes.filter(isLive).map((cls) => toListItem(ctx, cls)));
 }
 
+/** Get class by id */
 export async function getById(ctx: AppQueryCtx, id: Id<"classes">) {
 	const cls = await ctx.db.get("classes", id);
 	if (!cls || !isLive(cls)) return null;
 	return cls;
 }
 
-/** Returns the class even when `isDeleting` (for cascade workers). */
+/** Get class by id including deleting */
 export async function getByIdIncludingDeleting(
 	ctx: AppQueryCtx | AppMutationCtx,
 	id: Id<"classes">,
@@ -326,7 +298,7 @@ export async function getByIdIncludingDeleting(
 	return await ctx.db.get("classes", id);
 }
 
-/** Fetches a class and verifies it belongs to the given institution (via its program). */
+/** Ensure class belongs to the given institution */
 export async function ensureInInstitution(
 	ctx: AppQueryCtx | AppMutationCtx,
 	id: Id<"classes">,
@@ -338,11 +310,7 @@ export async function ensureInInstitution(
 		throwAppError(ERROR_CODES.CLASS.NOT_FOUND);
 	}
 
-	const program = await Program.getById(
-		ctx,
-		cls.programId as Id<"programs">,
-		institutionId,
-	);
+	const program = await Program.getById(ctx, cls.programId, institutionId);
 
 	if (!program) {
 		throwAppError(ERROR_CODES.CLASS.NOT_FOUND);
@@ -351,6 +319,7 @@ export async function ensureInInstitution(
 	return cls;
 }
 
+/** Patch class */
 export async function patch(
 	ctx: AppMutationCtx,
 	id: Id<"classes">,
@@ -366,17 +335,18 @@ export async function patch(
 	}
 
 	if (body.name !== undefined) {
-		const { name } = await assertNameAndSlugAvailable(
-			ctx,
-			cls.programId as Id<"programs">,
-			{ name: body.name, slug: cls.slug, excludeId: id },
-		);
+		const { name } = await assertNameAndSlugAvailable(ctx, cls.programId, {
+			name: body.name,
+			slug: cls.slug,
+			excludeId: id,
+		});
 		updates.name = name;
 	}
 
 	return await ctx.db.patch("classes", id, updates);
 }
 
+/** Mark class as deleting */
 export async function markDeleting(ctx: AppMutationCtx, id: Id<"classes">) {
 	await ctx.db.patch("classes", id, {
 		isDeleting: true,
@@ -384,6 +354,7 @@ export async function markDeleting(ctx: AppMutationCtx, id: Id<"classes">) {
 	});
 }
 
+/** Delete attendance register tree */
 export async function deleteAttendanceRegisterTree(
 	ctx: AppMutationCtx,
 	registerId: Id<"attendanceRegisters">,

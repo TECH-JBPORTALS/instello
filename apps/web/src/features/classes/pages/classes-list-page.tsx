@@ -21,10 +21,10 @@ import {
 } from "@/components/common/page-header";
 import { useInsQuery } from "@/hooks/convex-react";
 import { useProgramAlias } from "@/hooks/use-program-alias";
-import { ClassesList } from "./classes-list";
-import { NewClassDialog } from "./new-class-dialog";
+import { ClassesList } from "../components/classes-list";
+import { NewClassDialog } from "../components/new-class-dialog";
 
-export default function ClassesView() {
+export function ClassesListPage() {
 	const [open, setOpen] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [debouncedSearch, setDebouncedSearch] = useState("");

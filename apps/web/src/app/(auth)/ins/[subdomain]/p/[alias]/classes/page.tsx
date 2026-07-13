@@ -1,5 +1,5 @@
-import { ClassesPage } from "@/features/p/[alias]/pages/program-section-pages";
+import { ClassesListPage } from "@/features/classes/pages/classes-list-page";
 
 export default function Page() {
-	return <ClassesPage />;
+	return <ClassesListPage />;
 }

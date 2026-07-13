@@ -33,7 +33,9 @@ type ProgramSubjectListItem = FunctionReturnType<
 	typeof api.program.queries.listSubjectsByStage
 >[number];
 
-type BatchDto = FunctionReturnType<typeof api.classBatches.list>[number];
+type BatchDto = FunctionReturnType<
+	typeof api.class.queries.listBatches
+>[number];
 
 export function dtoToHourSpans(
 	timetable: TimetableDto,

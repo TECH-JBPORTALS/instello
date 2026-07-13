@@ -12,7 +12,7 @@ export type ClassFieldProps = {
 };
 
 export function ClassNameField({ classId, savedValue }: ClassFieldProps) {
-	const update = useInsMutation(api.classes.updateBasicInfo);
+	const update = useInsMutation(api.class.mutations.updateBasicInfo);
 
 	return (
 		<InlineTextField
@@ -32,7 +32,7 @@ export function ClassDescriptionField({
 	classId,
 	savedValue,
 }: ClassFieldProps) {
-	const update = useInsMutation(api.classes.updateBasicInfo);
+	const update = useInsMutation(api.class.mutations.updateBasicInfo);
 
 	return (
 		<InlineTextField

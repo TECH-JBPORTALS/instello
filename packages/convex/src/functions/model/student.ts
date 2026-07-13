@@ -1,6 +1,7 @@
 import type { PaginationOptions } from "convex/server";
 import { type Infer, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
+import * as ClassBatch from "../class/model/classBatch";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import {
 	validateIndianPhoneNumber,
@@ -8,7 +9,6 @@ import {
 } from "../helpers/phone";
 import * as InstitutionStudentCategory from "../institution/model/studentCategory";
 import { vv } from "../schema";
-import * as ClassBatch from "./classBatch";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 
 const GenderSchema = vv.union(

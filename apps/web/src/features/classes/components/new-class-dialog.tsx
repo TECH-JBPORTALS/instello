@@ -51,10 +51,10 @@ import {
 	useInsQuery,
 	useInstitutionSlug,
 } from "@/hooks/convex-react";
-import { classPath } from "@/lib/class-path";
 import { slugifyName } from "@/lib/slugify";
 import { protocol } from "@/lib/utils";
-import { ClassSlugSchema, NewClassSchema } from "./shared-form";
+import { classPath } from "../class-path";
+import { ClassSlugSchema, NewClassSchema } from "../shared-form";
 
 export function NewClassDialog({
 	open,
@@ -72,7 +72,7 @@ export function NewClassDialog({
 	const router = useRouter();
 	const institutionSlug = useInstitutionSlug();
 	const convex = useConvex();
-	const createClass = useInsMutation(api.classes.create);
+	const createClass = useInsMutation(api.class.mutations.create);
 	const adoptedPattern = useInsQuery(
 		api.academicPattern.queries.getAdoptedForActiveInstitution,
 		open ? {} : "skip",
@@ -200,7 +200,7 @@ export function NewClassDialog({
 									if (!name) return undefined;
 
 									const { available } = await convex.query(
-										api.classes.checkName,
+										api.class.queries.checkName,
 										{ slug: institutionSlug, programId, name },
 									);
 
@@ -283,7 +283,7 @@ export function NewClassDialog({
 									if (!parsed.success) return undefined;
 
 									const { available } = await convex.query(
-										api.classes.checkSlug,
+										api.class.queries.checkSlug,
 										{
 											slug: institutionSlug,
 											programId,

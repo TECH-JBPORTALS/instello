@@ -48,11 +48,11 @@ import {
 	PageHeaderStart,
 	PageHeaderTitle,
 } from "@/components/common/page-header";
+import { classPath } from "@/features/classes/class-path";
 import { subjectColorStyles } from "@/features/subjects/constants";
 import { useInsMutation, useInsQuery } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
-import { classPath } from "@/lib/class-path";
 import { getAttendanceTimeContext } from "./attendance-time";
 import { RegisterSessionStatusBadge } from "./session-status";
 
@@ -66,7 +66,7 @@ export function AttendanceView() {
 		alias: programAlias,
 	});
 	const cls = useInsQuery(
-		api.classes.getBySlug,
+		api.class.queries.getBySlug,
 		program && classSlug ? { programId: program._id, classSlug } : "skip",
 	);
 

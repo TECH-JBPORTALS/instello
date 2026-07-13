@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import type { ComponentProps } from "react";
+import { classPath } from "@/features/classes/class-path";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
-import { classPath } from "@/lib/class-path";
 
 type ClassLinkProps = Omit<ComponentProps<typeof Link>, "href"> & {
 	segment?: string;

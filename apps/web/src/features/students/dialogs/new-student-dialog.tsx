@@ -57,7 +57,7 @@ export function NewStudentDialog({
 		open ? {} : "skip",
 	);
 	const batches = useInsQuery(
-		api.classBatches.list,
+		api.class.queries.listBatches,
 		open && isGroupsEnabled ? { classId } : "skip",
 	);
 

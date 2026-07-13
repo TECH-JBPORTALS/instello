@@ -1,9 +1,9 @@
 import { paginationOptsValidator } from "convex/server";
+import * as Class from "./class/model/class";
+import * as ClassBatch from "./class/model/classBatch";
 import { ERROR_CODES, throwAppError } from "./helpers/constants";
 import { insMutation, insQuery } from "./helpers/customFunctions";
 import * as InstitutionStudentCategory from "./institution/model/studentCategory";
-import * as Class from "./model/class";
-import * as ClassBatch from "./model/classBatch";
 import * as Student from "./model/student";
 import { vv } from "./schema";
 
@@ -251,10 +251,7 @@ export const bulkMove = insMutation({
 					batchId: args.targetBatchId,
 				});
 			} else {
-				await ClassBatch.clearBatch(ctx, {
-					studentId,
-					classId: targetClass._id,
-				});
+				await ClassBatch.clearBatch(ctx, studentId);
 			}
 		}
 

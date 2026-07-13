@@ -27,9 +27,9 @@ import { useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useInsPaginatedQuery } from "@/hooks/convex-react";
 import { useProgramAlias } from "@/hooks/use-program-alias";
-import { classPath } from "@/lib/class-path";
+import { classPath } from "../class-path";
+import { CLASS_LIST_PAGE_SIZE } from "../constants";
 import { ClassAvatar } from "./class-avatar";
-import { CLASS_LIST_PAGE_SIZE } from "./constants";
 import { NewClassDialog } from "./new-class-dialog";
 
 function ClassesListEmpty({
@@ -104,7 +104,7 @@ export function ClassesList({
 	const programAlias = useProgramAlias();
 	const trimmedQuery = searchQuery.trim();
 	const { results, status, loadMore, isLoading } = useInsPaginatedQuery(
-		api.classes.list,
+		api.class.queries.list,
 		{
 			programId,
 			searchQuery: trimmedQuery || undefined,

@@ -1,3 +1,4 @@
+import * as Class from "./class/model/class";
 import { ERROR_CODES, throwAppError } from "./helpers/constants";
 import { insMutation, insQuery } from "./helpers/customFunctions";
 import * as AttendanceActivityLog from "./model/attendanceActivityLog";
@@ -5,7 +6,6 @@ import * as AttendanceRecord from "./model/attendanceRecord";
 import * as AttendanceRegister from "./model/attendanceRegister";
 import * as AttendanceSession from "./model/attendanceSession";
 import * as AttendanceSessionDetails from "./model/attendanceSessionDetails";
-import * as Class from "./model/class";
 import * as Timetable from "./model/timetable";
 import { vv } from "./schema";
 
