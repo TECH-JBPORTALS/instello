@@ -1,7 +1,7 @@
 import type { Infer } from "convex/values";
 import type { Id } from "../_generated/dataModel";
+import * as AcademicPattern from "../academicPattern/model/academicPattern";
 import { vv } from "../schema";
-import * as AcademicPattern from "./academicPattern";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 
 export const OwnerOrgCreateSchema = vv

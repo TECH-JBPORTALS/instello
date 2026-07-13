@@ -6,10 +6,10 @@ import {
 	validateIndianPhoneNumber,
 	validateOptionalIndianPhoneNumber,
 } from "../helpers/phone";
+import * as InstitutionStudentCategory from "../institution/model/studentCategory";
 import { vv } from "../schema";
 import * as ClassBatch from "./classBatch";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
-import * as InstitutionStudentCategory from "./institutionStudentCategory";
 
 const GenderSchema = vv.union(
 	vv.literal("male"),

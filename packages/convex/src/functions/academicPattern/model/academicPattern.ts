@@ -1,70 +1,26 @@
-import type { Infer } from "convex/values";
-import type { Doc, Id } from "../_generated/dataModel";
-import { DEFAULT_PATTERN_TEMPLATES } from "../helpers/academicPatternTemplates";
-import { ERROR_CODES, throwAppError } from "../helpers/constants";
-import { vv } from "../schema";
+import type { Doc, Id } from "../../_generated/dataModel";
+import { DEFAULT_PATTERN_TEMPLATES } from "../../helpers/academicPatternTemplates";
+import { ERROR_CODES, throwAppError } from "../../helpers/constants";
+import type { AppMutationCtx, AppQueryCtx } from "../../model/common.types";
+import type {
+	AcademicPatternDetailDto,
+	AcademicPatternDto,
+	PatchCore,
+	PatchMetadata,
+} from "../validator/academicPattern";
 import * as AcademicStage from "./academicStage";
-import type { AppMutationCtx, AppQueryCtx } from "./common.types";
 
-export const CreateInputSchema = {
-	name: vv.string(),
-	description: vv.optional(vv.string()),
-	systemType: vv.union(vv.literal("semester"), vv.literal("annual")),
-	durationInYears: vv.number(),
-	stages: vv.array(
-		vv.object({
-			name: vv.string(),
-			alias: vv.string(),
-			sequenceNumber: vv.number(),
-			yearNumber: vv.number(),
-		}),
-	),
-};
-
-export const PatchMetadataSchema = vv.object({
-	name: vv.optional(vv.string()),
-	description: vv.optional(vv.string()),
-});
-
-export const PatchCoreSchema = vv.object({
-	systemType: vv.optional(
-		vv.union(vv.literal("semester"), vv.literal("annual")),
-	),
-	durationInYears: vv.optional(vv.number()),
-});
-
-export const AcademicPatternDtoSchema = vv.object({
-	_id: vv.id("academicPatterns"),
-	name: vv.string(),
-	description: vv.optional(vv.string()),
-	systemType: vv.union(vv.literal("semester"), vv.literal("annual")),
-	durationInYears: vv.number(),
-	templateKey: vv.optional(
-		vv.union(vv.literal("engineering"), vv.literal("diploma")),
-	),
-	canBeEdited: vv.boolean(),
-	stageCount: vv.number(),
-	createdAt: vv.number(),
-});
-
-export const AcademicPatternDetailDtoSchema = vv.object({
-	_id: vv.id("academicPatterns"),
-	name: vv.string(),
-	description: vv.optional(vv.string()),
-	systemType: vv.union(vv.literal("semester"), vv.literal("annual")),
-	durationInYears: vv.number(),
-	templateKey: vv.optional(
-		vv.union(vv.literal("engineering"), vv.literal("diploma")),
-	),
-	canBeEdited: vv.boolean(),
-	createdAt: vv.number(),
-	stages: vv.array(AcademicStage.AcademicStageDtoSchema),
-});
-
-export type AcademicPatternDto = Infer<typeof AcademicPatternDtoSchema>;
-export type AcademicPatternDetailDto = Infer<
-	typeof AcademicPatternDetailDtoSchema
->;
+export type {
+	AcademicPatternDetailDto,
+	AcademicPatternDto,
+} from "../validator/academicPattern";
+export {
+	AcademicPatternDetailDtoSchema,
+	AcademicPatternDtoSchema,
+	CreateInputSchema,
+	PatchCoreSchema,
+	PatchMetadataSchema,
+} from "../validator/academicPattern";
 
 /** Maps a pattern document to the list DTO, including a precomputed stage count. */
 export function toDto(
@@ -194,7 +150,7 @@ export async function create(
 export async function patchMetadata(
 	ctx: AppMutationCtx,
 	id: Id<"academicPatterns">,
-	body: Infer<typeof PatchMetadataSchema>,
+	body: PatchMetadata,
 ) {
 	const pattern = await ctx.db.get("academicPatterns", id);
 
@@ -217,7 +173,7 @@ export async function patchMetadata(
 export async function patchCore(
 	ctx: AppMutationCtx,
 	id: Id<"academicPatterns">,
-	body: Infer<typeof PatchCoreSchema>,
+	body: PatchCore,
 ) {
 	const pattern = await ctx.db.get("academicPatterns", id);
 

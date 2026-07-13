@@ -61,7 +61,7 @@ describe("students.create", () => {
 	test("requires authentication", async ({ t, ins1, classes }) => {
 		const categoryId = await t.run(async (ctx) => {
 			const { seedDefaults, listByInstitution } = await import(
-				"../model/institutionStudentCategory"
+				"../institution/model/studentCategory"
 			);
 			await seedDefaults(ctx, ins1._id);
 			const categories = await listByInstitution(ctx, ins1._id);
