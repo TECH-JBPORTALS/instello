@@ -15,19 +15,20 @@ import {
 	ItemTitle,
 } from "@instello/ui/components/item";
 import { cn } from "@/lib/utils";
-import { DateOfBirthField, JoinedDateField } from "./fields/faculty-date-field";
-import { FacultyImageField } from "./fields/faculty-image-field";
 import {
+	DateOfBirthField,
 	DesignationField,
 	EmailField,
+	FacultyImageField,
 	type FacultySettingsProps,
 	FirstNameField,
+	JoinedDateField,
 	LastNameField,
 	PhoneField,
 	QualificationField,
 	SpecializationField,
 	StaffIdField,
-} from "./fields/faculty-text-fields";
+} from "./faculty-settings-fields";
 
 export function FacultySettingsSection({ faculty }: FacultySettingsProps) {
 	return (

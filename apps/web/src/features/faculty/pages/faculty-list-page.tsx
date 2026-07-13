@@ -17,11 +17,12 @@ import {
 	PageHeaderTitle,
 } from "@/components/common/page-header";
 import { useInsQuery, useInstitutionSlug } from "@/hooks/convex-react";
-import { AddFacultyButton } from "./add-faculty-button";
-import type { FacultyStatusTab } from "./constants";
-import { FacultyStatusTabs, FacultyTable } from "./tables/faculty-table";
+import { AddFacultyButton } from "../components/add-faculty-button";
+import type { FacultyStatusTab } from "../constants";
+import { FacultyList } from "../components/faculty-list";
+import { FacultyStatusTabs } from "../components/faculty-status-tabs";
 
-export function FacultyPage() {
+export function FacultyListPage() {
 	const slug = useInstitutionSlug();
 	const institution = useInsQuery(api.institution.queries.getBySlug, { slug });
 	const [statusTab, setStatusTab] = useState<FacultyStatusTab>("active");
@@ -57,7 +58,7 @@ export function FacultyPage() {
 
 			<FacultyStatusTabs value={statusTab} onChange={setStatusTab} />
 
-			<FacultyTable status={statusTab} searchQuery={searchQuery} />
+			<FacultyList status={statusTab} searchQuery={searchQuery} />
 		</Container>
 	);
 }

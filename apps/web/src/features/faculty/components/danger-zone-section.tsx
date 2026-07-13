@@ -46,8 +46,8 @@ export function DangerZoneSection({
 	const [confirmOpen, setConfirmOpen] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const activateFaculty = useInsMutation(api.faculty.activate);
-	const deactivateFaculty = useInsMutation(api.faculty.deactivate);
+	const activateFaculty = useInsMutation(api.faculty.mutations.activate);
+	const deactivateFaculty = useInsMutation(api.faculty.mutations.deactivate);
 
 	const displayName = `${faculty.firstName} ${faculty.lastName}`.trim();
 	const isActive = faculty.status === "active";

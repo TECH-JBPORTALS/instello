@@ -46,9 +46,9 @@ export function AddFacultyDialog({
 }: AddFacultyDialogProps) {
 	const [step, setStep] = useState(0);
 	const [globalError, setGlobalError] = useState<string | null>(null);
-	const createFaculty = useInsMutation(api.faculty.create);
+	const createFaculty = useInsMutation(api.faculty.mutations.create);
 	const generateImageUploadUrl = useInsMutation(
-		api.faculty.generateImageUploadUrl,
+		api.faculty.mutations.generateImageUploadUrl,
 	);
 
 	const form = useAppForm({

@@ -13,15 +13,16 @@ import Container from "@/components/common/container";
 import { PageHeader, PageHeaderStart } from "@/components/common/page-header";
 import { useInsQuery } from "@/hooks/convex-react";
 import { cn } from "@/lib/utils";
-import { FacultyAvatar } from "./faculty-avatar";
-import { getFacultyDisplayName } from "./forms/shared-form";
-import { DangerZoneSection } from "./sections/danger-zone-section";
-import { FacultySettingsSection } from "./sections/faculty-settings-section";
+import { DangerZoneSection } from "../components/danger-zone-section";
+import { FacultyAvatar } from "../components/faculty-avatar";
+import { FacultySettingsSection } from "../components/faculty-settings-section";
+import { facultyListPath } from "../faculty-path";
+import { getFacultyDisplayName } from "../forms/shared-form";
 
 export function FacultyDetailPage() {
 	const { facultyId } = useParams<{ facultyId: string }>();
 	const faculty = useInsQuery(
-		api.faculty.getById,
+		api.faculty.queries.getById,
 		facultyId ? { id: facultyId as Id<"faculty"> } : "skip",
 	);
 
@@ -47,7 +48,7 @@ export function FacultyDetailPage() {
 						variant="ghost"
 						size="sm"
 						className="-ml-2 h-8 rounded-full px-2 text-muted-foreground"
-						render={<Link href="/faculty" />}
+						render={<Link href={facultyListPath()} />}
 					>
 						<IconChevronLeft className="size-4" />
 						Faculty
@@ -65,7 +66,7 @@ export function FacultyDetailPage() {
 							size="xl"
 						/>
 						<div className="min-w-0 space-y-1.5">
-							<div className="flex flex-row flex-wrap items-center	 gap-1.5">
+							<div className="flex flex-row flex-wrap items-center gap-1.5">
 								<h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
 									{displayName}
 								</h1>

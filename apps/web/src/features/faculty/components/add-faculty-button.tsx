@@ -17,8 +17,8 @@ import {
 	IconTableImport,
 } from "@tabler/icons-react";
 import { useState } from "react";
-import { AddFacultyDialog } from "./dialogs/add-faculty-dialog";
-import { ImportFacultyDialog } from "./dialogs/import-faculty-dialog";
+import { AddFacultyDialog } from "./add-faculty-dialog";
+import { ImportFacultyDialog } from "./import-faculty-dialog";
 
 export function AddFacultyButton({ disabled }: { disabled?: boolean }) {
 	const [addOpen, setAddOpen] = useState(false);

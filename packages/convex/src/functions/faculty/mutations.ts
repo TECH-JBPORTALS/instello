@@ -1,15 +1,20 @@
-import { paginationOptsValidator } from "convex/server";
-import { ERROR_CODES, throwAppError } from "./helpers/constants";
-import { insMutation, insQuery } from "./helpers/customFunctions";
+import { ERROR_CODES, throwAppError } from "../helpers/constants";
+import { insMutation } from "../helpers/customFunctions";
+import { vv } from "../schema";
 import * as Faculty from "./model/faculty";
-import { vv } from "./schema";
+import {
+	CreateInputSchema,
+	PatchEmploymentSchema,
+	PatchPersonalInfoSchema,
+	PatchPhoneSchema,
+} from "./validator/faculty";
 
 /** Creates faculty in the current institution with all details in one call
  * @returns faculty id
  */
 export const create = insMutation({
 	permissions: ["faculty:create"],
-	args: Faculty.CreateInputSchema,
+	args: CreateInputSchema,
 	returns: vv.id("faculty"),
 	handler: async (ctx, args) => {
 		return await Faculty.create(ctx, {
@@ -17,43 +22,6 @@ export const create = insMutation({
 			institutionId: ctx.institution._id,
 			createdBy: ctx.session.userId,
 		});
-	},
-});
-
-/** Lists faculty in the current institution
- * @returns paginated faculty records
- */
-export const list = insQuery({
-	permissions: ["faculty:view"],
-	args: {
-		paginationOpts: paginationOptsValidator,
-		status: vv.optional(vv.union(vv.literal("active"), vv.literal("inactive"))),
-	},
-	returns: Faculty.PaginatedFacultyListSchema,
-	handler: async (ctx, args) => {
-		return await Faculty.list(ctx, {
-			institutionId: ctx.institution._id,
-			status: args.status,
-			paginationOpts: args.paginationOpts,
-		});
-	},
-});
-
-/** Get faculty by id in the current institution
- * @returns faculty record
- */
-export const getById = insQuery({
-	permissions: ["faculty:view"],
-	args: { id: vv.id("faculty") },
-	returns: Faculty.FacultyDtoSchema,
-	handler: async (ctx, args) => {
-		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
-
-		if (!faculty) {
-			throwAppError(ERROR_CODES.FACULTY.NOT_FOUND);
-		}
-
-		return await Faculty.toDto(ctx, faculty);
 	},
 });
 
@@ -75,7 +43,7 @@ export const updatePersonalInfo = insMutation({
 	permissions: ["faculty:update"],
 	args: {
 		id: vv.id("faculty"),
-		body: Faculty.PatchPersonalInfoSchema,
+		body: PatchPersonalInfoSchema,
 	},
 	returns: vv.null(),
 	handler: async (ctx, args) => {
@@ -98,7 +66,7 @@ export const updateEmployment = insMutation({
 	permissions: ["faculty:update"],
 	args: {
 		id: vv.id("faculty"),
-		body: Faculty.PatchEmploymentSchema,
+		body: PatchEmploymentSchema,
 	},
 	returns: vv.null(),
 	handler: async (ctx, args) => {
@@ -121,7 +89,7 @@ export const updatePhoneNumber = insMutation({
 	permissions: ["faculty:update"],
 	args: {
 		id: vv.id("faculty"),
-		body: Faculty.PatchPhoneSchema,
+		body: PatchPhoneSchema,
 	},
 	returns: vv.null(),
 	handler: async (ctx, args) => {

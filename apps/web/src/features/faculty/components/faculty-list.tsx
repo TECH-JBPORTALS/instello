@@ -34,7 +34,6 @@ import {
 	ItemTitle,
 } from "@instello/ui/components/item";
 import { Skeleton } from "@instello/ui/components/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@instello/ui/components/tabs";
 import { IconDots, IconUser, IconUserOff } from "@tabler/icons-react";
 import { isEmpty } from "lodash";
 import Link from "next/link";
@@ -42,22 +41,23 @@ import { useMemo, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useInsMutation, useInsPaginatedQuery } from "@/hooks/convex-react";
 import { FACULTY_LIST_PAGE_SIZE } from "../constants";
-import { FacultyAvatar } from "../faculty-avatar";
+import { facultyPath } from "../faculty-path";
 import { getFacultyDisplayName } from "../forms/shared-form";
+import { FacultyAvatar } from "./faculty-avatar";
 
-type FacultyTableProps = {
+type FacultyListProps = {
 	status: "active" | "inactive";
 	searchQuery: string;
 };
 
-export function FacultyTable({ status, searchQuery }: FacultyTableProps) {
+export function FacultyList({ status, searchQuery }: FacultyListProps) {
 	const {
 		results,
 		status: paginationStatus,
 		loadMore,
 		isLoading,
 	} = useInsPaginatedQuery(
-		api.faculty.list,
+		api.faculty.queries.list,
 		{ status },
 		{ initialNumItems: FACULTY_LIST_PAGE_SIZE },
 	);
@@ -150,7 +150,7 @@ type FacultyListItemProps = {
 function FacultyListItem({ faculty, showDeactivate }: FacultyListItemProps) {
 	const [confirmOpen, setConfirmOpen] = useState(false);
 	const [isDeactivating, setIsDeactivating] = useState(false);
-	const deactivateFaculty = useInsMutation(api.faculty.deactivate);
+	const deactivateFaculty = useInsMutation(api.faculty.mutations.deactivate);
 
 	const displayName = getFacultyDisplayName(
 		faculty.firstName,
@@ -170,7 +170,7 @@ function FacultyListItem({ faculty, showDeactivate }: FacultyListItemProps) {
 	return (
 		<>
 			<Item className="relative rounded-none! border-x-0! border-t-0! border-border! last:border-b-0! hover:bg-accent/50!">
-				<Link className="absolute inset-0" href={`/faculty/${faculty._id}`} />
+				<Link className="absolute inset-0" href={facultyPath(faculty._id)} />
 				<ItemMedia variant="image">
 					<FacultyAvatar
 						firstName={faculty.firstName}
@@ -270,27 +270,5 @@ function FacultyListSkeleton({ count }: { count: number }) {
 				))}
 			</CardContent>
 		</Card>
-	);
-}
-
-export function FacultyStatusTabs({
-	value,
-	onChange,
-}: {
-	value: "active" | "inactive";
-	onChange: (value: "active" | "inactive") => void;
-}) {
-	return (
-		<Tabs
-			value={value}
-			onValueChange={(nextValue) =>
-				onChange(nextValue as "active" | "inactive")
-			}
-		>
-			<TabsList>
-				<TabsTrigger value="active">Active</TabsTrigger>
-				<TabsTrigger value="inactive">Inactive</TabsTrigger>
-			</TabsList>
-		</Tabs>
 	);
 }

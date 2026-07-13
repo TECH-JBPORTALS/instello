@@ -32,9 +32,9 @@ import {
 	type ImportSchema,
 	useCxImporter,
 } from "@/lib/useCxImporter";
-import { ImportProgressHeader } from "../components/import-progress-header";
-import { ImportRowList } from "../components/import-row-list";
 import { downloadFacultyImportTemplate } from "../constants";
+import { ImportProgressHeader } from "./import-progress-header";
+import { ImportRowList } from "./import-row-list";
 
 type ImportFacultyDialogProps = {
 	open: boolean;
@@ -157,7 +157,7 @@ export function ImportFacultyDialog({
 	onOpenChange,
 }: ImportFacultyDialogProps) {
 	const inputRef = useRef<HTMLInputElement>(null);
-	const createFaculty = useInsMutation(api.faculty.create);
+	const createFaculty = useInsMutation(api.faculty.mutations.create);
 
 	const {
 		phase,
