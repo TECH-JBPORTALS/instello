@@ -14,10 +14,10 @@ import {
 	PageHeaderTitle,
 } from "@/components/common/page-header";
 import { useInstitutionSlug } from "@/hooks/convex-react";
-import { NewProgramDialog } from "./new-program-dialog";
-import { ProgramsList } from "./programs-list";
+import { NewProgramDialog } from "../components/new-program-dialog";
+import { ProgramsList } from "../components/programs-list";
 
-export default function Programs() {
+export function ProgramsListPage() {
 	const [open, setOpen] = useState(false);
 	const institutionSlug = useInstitutionSlug();
 	const institution = useQuery(api.institution.queries.getBySlug, {

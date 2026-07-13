@@ -2,11 +2,18 @@ import type { Doc, Id } from "../../_generated/dataModel";
 import { buildStagesForPattern } from "../../helpers/academicPatternTemplates";
 import { ERROR_CODES, throwAppError } from "../../helpers/constants";
 import type { AppMutationCtx, AppQueryCtx } from "../../model/common.types";
-import type { AcademicStageDto, PatchCore, PatchMetadata } from "../validator/academicStage";
-import { AcademicStageDtoSchema } from "../validator/academicStage";
+import type {
+	AcademicStageDto,
+	PatchCore,
+	PatchMetadata,
+} from "../validator/academicStage";
 
-export { AcademicStageDtoSchema, PatchCoreSchema, PatchMetadataSchema } from "../validator/academicStage";
 export type { AcademicStageDto } from "../validator/academicStage";
+export {
+	AcademicStageDtoSchema,
+	PatchCoreSchema,
+	PatchMetadataSchema,
+} from "../validator/academicStage";
 
 /** Maps a stage document to its API DTO. */
 export function toDto(stage: Doc<"academicStages">): AcademicStageDto {

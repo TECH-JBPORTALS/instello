@@ -12,8 +12,8 @@ import {
 import { IconArrowLeft } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { programPath } from "@/features/programs/program-path";
 import { useProgramAlias } from "@/hooks/use-program-alias";
-import { programPath } from "@/lib/program-path";
 import { getClassSegment } from "@/lib/sidebar-mode";
 import { ClassLink } from "./class-link";
 import { classNavGroups, isClassNavActive } from "./nav-items";

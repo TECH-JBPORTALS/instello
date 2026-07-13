@@ -1,5 +1,5 @@
-import ProgramsPage from "@/features/programs/programs-view";
+import { ProgramsListPage } from "@/features/programs/pages/programs-list-page";
 
 export default function Page() {
-	return <ProgramsPage />;
+	return <ProgramsListPage />;
 }

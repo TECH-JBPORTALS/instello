@@ -1,6 +1,5 @@
 "use client";
 
-import type { Id } from "@instello/convex/dataModel";
 import {
 	Card,
 	CardDescription,
@@ -15,14 +14,11 @@ import {
 	ItemGroup,
 	ItemTitle,
 } from "@instello/ui/components/item";
+import type { ProgramDto } from "../types";
 import { ProgramAliasField, ProgramNameField } from "./program-fields";
 
 type ProgramGeneralSectionProps = {
-	program: {
-		_id: Id<"programs">;
-		name: string;
-		alias: string;
-	};
+	program: Pick<ProgramDto, "_id" | "name" | "alias">;
 };
 
 export function ProgramGeneralSection({ program }: ProgramGeneralSectionProps) {

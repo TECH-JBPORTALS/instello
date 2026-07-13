@@ -54,7 +54,9 @@ export function TimetableView({ basePath }: { basePath: string }) {
 		!Number.isNaN(requestedVersion) &&
 		requestedVersion > 0;
 
-	const program = useInsQuery(api.programs.getByAlias, { alias: programAlias });
+	const program = useInsQuery(api.program.queries.getByAlias, {
+		alias: programAlias,
+	});
 	const cls = useInsQuery(
 		api.classes.getBySlug,
 		program && classSlug ? { programId: program._id, classSlug } : "skip",

@@ -36,7 +36,9 @@ function ClassSectionPage({
 	const institutionSlug = useInstitutionSlug();
 	const programAlias = useProgramAlias();
 	const classSlug = useClassSlug();
-	const program = useInsQuery(api.programs.getByAlias, { alias: programAlias });
+	const program = useInsQuery(api.program.queries.getByAlias, {
+		alias: programAlias,
+	});
 
 	useEffect(() => {
 		if (!programAlias || !classSlug || !institutionSlug || !program) return;
@@ -76,7 +78,9 @@ export function StudentsPage() {
 export function SubjectsPage() {
 	const programAlias = useProgramAlias();
 	const classSlug = useClassSlug();
-	const program = useInsQuery(api.programs.getByAlias, { alias: programAlias });
+	const program = useInsQuery(api.program.queries.getByAlias, {
+		alias: programAlias,
+	});
 	const cls = useInsQuery(
 		api.classes.getBySlug,
 		program && classSlug ? { programId: program._id, classSlug } : "skip",

@@ -31,7 +31,7 @@ import { ProgramSubjectList } from "./program-subject-list";
 
 export function ProgramSubjectAllocationView() {
 	const programAlias = useProgramAlias();
-	const program = useInsQuery(api.programs.getByAlias, {
+	const program = useInsQuery(api.program.queries.getByAlias, {
 		alias: programAlias,
 	});
 	const pattern = useInsQuery(

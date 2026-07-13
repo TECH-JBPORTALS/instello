@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { programPath } from "@/features/programs/program-path";
 import { useProgramAlias } from "@/hooks/use-program-alias";
-import { programPath } from "@/lib/program-path";
 
 export function useProgramRouter() {
 	const router = useRouter();

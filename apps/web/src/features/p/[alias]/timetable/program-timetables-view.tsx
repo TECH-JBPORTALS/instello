@@ -32,9 +32,9 @@ import {
 	PageHeaderStart,
 	PageHeaderTitle,
 } from "@/components/common/page-header";
+import { programPath } from "@/features/programs/program-path";
 import { useInsQuery } from "@/hooks/convex-react";
 import { useProgramAlias } from "@/hooks/use-program-alias";
-import { programPath } from "@/lib/program-path";
 
 type ProgramTimetableItem = FunctionReturnType<
 	typeof api.timetables.listByProgram
@@ -155,7 +155,9 @@ function ClassTimetableRow({
 
 export function ProgramTimetablesView() {
 	const programAlias = useProgramAlias();
-	const program = useInsQuery(api.programs.getByAlias, { alias: programAlias });
+	const program = useInsQuery(api.program.queries.getByAlias, {
+		alias: programAlias,
+	});
 	const items = useInsQuery(
 		api.timetables.listByProgram,
 		program ? { programId: program._id } : "skip",

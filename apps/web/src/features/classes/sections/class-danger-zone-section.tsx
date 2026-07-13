@@ -29,10 +29,10 @@ import {
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { programPath } from "@/features/programs/program-path";
 import { useInsMutation } from "@/hooks/convex-react";
 import { useProgramAlias } from "@/hooks/use-program-alias";
 import { getConvexErrorMessage } from "@/lib/convex-error";
-import { programPath } from "@/lib/program-path";
 
 type ClassDangerZoneSectionProps = {
 	cls: {

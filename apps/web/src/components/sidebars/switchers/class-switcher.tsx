@@ -30,7 +30,9 @@ export function ClassSwitcher() {
 	const pathname = usePathname();
 	const programAlias = useProgramAlias();
 	const classSlug = useClassSlug();
-	const program = useInsQuery(api.programs.getByAlias, { alias: programAlias });
+	const program = useInsQuery(api.program.queries.getByAlias, {
+		alias: programAlias,
+	});
 	const [createOpen, setCreateOpen] = useState(false);
 	const [selectOpen, setSelectOpen] = useState(false);
 	const classes = useInsQuery(

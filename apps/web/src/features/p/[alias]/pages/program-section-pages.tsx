@@ -21,6 +21,7 @@ import { TimetableView } from "@/features/c/[slug]/timetable/timetable-view";
 import ClassesView from "@/features/classes/classes-view";
 import { ProgramSubjectAllocationView } from "@/features/p/[alias]/subjects/program-subject-allocation-view";
 import { ProgramTimetablesView } from "@/features/p/[alias]/timetable/program-timetables-view";
+import { programPath } from "@/features/programs/program-path";
 import { useInsQuery, useInstitutionSlug } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
@@ -29,7 +30,6 @@ import {
 	getFeaturePreview,
 	getFeaturePreviewTitle,
 } from "@/lib/feature-previews";
-import { programPath } from "@/lib/program-path";
 
 function ProgramSectionPage({
 	title,
@@ -44,13 +44,13 @@ function ProgramSectionPage({
 	const institutionSlug = useInstitutionSlug();
 
 	const alias = useProgramAlias();
-	const program = useInsQuery(api.programs.getByAlias, { alias });
+	const program = useInsQuery(api.program.queries.getByAlias, { alias });
 
 	useEffect(() => {
 		if (!alias || !institutionSlug) return;
 
 		convex
-			.query(api.programs.getByAlias, { slug: institutionSlug, alias })
+			.query(api.program.queries.getByAlias, { slug: institutionSlug, alias })
 			.catch((error: unknown) => {
 				if (
 					error instanceof ConvexError &&

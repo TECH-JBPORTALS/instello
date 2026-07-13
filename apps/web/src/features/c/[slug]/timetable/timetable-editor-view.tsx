@@ -202,7 +202,9 @@ export function TimetableEditorView({ basePath }: { basePath: string }) {
 	const programAlias = useProgramAlias();
 	const classSlug = useClassSlug();
 
-	const program = useInsQuery(api.programs.getByAlias, { alias: programAlias });
+	const program = useInsQuery(api.program.queries.getByAlias, {
+		alias: programAlias,
+	});
 	const cls = useInsQuery(
 		api.classes.getBySlug,
 		program && classSlug ? { programId: program._id, classSlug } : "skip",

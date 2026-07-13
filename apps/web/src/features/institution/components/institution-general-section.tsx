@@ -19,6 +19,7 @@ import {
 	ItemGroup,
 	ItemTitle,
 } from "@instello/ui/components/item";
+import type { InstitutionDto } from "../types";
 import {
 	InstitutionAddressLineField,
 	InstitutionCountryField,
@@ -27,7 +28,6 @@ import {
 	InstitutionStateField,
 	InstitutionZipCodeField,
 } from "./institution-fields";
-import type { InstitutionDto } from "../types";
 
 export function InstitutionGeneralSection({
 	institution,

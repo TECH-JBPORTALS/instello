@@ -54,7 +54,7 @@ export function NewProgramDialog({
 }) {
 	const institutionSlug = useInstitutionSlug();
 	const convex = useConvex();
-	const createProgram = useMutation(api.programs.create);
+	const createProgram = useMutation(api.program.mutations.create);
 	const [globalError, setGlobalError] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -167,7 +167,7 @@ export function NewProgramDialog({
 									if (!parsed.success) return undefined;
 
 									const { available } = await convex.query(
-										api.programs.checkAlias,
+										api.program.queries.checkAlias,
 										{ slug: institutionSlug, alias },
 									);
 

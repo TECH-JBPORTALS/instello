@@ -26,7 +26,7 @@ import { isEmpty, isUndefined } from "lodash";
 import Link from "next/link";
 import { useState } from "react";
 import { useInstitutionSlug } from "@/hooks/convex-react";
-import { programPath } from "@/lib/program-path";
+import { programPath } from "../program-path";
 import { NewProgramDialog } from "./new-program-dialog";
 import { ProgramAvatar } from "./program-avatar";
 
@@ -81,7 +81,9 @@ function ProgramsListSkeleton({ count }: { count: number }) {
 
 export function ProgramsList() {
 	const institutionSlug = useInstitutionSlug();
-	const programs = useQuery(api.programs.list, { slug: institutionSlug });
+	const programs = useQuery(api.program.queries.list, {
+		slug: institutionSlug,
+	});
 
 	if (isUndefined(programs)) return <ProgramsListSkeleton count={8} />;
 

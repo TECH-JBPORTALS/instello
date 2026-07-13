@@ -12,7 +12,7 @@ type ProgramFieldProps = {
 };
 
 export function ProgramNameField({ programId, savedValue }: ProgramFieldProps) {
-	const update = useInsMutation(api.programs.updateName);
+	const update = useInsMutation(api.program.mutations.updateName);
 
 	return (
 		<InlineTextField
@@ -33,7 +33,7 @@ export function ProgramAliasField({
 	programId,
 	savedValue,
 }: ProgramFieldProps) {
-	const update = useInsMutation(api.programs.updateAlias);
+	const update = useInsMutation(api.program.mutations.updateAlias);
 
 	return (
 		<InlineTextField

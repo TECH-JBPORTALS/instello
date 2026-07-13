@@ -1,7 +1,6 @@
 "use client";
 
 import { api } from "@instello/convex/api";
-import type { Id } from "@instello/convex/dataModel";
 import { Button } from "@instello/ui/components/button";
 import {
 	Card,
@@ -31,19 +30,17 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useInsMutation } from "@/hooks/convex-react";
 import { getConvexErrorMessage } from "@/lib/convex-error";
+import type { ProgramDto } from "../types";
 
 type ProgramDangerZoneSectionProps = {
-	program: {
-		_id: Id<"programs">;
-		name: string;
-	};
+	program: Pick<ProgramDto, "_id" | "name">;
 };
 
 export function ProgramDangerZoneSection({
 	program,
 }: ProgramDangerZoneSectionProps) {
 	const router = useRouter();
-	const removeProgram = useInsMutation(api.programs.remove);
+	const removeProgram = useInsMutation(api.program.mutations.remove);
 	const [confirmOpen, setConfirmOpen] = useState(false);
 	const [confirmation, setConfirmation] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);

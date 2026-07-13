@@ -1,5 +1,5 @@
-import { ProgramSettingsView } from "@/features/institution-settings/program-settings-view";
+import { ProgramSettingsPage } from "@/features/programs/pages/program-settings-page";
 
 export default function Page() {
-	return <ProgramSettingsView />;
+	return <ProgramSettingsPage />;
 }

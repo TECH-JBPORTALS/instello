@@ -15,16 +15,16 @@ import {
 	PageHeaderTitle,
 } from "@/components/common/page-header";
 import { useInsQuery, useInstitutionSlug } from "@/hooks/convex-react";
-import { ProgramDangerZoneSection } from "./program-danger-zone-section";
-import { ProgramGeneralSection } from "./program-general-section";
+import { ProgramDangerZoneSection } from "../components/program-danger-zone-section";
+import { ProgramGeneralSection } from "../components/program-general-section";
 
-export function ProgramSettingsView() {
+export function ProgramSettingsPage() {
 	const params = useParams<{ programId: string }>();
 	const programId = params.programId as Id<"programs">;
 	const institutionSlug = useInstitutionSlug();
 	const convex = useConvex();
 	const program = useInsQuery(
-		api.programs.getById,
+		api.program.queries.getById,
 		programId ? { id: programId } : "skip",
 	);
 
@@ -32,7 +32,7 @@ export function ProgramSettingsView() {
 		if (!programId || !institutionSlug) return;
 
 		convex
-			.query(api.programs.getById, {
+			.query(api.program.queries.getById, {
 				slug: institutionSlug,
 				id: programId,
 			})

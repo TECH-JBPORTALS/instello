@@ -15,14 +15,14 @@ import { IconArrowLeft, IconBuilding, IconPlus } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { NewProgramDialog } from "@/features/programs/new-program-dialog";
-import { ProgramAvatar } from "@/features/programs/program-avatar";
+import { NewProgramDialog } from "@/features/programs/components/new-program-dialog";
+import { ProgramAvatar } from "@/features/programs/components/program-avatar";
 import { useInsQuery } from "@/hooks/convex-react";
 import { getInstitutionSettingsProgramId } from "@/lib/sidebar-mode";
 
 export function InstitutionSettingsSidebarContent() {
 	const pathname = usePathname();
-	const programs = useInsQuery(api.programs.list, {});
+	const programs = useInsQuery(api.program.queries.list, {});
 	const [addOpen, setAddOpen] = useState(false);
 	const activeProgramId = getInstitutionSettingsProgramId(pathname);
 	const isGeneralActive =

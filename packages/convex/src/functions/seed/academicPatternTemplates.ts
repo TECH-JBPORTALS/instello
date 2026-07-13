@@ -1,6 +1,6 @@
 import { env, internalMutation } from "../_generated/server";
-import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import * as AcademicPattern from "../academicPattern/model/academicPattern";
+import { ERROR_CODES, throwAppError } from "../helpers/constants";
 
 /**
  * Backfill default academic patterns for existing owner organizations.

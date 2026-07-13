@@ -15,10 +15,10 @@ import { Spinner } from "@instello/ui/components/spinner";
 import { useQuery } from "convex-helpers/react/cache";
 import { isUndefined } from "lodash";
 import { usePathname, useRouter } from "next/navigation";
-import { ProgramAvatar } from "@/features/programs/program-avatar";
+import { ProgramAvatar } from "@/features/programs/components/program-avatar";
+import { programPath } from "@/features/programs/program-path";
 import { useInsQuery, useInstitutionSlug } from "@/hooks/convex-react";
 import { useProgramAlias } from "@/hooks/use-program-alias";
-import { programPath } from "@/lib/program-path";
 import { getProgramSegment, getSidebarMode } from "@/lib/sidebar-mode";
 
 export function ProgramSwitcher() {
@@ -26,8 +26,12 @@ export function ProgramSwitcher() {
 	const pathname = usePathname();
 	const institutionSlug = useInstitutionSlug();
 	const programAlias = useProgramAlias();
-	const program = useInsQuery(api.programs.getByAlias, { alias: programAlias });
-	const programs = useQuery(api.programs.list, { slug: institutionSlug });
+	const program = useInsQuery(api.program.queries.getByAlias, {
+		alias: programAlias,
+	});
+	const programs = useQuery(api.program.queries.list, {
+		slug: institutionSlug,
+	});
 
 	if (isUndefined(program) || isUndefined(programs)) {
 		return (

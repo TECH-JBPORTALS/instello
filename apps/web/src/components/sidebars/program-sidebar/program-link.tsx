@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import type { ComponentProps } from "react";
+import { programPath } from "@/features/programs/program-path";
 import { useProgramAlias } from "@/hooks/use-program-alias";
-import { programPath } from "@/lib/program-path";
 
 type ProgramLinkProps = Omit<ComponentProps<typeof Link>, "href"> & {
 	segment?: string;

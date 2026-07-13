@@ -29,7 +29,9 @@ export default function ClassesView() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [debouncedSearch, setDebouncedSearch] = useState("");
 	const programAlias = useProgramAlias();
-	const program = useInsQuery(api.programs.getByAlias, { alias: programAlias });
+	const program = useInsQuery(api.program.queries.getByAlias, {
+		alias: programAlias,
+	});
 
 	useEffect(() => {
 		const timeout = setTimeout(() => {

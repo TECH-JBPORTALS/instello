@@ -1,7 +1,7 @@
-import { ERROR_CODES, throwAppError } from "./helpers/constants";
-import { insMutation, insQuery } from "./helpers/customFunctions";
 import { internal } from "./_generated/api";
 import { internalMutation } from "./_generated/server";
+import { ERROR_CODES, throwAppError } from "./helpers/constants";
+import { insMutation, insQuery } from "./helpers/customFunctions";
 import * as Class from "./model/class";
 import * as ClassBatch from "./model/classBatch";
 import * as Student from "./model/student";
