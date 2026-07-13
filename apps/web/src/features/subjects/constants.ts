@@ -1,4 +1,42 @@
+import * as v from "valibot";
+
 export const SUBJECT_LIST_PAGE_SIZE = 20;
+
+export const SubjectNameSchema = v.pipe(
+	v.string(),
+	v.nonEmpty("Subject name is required"),
+);
+
+export const SubjectCodeSchema = v.pipe(
+	v.string(),
+	v.nonEmpty("Subject code is required"),
+	v.regex(
+		/^[A-Za-z0-9-]+$/,
+		"Allowed only alphanumeric characters and hyphens",
+	),
+);
+
+export const SubjectAliasSchema = v.pipe(
+	v.string(),
+	v.slug("Allowed only alphanumeric characters and hyphens"),
+	v.nonEmpty("Subject alias is required"),
+);
+
+export const SubjectColorSchema = v.pipe(
+	v.string(),
+	v.nonEmpty("Color is required"),
+	v.regex(/^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/, "Enter a valid hex color"),
+);
+
+export const SubjectDescriptionSchema = v.string();
+
+export const NewSubjectSchema = v.object({
+	name: SubjectNameSchema,
+	code: SubjectCodeSchema,
+	alias: SubjectAliasSchema,
+	color: SubjectColorSchema,
+	description: SubjectDescriptionSchema,
+});
 
 export const SUBJECT_COLOR_PALETTE = [
 	{ value: "#22C55E", label: "Green" },

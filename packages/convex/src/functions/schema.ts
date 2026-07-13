@@ -4,6 +4,7 @@ import { typedV } from "convex-helpers/validators";
 import { academicPatternTables } from "./academicPattern/schema";
 import { institutionTables } from "./institution/schema";
 import { programTables } from "./program/schema";
+import { subjectTables } from "./subject/schema";
 
 const tables = {
 	/** This model is only for owner who owns an organization.
@@ -47,6 +48,7 @@ const tables = {
 	...academicPatternTables,
 	...institutionTables,
 	...programTables,
+	...subjectTables,
 
 	/** Classes are batches of students in a program which they go through in a semester cycle to complete their academics */
 	classes: defineTable({
@@ -171,31 +173,6 @@ const tables = {
 			"status",
 			"staffId",
 		]),
-
-	/**
-	 * Subjects are the academic disciplines that are taught in the institution.
-	 * Currently we store all subjects under the institution. Later we allocate subjects under programs and classes.
-	 * with it's type (`theory`, `practical`, etc... ).
-	 * */
-	subjects: defineTable({
-		name: v.string(),
-		color: v.string(),
-		code: v.string(),
-		alias: v.string(),
-		status: v.union(v.literal("inactive"), v.literal("active")),
-		description: v.optional(v.string()),
-		institutionId: v.string(),
-		createdAt: v.number(),
-		updatedAt: v.number(),
-	})
-		.index("by_institution", ["institutionId"])
-		.index("by_institution_name", ["institutionId", "name"])
-		.index("by_institution_and_alias", ["institutionId", "alias"])
-		.index("by_institution_and_code", ["institutionId", "code"])
-		.searchIndex("search_by_name", {
-			searchField: "name",
-			filterFields: ["institutionId"],
-		}),
 
 	/**
 	 * Subjects allocated to a program for a given academic stage (semester/year),

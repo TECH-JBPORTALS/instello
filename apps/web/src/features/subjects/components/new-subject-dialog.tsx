@@ -35,38 +35,14 @@ import { ConvexError } from "convex/values";
 import { useEffect, useState } from "react";
 import * as v from "valibot";
 import { useInsMutation, useInstitutionSlug } from "@/hooks/convex-react";
-import { SUBJECT_COLOR_PALETTE } from "./constants";
-import { SubjectColorField } from "./forms/subject-color-field";
+import {
+	NewSubjectSchema,
+	SUBJECT_COLOR_PALETTE,
+	SubjectAliasSchema,
+	SubjectCodeSchema,
+} from "../constants";
+import { SubjectColorField } from "../forms/subject-color-field";
 import { SubjectAvatar } from "./subject-avatar";
-
-const AliasSchema = v.pipe(
-	v.string(),
-	v.slug("Allowed only alphanumeric characters and hyphens"),
-	v.nonEmpty("Subject alias is required"),
-);
-
-const CodeSchema = v.pipe(
-	v.string(),
-	v.nonEmpty("Subject code is required"),
-	v.regex(
-		/^[A-Za-z0-9-]+$/,
-		"Allowed only alphanumeric characters and hyphens",
-	),
-);
-
-const ColorSchema = v.pipe(
-	v.string(),
-	v.nonEmpty("Color is required"),
-	v.regex(/^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/, "Enter a valid hex color"),
-);
-
-const NewSubjectSchema = v.object({
-	name: v.pipe(v.string(), v.nonEmpty("Subject name is required")),
-	code: CodeSchema,
-	alias: AliasSchema,
-	color: ColorSchema,
-	description: v.string(),
-});
 
 export function NewSubjectDialog({
 	open,
@@ -77,7 +53,7 @@ export function NewSubjectDialog({
 }) {
 	const institutionSlug = useInstitutionSlug();
 	const convex = useConvex();
-	const createSubject = useInsMutation(api.subjects.create);
+	const createSubject = useInsMutation(api.subject.mutations.create);
 	const [globalError, setGlobalError] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -227,16 +203,16 @@ export function NewSubjectDialog({
 						<form.Field
 							name="code"
 							validators={{
-								onChange: CodeSchema,
+								onChange: SubjectCodeSchema,
 								onChangeAsync: async ({ value }) => {
 									const code = value.trim();
 									if (!code) return undefined;
 
-									const parsed = v.safeParse(CodeSchema, code);
+									const parsed = v.safeParse(SubjectCodeSchema, code);
 									if (!parsed.success) return undefined;
 
 									const { available } = await convex.query(
-										api.subjects.checkCode,
+										api.subject.queries.checkCode,
 										{ slug: institutionSlug, code },
 									);
 
@@ -303,16 +279,16 @@ export function NewSubjectDialog({
 						<form.Field
 							name="alias"
 							validators={{
-								onChange: AliasSchema,
+								onChange: SubjectAliasSchema,
 								onChangeAsync: async ({ value }) => {
 									const alias = value.trim();
 									if (!alias) return undefined;
 
-									const parsed = v.safeParse(AliasSchema, alias);
+									const parsed = v.safeParse(SubjectAliasSchema, alias);
 									if (!parsed.success) return undefined;
 
 									const { available } = await convex.query(
-										api.subjects.checkAlias,
+										api.subject.queries.checkAlias,
 										{ slug: institutionSlug, alias },
 									);
 

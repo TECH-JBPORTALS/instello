@@ -40,7 +40,7 @@ import {
 	IconTrash,
 } from "@tabler/icons-react";
 import { useState } from "react";
-import { SubjectAvatar } from "@/features/subjects/subject-avatar";
+import { SubjectAvatar } from "@/features/subjects/components/subject-avatar";
 import { useInsMutation, useInsQuery } from "@/hooks/convex-react";
 import { getConvexErrorMessage } from "@/lib/convex-error";
 import { SubjectTypeBadge } from "./subject-type-badge";

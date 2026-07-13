@@ -1,5 +1,6 @@
 "use client";
 
+import type { Id } from "@instello/convex/dataModel";
 import {
 	Card,
 	CardDescription,
@@ -14,14 +15,28 @@ import {
 	ItemGroup,
 	ItemTitle,
 } from "@instello/ui/components/item";
-// import { AliasField } from "./fields/alias-field";
-import { CodeField } from "./fields/code-field";
-import { ColorField } from "./fields/color-field";
-import { DescriptionField } from "./fields/description-field";
-import { NameField } from "./fields/name-field";
-import type { SubjectSettingsProps } from "./fields/types";
+import {
+	SubjectAliasField,
+	SubjectCodeField,
+	SubjectColorField,
+	SubjectDescriptionField,
+	SubjectNameField,
+} from "./subject-settings-fields";
 
-export function SubjectSettingsSection({ subject }: SubjectSettingsProps) {
+type SubjectSettingsSectionProps = {
+	subject: {
+		_id: Id<"subjects">;
+		name: string;
+		code: string;
+		alias: string;
+		color: string;
+		description?: string;
+	};
+};
+
+export function SubjectSettingsSection({
+	subject,
+}: SubjectSettingsSectionProps) {
 	return (
 		<Card className="bg-transparent! shadow-none! ring-0!">
 			<CardHeader className="px-0">
@@ -39,7 +54,10 @@ export function SubjectSettingsSection({ subject }: SubjectSettingsProps) {
 						</ItemDescription>
 					</ItemContent>
 					<ItemActions>
-						<ColorField subjectId={subject._id} savedValue={subject.color} />
+						<SubjectColorField
+							subjectId={subject._id}
+							savedValue={subject.color}
+						/>
 					</ItemActions>
 				</Item>
 				<Item variant="outline">
@@ -48,7 +66,10 @@ export function SubjectSettingsSection({ subject }: SubjectSettingsProps) {
 						<ItemDescription>Display name in lists and reports</ItemDescription>
 					</ItemContent>
 					<ItemActions>
-						<NameField subjectId={subject._id} savedValue={subject.name} />
+						<SubjectNameField
+							subjectId={subject._id}
+							savedValue={subject.name}
+						/>
 					</ItemActions>
 				</Item>
 				<Item variant="outline">
@@ -59,25 +80,31 @@ export function SubjectSettingsSection({ subject }: SubjectSettingsProps) {
 						</ItemDescription>
 					</ItemContent>
 					<ItemActions>
-						<CodeField subjectId={subject._id} savedValue={subject.code} />
+						<SubjectCodeField
+							subjectId={subject._id}
+							savedValue={subject.code}
+						/>
 					</ItemActions>
 				</Item>
-				{/* <Item variant="outline">
+				<Item variant="outline">
 					<ItemContent>
 						<ItemTitle>Subject alias</ItemTitle>
 						<ItemDescription>URL-friendly identifier</ItemDescription>
 					</ItemContent>
 					<ItemActions>
-						<AliasField subjectId={subject._id} savedValue={subject.alias} />
+						<SubjectAliasField
+							subjectId={subject._id}
+							savedValue={subject.alias}
+						/>
 					</ItemActions>
-				</Item> */}
+				</Item>
 				<Item variant="outline">
 					<ItemContent>
 						<ItemTitle>Description</ItemTitle>
 						<ItemDescription>
 							Optional details about this subject
 						</ItemDescription>
-						<DescriptionField
+						<SubjectDescriptionField
 							subjectId={subject._id}
 							savedValue={subject.description ?? ""}
 						/>

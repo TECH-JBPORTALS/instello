@@ -25,10 +25,10 @@ import Link from "next/link";
 import { useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useInsPaginatedQuery } from "@/hooks/convex-react";
-import { SUBJECT_LIST_PAGE_SIZE } from "./constants";
+import { SUBJECT_LIST_PAGE_SIZE } from "../constants";
+import { subjectPath } from "../subject-path";
 import { NewSubjectDialog } from "./new-subject-dialog";
 import { SubjectAvatar } from "./subject-avatar";
-import { subjectPath } from "./subject-path";
 
 function SubjectsListEmpty({ searchQuery }: { searchQuery: string }) {
 	const [open, setOpen] = useState(false);
@@ -85,7 +85,7 @@ function SubjectsListSkeleton({ count }: { count: number }) {
 export function SubjectsList({ searchQuery }: { searchQuery: string }) {
 	const trimmedQuery = searchQuery.trim();
 	const { results, status, loadMore, isLoading } = useInsPaginatedQuery(
-		api.subjects.list,
+		api.subject.queries.list,
 		{ query: trimmedQuery || undefined },
 		{ initialNumItems: SUBJECT_LIST_PAGE_SIZE },
 	);

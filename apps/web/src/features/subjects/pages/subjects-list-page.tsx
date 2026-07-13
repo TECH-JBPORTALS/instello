@@ -18,10 +18,10 @@ import {
 	PageHeaderTitle,
 } from "@/components/common/page-header";
 import { useInsQuery, useInstitutionSlug } from "@/hooks/convex-react";
-import { NewSubjectDialog } from "./new-subject-dialog";
-import { SubjectsList } from "./subjects-list";
+import { NewSubjectDialog } from "../components/new-subject-dialog";
+import { SubjectsList } from "../components/subjects-list";
 
-export default function SubjectsView() {
+export function SubjectsListPage() {
 	const [open, setOpen] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [debouncedSearch, setDebouncedSearch] = useState("");

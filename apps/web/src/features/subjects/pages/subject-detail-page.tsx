@@ -12,14 +12,14 @@ import Container from "@/components/common/container";
 import { PageHeader, PageHeaderStart } from "@/components/common/page-header";
 import { useInsQuery } from "@/hooks/convex-react";
 import { cn } from "@/lib/utils";
-import { SubjectSettingsSection } from "./sections/subject-settings-section";
-import { SubjectAvatar } from "./subject-avatar";
-import { subjectsListPath } from "./subject-path";
+import { SubjectAvatar } from "../components/subject-avatar";
+import { SubjectSettingsSection } from "../components/subject-settings-section";
+import { subjectsListPath } from "../subject-path";
 
 export function SubjectDetailPage() {
 	const { subjectAlias } = useParams<{ subjectAlias: string }>();
 	const subject = useInsQuery(
-		api.subjects.getByAlias,
+		api.subject.queries.getByAlias,
 		subjectAlias ? { alias: subjectAlias } : "skip",
 	);
 

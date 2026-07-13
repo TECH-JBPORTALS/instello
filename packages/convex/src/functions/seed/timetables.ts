@@ -19,10 +19,10 @@ import type { Id } from "../_generated/dataModel";
 import { env, internalMutation, type MutationCtx } from "../_generated/server";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import * as Class from "../model/class";
-import * as Subject from "../model/subject";
 import type { SlotInput } from "../model/timetable";
 import * as Timetable from "../model/timetable";
 import { vv } from "../schema";
+import * as Subject from "../subject/model/subject";
 
 const THEORY_ALIASES = ["mathematics", "engineering-physics"] as const;
 const LAB_ALIASES = ["data-structures-lab", "oop-lab"] as const;

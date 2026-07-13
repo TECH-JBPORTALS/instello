@@ -19,7 +19,7 @@ import { Skeleton } from "@instello/ui/components/skeleton";
 import { IconAlertCircle } from "@tabler/icons-react";
 import { isUndefined } from "lodash";
 import React, { useCallback, useEffect, useState } from "react";
-import { SubjectAvatar } from "@/features/subjects/subject-avatar";
+import { SubjectAvatar } from "@/features/subjects/components/subject-avatar";
 import { useInsMutation, useInsQuery } from "@/hooks/convex-react";
 import { getConvexErrorMessage } from "@/lib/convex-error";
 import type { SubjectAllocationType } from "./constants";

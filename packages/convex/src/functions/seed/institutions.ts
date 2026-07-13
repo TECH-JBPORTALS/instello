@@ -15,9 +15,9 @@ import { v } from "convex/values";
 import { components } from "../_generated/api";
 import { env, internalMutation, type MutationCtx } from "../_generated/server";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
-import * as Subject from "../model/subject";
 import * as Program from "../program/model/program";
 import { vv } from "../schema";
+import * as Subject from "../subject/model/subject";
 import { SEED_SUBJECTS } from "./mock";
 
 const SEED_PROGRAMS = [

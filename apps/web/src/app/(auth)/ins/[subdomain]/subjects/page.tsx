@@ -1,5 +1,5 @@
-import SubjectsView from "@/features/subjects/subjects-view";
+import { SubjectsListPage } from "@/features/subjects/pages/subjects-list-page";
 
 export default function Page() {
-	return <SubjectsView />;
+	return <SubjectsListPage />;
 }

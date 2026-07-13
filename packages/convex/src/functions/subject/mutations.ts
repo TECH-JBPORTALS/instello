@@ -1,109 +1,28 @@
-import { paginationOptsValidator } from "convex/server";
-import { ERROR_CODES, throwAppError } from "./helpers/constants";
-import { insMutation, insQuery } from "./helpers/customFunctions";
+import { ERROR_CODES, throwAppError } from "../helpers/constants";
+import { insMutation } from "../helpers/customFunctions";
+import { vv } from "../schema";
 import * as Subject from "./model/subject";
-import { vv } from "./schema";
+import {
+	CreateInputSchema,
+	PatchAliasSchema,
+	PatchCodeSchema,
+	PatchColorSchema,
+	PatchDescriptionSchema,
+	PatchNameSchema,
+} from "./validator/subject";
 
 /** Creates subject in the current institution
  * @returns subject id
  */
 export const create = insMutation({
 	permissions: ["subject:create"],
-	args: Subject.CreateInputSchema,
+	args: CreateInputSchema,
 	returns: vv.id("subjects"),
 	handler: async (ctx, args) => {
 		return await Subject.create(ctx, {
 			...args,
 			institutionId: ctx.institution._id,
 		});
-	},
-});
-
-/** Check if a subject alias is available in the current institution */
-export const checkAlias = insQuery({
-	permissions: ["subject:create"],
-	args: { alias: vv.string() },
-	returns: vv.object({ available: vv.boolean() }),
-	handler: async (ctx, args) => {
-		const alias = args.alias.trim();
-		if (!alias) return { available: false };
-
-		const existing = await Subject.findByAlias(ctx, ctx.institution._id, alias);
-
-		return { available: existing === null };
-	},
-});
-
-/** Check if a subject code is available in the current institution */
-export const checkCode = insQuery({
-	permissions: ["subject:create"],
-	args: { code: vv.string() },
-	returns: vv.object({ available: vv.boolean() }),
-	handler: async (ctx, args) => {
-		const code = args.code.trim().toUpperCase();
-		if (!code) return { available: false };
-
-		const existing = await Subject.findByCode(ctx, ctx.institution._id, code);
-
-		return { available: existing === null };
-	},
-});
-
-/** Lists subjects in the current institution
- * @returns paginated subjects
- */
-export const list = insQuery({
-	permissions: ["subject:view"],
-	args: {
-		paginationOpts: paginationOptsValidator,
-		query: vv.optional(vv.nullable(vv.string())),
-	},
-	returns: Subject.PaginatedSubjectListSchema,
-	handler: async (ctx, args) => {
-		return await Subject.list(ctx, {
-			institutionId: ctx.institution._id,
-			query: args.query,
-			paginationOpts: args.paginationOpts,
-		});
-	},
-});
-
-/** Get the subject by alias in the current institution
- * @param alias - subject alias
- * @returns subject
- */
-export const getByAlias = insQuery({
-	permissions: ["subject:view"],
-	args: { alias: vv.string() },
-	returns: Subject.SubjectDtoSchema,
-	handler: async (ctx, args) => {
-		const alias = args.alias.trim();
-		const subject = await Subject.findByAlias(ctx, ctx.institution._id, alias);
-
-		if (!subject) {
-			throwAppError(ERROR_CODES.SUBJECT.NOT_FOUND);
-		}
-
-		return Subject.toDto(subject);
-	},
-});
-
-/** Get the subject by id
- * @param id - subject id
- * @returns subject
- */
-export const getById = insQuery({
-	permissions: ["subject:view"],
-	args: { id: vv.id("subjects") },
-	returns: Subject.SubjectDtoSchema,
-	handler: async (ctx, args) => {
-		const subject = await Subject.getById(ctx, args.id, ctx.institution._id);
-
-		if (!subject) {
-			throwAppError(ERROR_CODES.SUBJECT.NOT_FOUND);
-		}
-
-		return Subject.toDto(subject);
 	},
 });
 
@@ -115,7 +34,7 @@ export const updateName = insMutation({
 	permissions: ["subject:update"],
 	args: {
 		id: vv.id("subjects"),
-		body: Subject.PatchNameSchema,
+		body: PatchNameSchema,
 	},
 	returns: vv.null(),
 	handler: async (ctx, args) => {
@@ -138,7 +57,7 @@ export const updateCode = insMutation({
 	permissions: ["subject:update"],
 	args: {
 		id: vv.id("subjects"),
-		body: Subject.PatchCodeSchema,
+		body: PatchCodeSchema,
 	},
 	returns: vv.null(),
 	handler: async (ctx, args) => {
@@ -161,7 +80,7 @@ export const updateAlias = insMutation({
 	permissions: ["subject:update"],
 	args: {
 		id: vv.id("subjects"),
-		body: Subject.PatchAliasSchema,
+		body: PatchAliasSchema,
 	},
 	returns: vv.null(),
 	handler: async (ctx, args) => {
@@ -184,7 +103,7 @@ export const updateColor = insMutation({
 	permissions: ["subject:update"],
 	args: {
 		id: vv.id("subjects"),
-		body: Subject.PatchColorSchema,
+		body: PatchColorSchema,
 	},
 	returns: vv.null(),
 	handler: async (ctx, args) => {
@@ -207,7 +126,7 @@ export const updateDescription = insMutation({
 	permissions: ["subject:update"],
 	args: {
 		id: vv.id("subjects"),
-		body: Subject.PatchDescriptionSchema,
+		body: PatchDescriptionSchema,
 	},
 	returns: vv.null(),
 	handler: async (ctx, args) => {

@@ -2,7 +2,7 @@
 
 import { Avatar, AvatarFallback } from "@instello/ui/components/avatar";
 import { cn } from "@/lib/utils";
-import { getSubjectInitials, subjectColorStyles } from "./constants";
+import { getSubjectInitials, subjectColorStyles } from "../constants";
 
 export function SubjectAvatar({
 	name,
