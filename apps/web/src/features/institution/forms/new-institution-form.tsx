@@ -76,7 +76,7 @@ export function NewInstitutionForm() {
 			const institutionId =
 				data?.id ??
 				(
-					await convex.query(api.institutions.getBySlug, {
+					await convex.query(api.institution.queries.getBySlug, {
 						slug,
 					})
 				)._id;

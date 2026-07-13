@@ -26,24 +26,13 @@ import {
 	InstitutionNameField,
 	InstitutionStateField,
 	InstitutionZipCodeField,
-} from "./institution-fields";
-
-type Institution = {
-	_id: string;
-	name: string;
-	slug: string;
-	code: string;
-	addressLine: string;
-	district: string;
-	state: string;
-	country: string;
-	zipCode: string;
-};
+} from "../fields/institution-fields";
+import type { InstitutionDto } from "../types";
 
 export function InstitutionGeneralSection({
 	institution,
 }: {
-	institution: Institution;
+	institution: InstitutionDto;
 }) {
 	return (
 		<Card className="bg-transparent! shadow-none! ring-0!">

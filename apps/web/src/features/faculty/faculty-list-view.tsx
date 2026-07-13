@@ -23,7 +23,7 @@ import { FacultyStatusTabs, FacultyTable } from "./tables/faculty-table";
 
 export function FacultyPage() {
 	const slug = useInstitutionSlug();
-	const institution = useInsQuery(api.institutions.getBySlug, { slug });
+	const institution = useInsQuery(api.institution.queries.getBySlug, { slug });
 	const [statusTab, setStatusTab] = useState<FacultyStatusTab>("active");
 	const [searchQuery, setSearchQuery] = useState("");
 

@@ -11,10 +11,10 @@ import {
 	PageHeaderTitle,
 } from "@/components/common/page-header";
 import { useInsQuery } from "@/hooks/convex-react";
-import { InstitutionGeneralSection } from "./institution-general-section";
+import { InstitutionGeneralSection } from "../sections/institution-general-section";
 
-export function InstitutionSettingsView() {
-	const institution = useInsQuery(api.institutions.getCurrent, {});
+export function InstitutionSettingsPage() {
+	const institution = useInsQuery(api.institution.queries.getCurrent, {});
 
 	return (
 		<Container>
