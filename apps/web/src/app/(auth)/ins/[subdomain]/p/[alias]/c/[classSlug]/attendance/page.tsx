@@ -1,5 +1,11 @@
-import { AttendancePage } from "@/features/c/[slug]/pages/class-section-pages";
+import { AttendancePage } from "@/features/attendance/pages/attendance-page";
 
-export default function Page() {
-	return <AttendancePage />;
+export default async function Page({
+	params,
+}: {
+	params: Promise<{ alias: string; classSlug: string }>;
+}) {
+	const { alias, classSlug } = await params;
+
+	return <AttendancePage classSlug={classSlug} programAlias={alias} />;
 }
