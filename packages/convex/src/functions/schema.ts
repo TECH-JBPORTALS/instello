@@ -143,26 +143,6 @@ const tables = {
 			staged: true,
 		}),
 
-	/**
-	 * Subjects allocated to a program for a given academic stage (semester/year),
-	 * with the type (`theory`, `practical`) they're taught as in that stage.
-	 */
-	programSubjects: defineTable({
-		programId: v.id("programs"),
-		subjectId: v.id("subjects"),
-		academicStageId: v.id("academicStages"),
-		type: v.union(v.literal("theory"), v.literal("practical")),
-		createdAt: v.number(),
-		updatedAt: v.number(),
-	})
-		.index("by_program_and_stage", ["programId", "academicStageId"])
-		.index("by_program_and_stage_and_subject", [
-			"programId",
-			"academicStageId",
-			"subjectId",
-		])
-		.index("by_subject", ["subjectId"]),
-
 	timetable: defineTable({
 		classId: v.id("classes"),
 		version: v.number(),

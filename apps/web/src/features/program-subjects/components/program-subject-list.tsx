@@ -106,11 +106,11 @@ export function ProgramSubjectList({
 	stageName: string;
 	onAllocate: () => void;
 }) {
-	const items = useInsQuery(api.programSubjects.listByStage, {
+	const items = useInsQuery(api.program.queries.listSubjectsByStage, {
 		programId,
 		academicStageId,
 	});
-	const removeAllocation = useInsMutation(api.programSubjects.remove);
+	const removeAllocation = useInsMutation(api.program.mutations.removeSubject);
 	const [removeError, setRemoveError] = useState<string | null>(null);
 
 	async function handleRemove(id: Id<"programSubjects">) {

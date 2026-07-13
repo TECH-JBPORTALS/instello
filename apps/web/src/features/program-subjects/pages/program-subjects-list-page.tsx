@@ -25,11 +25,11 @@ import {
 } from "@/components/common/page-header";
 import { useInsQuery } from "@/hooks/convex-react";
 import { useProgramAlias } from "@/hooks/use-program-alias";
-import { AllocateSubjectsCommand } from "./allocate-subjects-command";
-import { ACTIVE_STAGE_QUERY_KEY } from "./constants";
-import { ProgramSubjectList } from "./program-subject-list";
+import { AllocateSubjectsCommand } from "../components/allocate-subjects-command";
+import { ProgramSubjectList } from "../components/program-subject-list";
+import { ACTIVE_STAGE_QUERY_KEY } from "../constants";
 
-export function ProgramSubjectAllocationView() {
+export function ProgramSubjectsListPage() {
 	const programAlias = useProgramAlias();
 	const program = useInsQuery(api.program.queries.getByAlias, {
 		alias: programAlias,

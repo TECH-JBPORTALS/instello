@@ -1,46 +1,18 @@
-import type { Infer } from "convex/values";
-import type { Id } from "../_generated/dataModel";
-import { vv } from "../schema";
-import type { AppMutationCtx, AppQueryCtx } from "./common.types";
+import type { Doc, Id } from "../../_generated/dataModel";
+import type { AppMutationCtx, AppQueryCtx } from "../../model/common.types";
+import type {
+	AllocatableSubject,
+	AllocationType,
+	ProgramSubjectListItem,
+} from "../validator/programSubject";
+import { ALLOCATION_TYPES } from "../validator/programSubject";
 
-export const ALLOCATION_TYPES = ["theory", "practical"] as const;
-
-export type AllocationType = (typeof ALLOCATION_TYPES)[number];
-
-const allocationTypeValidator = vv.union(
-	vv.literal("theory"),
-	vv.literal("practical"),
-);
-
-export const AllocateInputSchema = {
-	programId: vv.id("programs"),
-	academicStageId: vv.id("academicStages"),
-	subjectIds: vv.array(vv.id("subjects")),
-	type: allocationTypeValidator,
-};
-
-export const AllocatableSubjectSchema = vv.object({
-	_id: vv.id("subjects"),
-	name: vv.string(),
-	code: vv.string(),
-	color: vv.string(),
-	remainingTypes: vv.array(allocationTypeValidator),
-});
-
-export const ProgramSubjectListItemSchema = vv.object({
-	_id: vv.id("programSubjects"),
-	type: allocationTypeValidator,
-	createdAt: vv.number(),
-	subject: vv.object({
-		_id: vv.id("subjects"),
-		name: vv.string(),
-		code: vv.string(),
-		color: vv.string(),
-	}),
-});
-
-export type AllocatableSubject = Infer<typeof AllocatableSubjectSchema>;
-export type ProgramSubjectListItem = Infer<typeof ProgramSubjectListItemSchema>;
+export {
+	AllocatableSubjectSchema,
+	AllocateInputSchema,
+	ProgramSubjectListItemSchema,
+} from "../validator/programSubject";
+export type { AllocatableSubject, AllocationType, ProgramSubjectListItem };
 
 function allocationKey(subjectId: Id<"subjects">, type: AllocationType) {
 	return `${subjectId}:${type}`;
@@ -207,9 +179,55 @@ export async function getById(ctx: AppQueryCtx, id: Id<"programSubjects">) {
 	return await ctx.db.get("programSubjects", id);
 }
 
+/** Returns the allocation for a subject in a program stage, or null if none exists. */
+export async function getForStageAndSubject(
+	ctx: AppQueryCtx,
+	args: {
+		programId: Id<"programs">;
+		academicStageId: Id<"academicStages">;
+		subjectId: Id<"subjects">;
+	},
+): Promise<Doc<"programSubjects"> | null> {
+	const rows = await ctx.db
+		.query("programSubjects")
+		.withIndex("by_program_and_stage_and_subject", (q) =>
+			q
+				.eq("programId", args.programId)
+				.eq("academicStageId", args.academicStageId)
+				.eq("subjectId", args.subjectId),
+		)
+		.take(10);
+
+	return rows[0] ?? null;
+}
+
 export async function removeById(
 	ctx: AppMutationCtx,
 	id: Id<"programSubjects">,
 ) {
 	await ctx.db.delete("programSubjects", id);
+}
+
+/**
+ * Deletes up to `batchSize` program subject allocations for a program.
+ * Returns `true` when more allocations remain.
+ */
+export async function deleteBatchByProgram(
+	ctx: AppMutationCtx,
+	programId: Id<"programs">,
+	batchSize: number,
+): Promise<boolean> {
+	const programSubjects = await ctx.db
+		.query("programSubjects")
+		.withIndex("by_program_and_stage", (q) => q.eq("programId", programId))
+		.take(batchSize);
+
+	if (programSubjects.length > 0) {
+		for (const programSubject of programSubjects) {
+			await ctx.db.delete("programSubjects", programSubject._id);
+		}
+		return true;
+	}
+
+	return false;
 }

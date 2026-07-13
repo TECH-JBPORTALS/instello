@@ -19,7 +19,6 @@ import { UpcomingFeaturePreview } from "@/components/common/upcoming-feature-pre
 import { TimetableHistoryView } from "@/features/c/[slug]/timetable/timetable-history-view";
 import { TimetableView } from "@/features/c/[slug]/timetable/timetable-view";
 import ClassesView from "@/features/classes/classes-view";
-import { ProgramSubjectAllocationView } from "@/features/p/[alias]/subjects/program-subject-allocation-view";
 import { ProgramTimetablesView } from "@/features/p/[alias]/timetable/program-timetables-view";
 import { programPath } from "@/features/programs/program-path";
 import { useInsQuery, useInstitutionSlug } from "@/hooks/convex-react";
@@ -89,10 +88,6 @@ function ProgramSectionPage({
 
 export function ClassesPage() {
 	return <ClassesView />;
-}
-
-export function SubjectsPage() {
-	return <ProgramSubjectAllocationView />;
 }
 
 export function FacultyPage() {

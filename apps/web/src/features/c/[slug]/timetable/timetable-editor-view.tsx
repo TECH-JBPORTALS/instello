@@ -218,7 +218,7 @@ export function TimetableEditorView({ basePath }: { basePath: string }) {
 	);
 
 	const programSubjects = useInsQuery(
-		api.programSubjects.listByStage,
+		api.program.queries.listSubjectsByStage,
 		program && cls
 			? {
 					programId: program._id,

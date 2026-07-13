@@ -30,7 +30,7 @@ export type TimetableVersionDto = FunctionReturnType<
 type SlotInput = FunctionArgs<typeof api.timetables.create>["slots"][number];
 
 type ProgramSubjectListItem = FunctionReturnType<
-	typeof api.programSubjects.listByStage
+	typeof api.program.queries.listSubjectsByStage
 >[number];
 
 type BatchDto = FunctionReturnType<typeof api.classBatches.list>[number];

@@ -22,8 +22,8 @@ import React, { useCallback, useEffect, useState } from "react";
 import { SubjectAvatar } from "@/features/subjects/components/subject-avatar";
 import { useInsMutation, useInsQuery } from "@/hooks/convex-react";
 import { getConvexErrorMessage } from "@/lib/convex-error";
-import type { SubjectAllocationType } from "./constants";
-import { SUBJECT_TYPE_OPTIONS } from "./constants";
+import type { SubjectAllocationType } from "../constants";
+import { SUBJECT_TYPE_OPTIONS } from "../constants";
 import { SubjectTypeBadge } from "./subject-type-badge";
 
 type AllocatableSubject = {
@@ -86,7 +86,7 @@ function SelectSubjectsStep({
 }) {
 	const [search, setSearch] = useState("");
 	const allocatable = useInsQuery(
-		api.programSubjects.listAllocatable,
+		api.program.queries.listAllocatableSubjects,
 		open ? { programId, academicStageId } : "skip",
 	);
 
@@ -166,7 +166,7 @@ export function AllocateSubjectsCommand({
 	const [error, setError] = useState<string | null>(null);
 	const [typeSearch, setTypeSearch] = useState("");
 
-	const allocate = useInsMutation(api.programSubjects.allocate);
+	const allocate = useInsMutation(api.program.mutations.allocateSubjects);
 
 	const resetState = useCallback(() => {
 		setStep("select-subjects");
@@ -282,8 +282,6 @@ export function AllocateSubjectsCommand({
 
 			if (!(ev.metaKey || ev.ctrlKey)) return;
 
-			// Capture-phase: stop cmdk from also selecting/toggling the
-			// highlighted item when advancing with ⌘Enter / ⌘⌫.
 			if (ev.key === "Enter" && step === "select-subjects") {
 				ev.preventDefault();
 				ev.stopPropagation();

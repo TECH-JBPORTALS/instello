@@ -6,6 +6,7 @@ import * as Class from "../../model/class";
 import type { AppMutationCtx, AppQueryCtx } from "../../model/common.types";
 import { vv } from "../../schema";
 import type { ProgramDto, ProgramListItem } from "../validator/program";
+import * as ProgramSubject from "./programSubject";
 
 export type { ProgramDto, ProgramListItem } from "../validator/program";
 export {
@@ -220,17 +221,12 @@ export async function deleteCascadeBatch(
 		return true;
 	}
 
-	const programSubjects = await ctx.db
-		.query("programSubjects")
-		.withIndex("by_program_and_stage", (q) => q.eq("programId", programId))
-		.take(DELETE_BATCH_SIZE);
-
-	if (programSubjects.length > 0) {
-		for (const programSubject of programSubjects) {
-			await ctx.db.delete("programSubjects", programSubject._id);
-		}
-		return true;
-	}
+	const hasMoreSubjects = await ProgramSubject.deleteBatchByProgram(
+		ctx,
+		programId,
+		DELETE_BATCH_SIZE,
+	);
+	if (hasMoreSubjects) return true;
 
 	await ctx.db.delete("programs", programId);
 	return false;

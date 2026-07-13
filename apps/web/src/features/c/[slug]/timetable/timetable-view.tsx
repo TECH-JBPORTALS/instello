@@ -85,7 +85,7 @@ export function TimetableView({ basePath }: { basePath: string }) {
 		: latestTimetable;
 
 	const programSubjects = useInsQuery(
-		api.programSubjects.listByStage,
+		api.program.queries.listSubjectsByStage,
 		program && cls
 			? {
 					programId: program._id,

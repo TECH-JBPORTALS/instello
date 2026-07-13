@@ -2,13 +2,13 @@ import type { Infer } from "convex/values";
 import { components } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
+import * as ProgramSubject from "../program/model/programSubject";
 import { vv } from "../schema";
 import * as AttendanceActivityLog from "./attendanceActivityLog";
 import * as AttendanceSession from "./attendanceSession";
 import * as Class from "./class";
 import * as ClassBatch from "./classBatch";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
-import * as ProgramSubject from "./programSubject";
 import type { SlotInput } from "./timetable";
 
 export const RegisterStatusSchema = vv.union(
@@ -271,13 +271,11 @@ export async function toDto(
 		throwAppError(ERROR_CODES.SUBJECT.NOT_FOUND);
 	}
 
-	const programSubjects = await ProgramSubject.listByStage(ctx, {
+	const allocation = await ProgramSubject.getForStageAndSubject(ctx, {
 		programId: cls.programId as Id<"programs">,
 		academicStageId: cls.currentHeadStageId,
+		subjectId: register.subjectId,
 	});
-	const allocation = programSubjects.find(
-		(item) => item.subject._id === register.subjectId,
-	);
 	const type = allocation?.type ?? "theory";
 
 	let batchLabel: string | undefined;

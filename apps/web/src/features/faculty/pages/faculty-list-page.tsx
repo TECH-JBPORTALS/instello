@@ -18,9 +18,9 @@ import {
 } from "@/components/common/page-header";
 import { useInsQuery, useInstitutionSlug } from "@/hooks/convex-react";
 import { AddFacultyButton } from "../components/add-faculty-button";
-import type { FacultyStatusTab } from "../constants";
 import { FacultyList } from "../components/faculty-list";
 import { FacultyStatusTabs } from "../components/faculty-status-tabs";
+import type { FacultyStatusTab } from "../constants";
 
 export function FacultyListPage() {
 	const slug = useInstitutionSlug();

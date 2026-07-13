@@ -1,13 +1,13 @@
 import { describe, expect } from "vitest";
-import { api } from "../_generated/api";
-import { ERROR_CODES } from "../helpers/constants";
+import { api } from "../../_generated/api";
+import { ERROR_CODES } from "../../helpers/constants";
 import {
 	expectAppError,
 	programSubjectTest,
 	withSlug,
-} from "./fixtures/index.setup";
+} from "../../tests/fixtures/index.setup";
 
-describe("programSubjects.allocate", () => {
+describe("program.allocateSubjects", () => {
 	const test = programSubjectTest();
 
 	test("rejects unauthenticated user", async ({
@@ -19,7 +19,7 @@ describe("programSubjects.allocate", () => {
 	}) => {
 		await expectAppError(
 			t.mutation(
-				api.programSubjects.allocate,
+				api.program.mutations.allocateSubjects,
 				withSlug(ins1, {
 					programId: programs.me._id,
 					academicStageId: academicAdoptions.ins1FirstStage._id,
@@ -41,7 +41,7 @@ describe("programSubjects.allocate", () => {
 		asOwner,
 	}) => {
 		const insertedIds = await asOwner(user1, ins1).mutation(
-			api.programSubjects.allocate,
+			api.program.mutations.allocateSubjects,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				academicStageId: academicAdoptions.ins1FirstStage._id,
@@ -83,7 +83,7 @@ describe("programSubjects.allocate", () => {
 		asOwner,
 	}) => {
 		await asOwner(user1, ins1).mutation(
-			api.programSubjects.allocate,
+			api.program.mutations.allocateSubjects,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				academicStageId: academicAdoptions.ins1FirstStage._id,
@@ -93,7 +93,7 @@ describe("programSubjects.allocate", () => {
 		);
 
 		const secondBatchIds = await asOwner(user1, ins1).mutation(
-			api.programSubjects.allocate,
+			api.program.mutations.allocateSubjects,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				academicStageId: academicAdoptions.ins1FirstStage._id,
@@ -137,7 +137,7 @@ describe("programSubjects.allocate", () => {
 		asOwner,
 	}) => {
 		await asOwner(user1, ins1).mutation(
-			api.programSubjects.allocate,
+			api.program.mutations.allocateSubjects,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				academicStageId: academicAdoptions.ins1FirstStage._id,
@@ -147,7 +147,7 @@ describe("programSubjects.allocate", () => {
 		);
 
 		const secondBatchIds = await asOwner(user1, ins1).mutation(
-			api.programSubjects.allocate,
+			api.program.mutations.allocateSubjects,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				academicStageId: academicAdoptions.ins1FirstStage._id,
@@ -175,7 +175,7 @@ describe("programSubjects.allocate", () => {
 	}) => {
 		await expectAppError(
 			asOwner(user1, ins1).mutation(
-				api.programSubjects.allocate,
+				api.program.mutations.allocateSubjects,
 				withSlug(ins1, {
 					programId: programs.ce._id,
 					academicStageId: academicAdoptions.ins1FirstStage._id,
@@ -197,7 +197,7 @@ describe("programSubjects.allocate", () => {
 	}) => {
 		await expectAppError(
 			asOwner(user1, ins1).mutation(
-				api.programSubjects.allocate,
+				api.program.mutations.allocateSubjects,
 				withSlug(ins1, {
 					programId: programs.me._id,
 					academicStageId: academicAdoptions.ins2FirstStage._id,
@@ -230,7 +230,7 @@ describe("programSubjects.allocate", () => {
 
 		await expectAppError(
 			asOwner(user1, ins1).mutation(
-				api.programSubjects.allocate,
+				api.program.mutations.allocateSubjects,
 				withSlug(ins1, {
 					programId: programs.me._id,
 					academicStageId: academicAdoptions.ins1FirstStage._id,
@@ -243,7 +243,7 @@ describe("programSubjects.allocate", () => {
 	});
 });
 
-describe("programSubjects.listByStage", () => {
+describe("program.listSubjectsByStage", () => {
 	const test = programSubjectTest();
 
 	test("rejects unauthenticated user", async ({
@@ -254,7 +254,7 @@ describe("programSubjects.listByStage", () => {
 	}) => {
 		await expectAppError(
 			t.query(
-				api.programSubjects.listByStage,
+				api.program.queries.listSubjectsByStage,
 				withSlug(ins1, {
 					programId: programs.me._id,
 					academicStageId: academicAdoptions.ins1FirstStage._id,
@@ -273,7 +273,7 @@ describe("programSubjects.listByStage", () => {
 		asOwner,
 	}) => {
 		await asOwner(user1, ins1).mutation(
-			api.programSubjects.allocate,
+			api.program.mutations.allocateSubjects,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				academicStageId: academicAdoptions.ins1FirstStage._id,
@@ -283,7 +283,7 @@ describe("programSubjects.listByStage", () => {
 		);
 
 		const result = await asOwner(user1, ins1).query(
-			api.programSubjects.listByStage,
+			api.program.queries.listSubjectsByStage,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				academicStageId: academicAdoptions.ins1FirstStage._id,
@@ -320,7 +320,7 @@ describe("programSubjects.listByStage", () => {
 		asOwner,
 	}) => {
 		await asOwner(user1, ins1).mutation(
-			api.programSubjects.allocate,
+			api.program.mutations.allocateSubjects,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				academicStageId: academicAdoptions.ins1FirstStage._id,
@@ -330,7 +330,7 @@ describe("programSubjects.listByStage", () => {
 		);
 
 		const result = await asOwner(user1, ins1).query(
-			api.programSubjects.listByStage,
+			api.program.queries.listSubjectsByStage,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				academicStageId: academicAdoptions.ins1SecondStage._id,
@@ -349,7 +349,7 @@ describe("programSubjects.listByStage", () => {
 	}) => {
 		await expectAppError(
 			asOwner(user1, ins1).query(
-				api.programSubjects.listByStage,
+				api.program.queries.listSubjectsByStage,
 				withSlug(ins1, {
 					programId: programs.ce._id,
 					academicStageId: academicAdoptions.ins1FirstStage._id,
@@ -360,7 +360,7 @@ describe("programSubjects.listByStage", () => {
 	});
 });
 
-describe("programSubjects.listAllocatable", () => {
+describe("program.listAllocatableSubjects", () => {
 	const test = programSubjectTest();
 
 	test("rejects unauthenticated user", async ({
@@ -371,7 +371,7 @@ describe("programSubjects.listAllocatable", () => {
 	}) => {
 		await expectAppError(
 			t.query(
-				api.programSubjects.listAllocatable,
+				api.program.queries.listAllocatableSubjects,
 				withSlug(ins1, {
 					programId: programs.me._id,
 					academicStageId: academicAdoptions.ins1FirstStage._id,
@@ -390,7 +390,7 @@ describe("programSubjects.listAllocatable", () => {
 		asOwner,
 	}) => {
 		await asOwner(user1, ins1).mutation(
-			api.programSubjects.allocate,
+			api.program.mutations.allocateSubjects,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				academicStageId: academicAdoptions.ins1FirstStage._id,
@@ -400,7 +400,7 @@ describe("programSubjects.listAllocatable", () => {
 		);
 
 		const result = await asOwner(user1, ins1).query(
-			api.programSubjects.listAllocatable,
+			api.program.queries.listAllocatableSubjects,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				academicStageId: academicAdoptions.ins1FirstStage._id,
@@ -431,7 +431,7 @@ describe("programSubjects.listAllocatable", () => {
 		asOwner,
 	}) => {
 		await asOwner(user1, ins1).mutation(
-			api.programSubjects.allocate,
+			api.program.mutations.allocateSubjects,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				academicStageId: academicAdoptions.ins1FirstStage._id,
@@ -440,7 +440,7 @@ describe("programSubjects.listAllocatable", () => {
 			}),
 		);
 		await asOwner(user1, ins1).mutation(
-			api.programSubjects.allocate,
+			api.program.mutations.allocateSubjects,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				academicStageId: academicAdoptions.ins1FirstStage._id,
@@ -450,7 +450,7 @@ describe("programSubjects.listAllocatable", () => {
 		);
 
 		const result = await asOwner(user1, ins1).query(
-			api.programSubjects.listAllocatable,
+			api.program.queries.listAllocatableSubjects,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				academicStageId: academicAdoptions.ins1FirstStage._id,
@@ -475,7 +475,7 @@ describe("programSubjects.listAllocatable", () => {
 	}) => {
 		await expectAppError(
 			asOwner(user1, ins1).query(
-				api.programSubjects.listAllocatable,
+				api.program.queries.listAllocatableSubjects,
 				withSlug(ins1, {
 					programId: programs.me._id,
 					academicStageId: academicAdoptions.ins2FirstStage._id,
@@ -486,7 +486,7 @@ describe("programSubjects.listAllocatable", () => {
 	});
 });
 
-describe("programSubjects.remove", () => {
+describe("program.removeSubject", () => {
 	const test = programSubjectTest();
 
 	test("rejects unauthenticated user", async ({
@@ -499,7 +499,7 @@ describe("programSubjects.remove", () => {
 		asOwner,
 	}) => {
 		const [id] = await asOwner(user1, ins1).mutation(
-			api.programSubjects.allocate,
+			api.program.mutations.allocateSubjects,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				academicStageId: academicAdoptions.ins1FirstStage._id,
@@ -509,7 +509,7 @@ describe("programSubjects.remove", () => {
 		);
 
 		await expectAppError(
-			t.mutation(api.programSubjects.remove, withSlug(ins1, { id })),
+			t.mutation(api.program.mutations.removeSubject, withSlug(ins1, { id })),
 			ERROR_CODES.BASE.UNAUTHORIZED,
 		);
 	});
@@ -524,7 +524,7 @@ describe("programSubjects.remove", () => {
 		asOwner,
 	}) => {
 		const [id] = await asOwner(user1, ins1).mutation(
-			api.programSubjects.allocate,
+			api.program.mutations.allocateSubjects,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				academicStageId: academicAdoptions.ins1FirstStage._id,
@@ -536,7 +536,7 @@ describe("programSubjects.remove", () => {
 		if (!id) throw new Error("Expected an allocation id");
 
 		await asOwner(user1, ins1).mutation(
-			api.programSubjects.remove,
+			api.program.mutations.removeSubject,
 			withSlug(ins1, { id }),
 		);
 
@@ -557,7 +557,7 @@ describe("programSubjects.remove", () => {
 		asOwner,
 	}) => {
 		const [id] = await asOwner(user1, ins1).mutation(
-			api.programSubjects.allocate,
+			api.program.mutations.allocateSubjects,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				academicStageId: academicAdoptions.ins1FirstStage._id,
@@ -572,7 +572,7 @@ describe("programSubjects.remove", () => {
 
 		await expectAppError(
 			asOwner(user1, ins1).mutation(
-				api.programSubjects.remove,
+				api.program.mutations.removeSubject,
 				withSlug(ins1, { id }),
 			),
 			ERROR_CODES.PROGRAM_SUBJECT.NOT_FOUND,
@@ -590,7 +590,7 @@ describe("programSubjects.remove", () => {
 		asOwner,
 	}) => {
 		const [id] = await asOwner(user2, ins2).mutation(
-			api.programSubjects.allocate,
+			api.program.mutations.allocateSubjects,
 			withSlug(ins2, {
 				programId: programs.ce._id,
 				academicStageId: academicAdoptions.ins2FirstStage._id,
@@ -603,7 +603,7 @@ describe("programSubjects.remove", () => {
 
 		await expectAppError(
 			asOwner(user1, ins1).mutation(
-				api.programSubjects.remove,
+				api.program.mutations.removeSubject,
 				withSlug(ins1, { id }),
 			),
 			ERROR_CODES.PROGRAM_SUBJECT.NOT_FOUND,
