@@ -26,7 +26,7 @@ export default function SubjectsView() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [debouncedSearch, setDebouncedSearch] = useState("");
 	const institutionSlug = useInstitutionSlug();
-	const institution = useInsQuery(api.institutions.getBySlug, {
+	const institution = useInsQuery(api.institution.queries.getBySlug, {
 		slug: institutionSlug,
 	});
 

@@ -1,528 +1,835 @@
-# Convex Backend Agent Instructions
+# Instello Convex Backend — AGENTS.md
 
-<!-- convex-ai-start -->
+This package contains the entire Convex backend for Instello, including authentication powered by Better Auth.
 
-This project uses [Convex](https://convex.dev) as its backend.
+The backend uses:
 
-Before making any changes to Convex code, **always read**:
+- Convex
+- Better Auth
+- `convex-helpers`
+- Vitest
 
+Before making changes, review:
+
+- Convex Best Practices: https://docs.convex.dev/understanding/best-practices/
+- Better Auth Convex Integration: https://labs.convex.dev/better-auth
+
+---
+
+# 1. Architecture
+
+The backend follows a **feature-based architecture**.
+
+All code belonging to a feature must remain inside that feature's directory.
+
+```text id="xsz2u7"
+packages/convex/
+├── better-auth/
+│   └── ...                         # Authentication clients exposed to frontend apps
+│
+└── functions/
+    ├── _generated/                 # Auto-generated Convex files — never modify
+    ├── betterAuth/                 # Better Auth Convex component
+    ├── helpers/                    # Truly shared cross-feature utilities
+    ├── seed/                       # Internal seed functions
+    │
+    ├── institution/
+    │   ├── model/
+    │   ├── validator/
+    │   ├── tests/
+    │   ├── queries.ts
+    │   ├── mutations.ts
+    │   └── schema.ts
+    │
+    ├── program/
+    │   ├── model/
+    │   ├── validator/
+    │   ├── tests/
+    │   ├── queries.ts
+    │   ├── mutations.ts
+    │   └── schema.ts
+    │
+    ├── timetable/
+    │   ├── model/
+    │   ├── validator/
+    │   ├── tests/
+    │   ├── queries.ts
+    │   ├── mutations.ts
+    │   └── schema.ts
+    │
+    ├── attendance/
+    │   ├── model/
+    │   │   ├── register.ts
+    │   │   ├── record.ts
+    │   │   ├── entry.ts
+    │   │   └── activityLog.ts
+    │   ├── validator/
+    │   │   ├── register.ts
+    │   │   ├── session.ts
+    │   │   └── activity.ts
+    │   ├── tests/
+    │   │   ├── queries.test.ts
+    │   │   └── mutations.test.ts
+    │   ├── queries.ts
+    │   ├── mutations.ts
+    │   └── schema.ts
+    │
+    ├── auth.config.ts
+    ├── auth.ts
+    ├── convex.config.ts
+    ├── http.ts
+    └── schema.ts                  # Global schema composition root
 ```
-functions/_generated/ai/guidelines.md
+
+The exact internal structure of a feature may vary according to its complexity.
+
+Do not create empty folders, unnecessary layers, or abstractions merely to satisfy a pattern.
+
+---
+
+# 2. Feature Ownership
+
+A feature owns all code specific to its domain.
+
+This includes:
+
+- database table definitions
+- public queries
+- public mutations
+- entity models
+- business logic
+- validators
+- DTOs and API resources
+- feature-specific helpers
+- integration tests
+
+For example, the Attendance feature owns:
+
+```text id="a3hqlg"
+attendance/
+├── model/
+│   ├── register.ts
+│   ├── record.ts
+│   ├── entry.ts
+│   └── activityLog.ts
+├── validator/
+│   ├── register.ts
+│   ├── session.ts
+│   └── activity.ts
+├── tests/
+│   ├── queries.test.ts
+│   └── mutations.test.ts
+├── queries.ts
+├── mutations.ts
+└── schema.ts
 ```
 
-The guidelines in that file take precedence over any existing Convex knowledge.
+Feature-specific logic must remain inside the feature.
 
-Never modify anything inside `_generated`.
+Do not move domain logic into global `helpers`.
 
-<!-- convex-ai-end -->
+Prefer:
 
-# Overview
-
-This package contains the complete backend for Instello.
-
-It follows a layered architecture:
-
+```text id="0a3n1w"
+attendance/helpers/session.ts
 ```
-Frontend
+
+over:
+
+```text id="p3ccl4"
+helpers/attendanceSession.ts
+```
+
+when the logic belongs only to Attendance.
+
+---
+
+# 3. Feature-Owned Database Schemas
+
+Each feature must own the Convex table definitions belonging to that feature.
+
+Feature tables must be defined in the feature's local `schema.ts`.
+
+Example:
+
+```ts id="t7vp1s"
+// attendance/schema.ts
+
+import { defineTable } from "convex/server";
+import { v } from "convex/values";
+
+export const attendanceTables = {
+  attendanceRegisters: defineTable({
+    classId: v.id("classes"),
+    subjectId: v.id("subjects"),
+    batchId: v.optional(v.id("classBatches")),
+    status: v.union(
+      v.literal("active"),
+      v.literal("archived"),
+    ),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }),
+
+  attendanceRecords: defineTable({
+    registerId: v.id("attendanceRegisters"),
+    sessionDate: v.string(),
+    startHour: v.number(),
+    endHour: v.number(),
+    markedBy: v.string(),
+    markedAt: v.number(),
+    updatedAt: v.number(),
+    presentCount: v.number(),
+    absentCount: v.number(),
+  }),
+
+  attendanceEntries: defineTable({
+    recordId: v.id("attendanceRecords"),
+    studentId: v.id("students"),
+    status: v.union(
+      v.literal("present"),
+      v.literal("absent"),
+    ),
+  }),
+};
+```
+
+The global `functions/schema.ts` is only the composition root for all feature schemas.
+
+```ts id="yj31du"
+// functions/schema.ts
+
+import { defineSchema } from "convex/server";
+
+import { attendanceTables } from "./attendance/schema";
+import { institutionTables } from "./institution/schema";
+import { programTables } from "./program/schema";
+import { timetableTables } from "./timetable/schema";
+
+export default defineSchema({
+  ...institutionTables,
+  ...programTables,
+  ...timetableTables,
+  ...attendanceTables,
+});
+```
+
+## Schema Rules
+
+- Every table must be defined by the feature that owns it.
+- Each feature exports its tables as a named `*Tables` object.
+- Use camelCase names such as `attendanceTables` and `institutionTables`.
+- The global `schema.ts` must compose feature schemas using spread operators.
+- Do not define feature-specific tables directly in the global `schema.ts`.
+- Foreign keys may reference tables owned by other features.
+- A feature schema may contain multiple closely related tables.
+- Do not create one schema file per table unless complexity genuinely requires it.
+- The global `schema.ts` is the composition root for the complete database schema.
+
+---
+
+# 4. Dependency Direction
+
+Features may depend on other features when required by the domain.
+
+A typical dependency direction is:
+
+```text id="b3id09"
+Institution
     ↓
-Public Functions (Authentication, Authorization, Validation)
+Program
     ↓
-Model Layer (Domain Logic + Database Operations)
+Academic Stage
     ↓
+Class
+    ↓
+Subject / Program Subject
+    ↓
+Class Batch
+    ↓
+Timetable
+    ↓
+Attendance
+```
+
+Higher-level features may consume model APIs exposed by foundational features.
+
+Cross-feature imports are allowed.
+
+Example:
+
+```ts id="j13w6p"
+import * as Class from "../class/model/class";
+import * as Subject from "../subject/model/subject";
+import * as ProgramSubject from "../programSubject/model/programSubject";
+```
+
+However:
+
+> A feature may depend on another feature's model API, but must not reproduce that feature's internal database queries or business rules.
+
+---
+
+# 5. Feature and Entity Boundaries
+
+The owning feature decides how its data is retrieved and manipulated.
+
+The consuming feature should express **what it needs**, not **how another feature retrieves it**.
+
+Prefer:
+
+```ts id="m6z3r5"
+const allocation =
+  await ProgramSubject.getForStageAndSubjectOrThrow(ctx, {
+    programId,
+    academicStageId,
+    subjectId,
+  });
+```
+
+Avoid:
+
+```ts id="c8u3f7"
+const allocations = await ctx.db
+  .query("programSubjects")
+  .withIndex(...)
+  .collect();
+
+const allocation = allocations.find(...);
+```
+
+Avoid making one feature understand:
+
+- another feature's indexes
+- another feature's filtering implementation
+- another feature's relationship traversal
+- another feature's internal business rules
+
+Expose a meaningful model operation from the owning feature instead.
+
+---
+
+# 6. Public Queries and Mutations
+
+`queries.ts` and `mutations.ts` are the public application boundaries of a feature.
+
+They should:
+
+- validate external input
+- define explicit return validators
+- authenticate the caller
+- authorize the operation
+- call model functions
+- orchestrate the use case when necessary
+- return the final API resource or DTO
+- include JSDoc for exported public functions
+
+The normal flow is:
+
+```text id="1z0ubf"
+Input Validation
+      ↓
+Authentication
+      ↓
+Authorization
+      ↓
+Model / Domain Operations
+      ↓
+Resource Assembly
+      ↓
+Validated Response
+```
+
+Public functions should remain small and readable at a high level.
+
+They should not contain:
+
+- large raw database queries
+- duplicated entity lookup logic
+- duplicated relationship traversal
+- deeply nested business logic
+- business rules owned by another feature
+
+---
+
+# 7. Model Layer
+
+Each feature may contain a `model/` directory.
+
+Models own reusable domain and persistence logic for entities belonging to the feature.
+
+Models may:
+
+- read and write their own entity data
+- encapsulate index usage
+- expose reusable entity lookups
+- enforce business invariants
+- perform domain calculations
+- expose meaningful operations to other features
+- use relationship helpers for associated data
+
+Models must:
+
+- never perform authentication
+- never perform caller-based authorization
+- clearly document exported methods
+
+Prefer predictable APIs:
+
+```ts id="bgv21q"
+getById()
+getByIdOrThrow()
+getByX()
+listByX()
+create()
+update()
+remove()
+```
+
+Use domain-specific names when they communicate intent better:
+
+```ts id="n0jpy6"
+ProgramSubject.getForStageAndSubject()
+ClassBatch.getLabel()
+AttendanceRecord.getLatestForRegister()
+```
+
+Do not create generic abstractions when a domain-specific API is clearer.
+
+---
+
+# 8. Relationships and Join Operations
+
+When an operation needs associated data from another table or entity, use:
+
+```ts id="hldu3h"
+convex-helpers/server/relationships
+```
+
+Use relationship helpers for join-like operations and relationship traversal.
+
+Examples include:
+
+- retrieving a related parent document
+- retrieving associated child documents
+- one-to-one relationships
+- one-to-many relationships
+- many-to-many relationships
+- resolving foreign-key associations
+- joining related documents for a DTO or API resource
+
+## Rule
+
+> If data must be joined or resolved through a relationship between entities, prefer `convex-helpers/server/relationships` instead of manually implementing repeated relationship traversal.
+
+Relationship helpers should normally be used inside model functions.
+
+```text id="0il8aa"
+Public Query / Mutation
+        ↓
+Model / Domain Operation
+        ↓
+convex-helpers/server/relationships
+        ↓
 Convex Database
 ```
 
-Every feature should preserve this separation.
+Relationship helpers are data-access utilities, not architectural boundaries.
+
+Do not:
+
+- create a giant global relationship layer
+- expose the entire database graph through generic utilities
+- move feature ownership into a relationship utility
+- use relationship helpers as a replacement for meaningful domain APIs
+
+Direct `ctx.db.get(id)` remains acceptable for simple direct document retrieval when a relationship helper provides no meaningful benefit.
+
+Direct indexed queries remain appropriate when querying an entity's own table by its indexed fields.
 
 ---
 
-# Folder Structure
+# 9. Cross-Feature Orchestration
 
+Some use cases naturally require multiple features.
+
+This is allowed.
+
+For example, an Attendance Register resource may require:
+
+```text id="69tihm"
+Attendance Register
+├── Class
+├── Subject
+├── Program Subject
+├── Class Batch
+└── Attendance Activity
 ```
-packages/convex
-├── better-auth/             # Frontend authentication exports
-└── functions/
-    ├── _generated/          # Generated Convex files (Never modify)
-    ├── betterAuth/          # Better Auth component
-    ├── helpers/             # Shared reusable helpers
-    ├── model/               # Domain models
-    ├── seed/                # Seed functions
-    ├── tests/               # Public API tests
-    ├── auth.ts
-    ├── http.ts
-    ├── schema.ts
-    └── ...
-```
 
----
-
-# Development Philosophy
-
-We follow Test-Driven Development.
-
-Workflow:
-
-1. Update schema if required.
-2. Create the public function.
-3. Write tests.
-4. Implement the model.
-5. Make tests pass.
-6. Refactor.
-
-Prefer black-box testing over implementation testing.
-
----
-
-# Architecture Rules
-
-## Public Functions
-
-Public functions inside `functions/` are the application's entry points.
-
-Responsibilities:
-
-- Validate arguments
-- Define return validators
-- Authenticate users
-- Authorize permissions
-- Verify institution/organization access
-- Orchestrate one or more model operations
-- Return DTOs
-
-Public functions should remain thin.
-
-Avoid implementing domain logic inside public functions. Don't create any helpers inside the functions if you need to check entity existenance directly add line of code instead of making abstraction out of it.
+The feature that owns the final use case may orchestrate these dependencies.
 
 Example:
 
-instead of this
+```ts id="x4uvh6"
+const cls = await Class.getByIdOrThrow(
+  ctx,
+  register.classId,
+);
 
-export const updateName = insQuery({
-    permission:["program:update"],
-    args:{
-        id: vv.string(),
-        body: vv.object({
-            name: vv.string()
-        })
-    },
-    handler: async (ctx,args)=>{
-        const program = await ensureProgramInInstitution(ctx,args.id,ctx.session.activeInstiutionId);
-        await Program.patch(args.id,args.body)
-    }
-})
+const subject = await Subject.getByIdOrThrow(
+  ctx,
+  register.subjectId,
+);
 
-do this
+const allocation =
+  await ProgramSubject.getForStageAndSubjectOrThrow(ctx, {
+    programId: cls.programId,
+    academicStageId: cls.currentHeadStageId,
+    subjectId: register.subjectId,
+  });
+```
 
-export const updateName = insQuery({
-    permission:["program:update"],
-    args:{
-        id: vv.string(),
-        body: vv.object({
-            name: vv.string()
-        })
-    },
-    handler: async (ctx,args)=>{
-        const program = await Program.getById(ctx,args.id,ctx.session.activeInstituion.id);
-        if(!program) throw new ConvexError(ERROR_CODES.PROGRAM.NOT_FOUND);
-        await Program.patch(args.id,args.body)
-    }
-})
+Cross-feature dependency is not automatically bad coupling.
 
-it's more readable than before one.
+The rule is:
+
+> Depend on another feature's meaningful model API, not its internal implementation.
+
+If orchestration contains complex relationship traversal, move that traversal into the appropriate owning model and use `convex-helpers/server/relationships`.
 
 ---
 
-## Model Layer
+# 10. Validators and API Resources
 
-Every entity should have its own model.
+Each feature owns its validators.
+
+```text id="jvnuyz"
+attendance/
+└── validator/
+    ├── register.ts
+    ├── session.ts
+    └── activity.ts
+```
+
+Use explicit validators for public API contracts.
+
+A database document and an API resource are different concepts.
+
+Use a document validator when the returned value is genuinely a raw database document.
+
+Use an explicit DTO or resource validator when the response:
+
+- combines multiple entities
+- contains computed fields
+- contains presentation fields
+- exposes only part of a database document
+- must remain stable independently of database schema changes
+
+Do not use `vv.doc()` merely to reduce typing when the returned value is not actually a raw database document.
 
 Example:
 
+```ts id="l5pd0g"
+export const AttendanceRegisterResourceSchema = vv.object({
+  _id: vv.id("attendanceRegisters"),
+  subjectName: vv.string(),
+  subjectCode: vv.string(),
+  batchLabel: vv.optional(vv.string()),
+  activity: vv.optional(RegisterActivitySchema),
+});
 ```
-model/
-    student.ts
-    faculty.ts
-    program.ts
-```
-
-Models are responsible for:
-
-- Database operations
-- Domain business rules
-- Domain invariants
-- Reusable queries
-- DTO mapping
-
-Models must NOT:
-
-- Authenticate users
-- Check permissions
-- Read session information
-- Perform institution membership checks
-- Depend on frontend concepts
-
-Models should be reusable from multiple public functions.
 
 ---
 
-# DTO Pattern
+# 11. Shared Helpers
 
-Every model should expose a DTO.
-
-Example:
-
-```
-ProgramDtoSchema
-
-type ProgramDto
-
-toDto(program)
-```
-
-Public functions should return DTOs instead of manually constructing response objects.
-
-Do not duplicate response mapping across multiple functions.
-
----
-
-# Validation
-
-Entity validators belong beside the model.
-
-Example:
-
-```
-model/program.ts
-
-CreateSchema
-PatchSchema
-ProgramDtoSchema
-```
-
-Avoid defining entity validators inside public function files.
-
----
-
-# Session Ownership
-
-Clients must never provide values derived from the authenticated session.
+Global `functions/helpers` is reserved for genuinely shared, cross-feature infrastructure.
 
 Examples:
 
-- institutionId
-- organizationId
-- createdBy
-- updatedBy
-- ownerId
+```text id="21x5zp"
+helpers/
+├── errors.ts
+├── pagination.ts
+└── dates.ts
+```
 
-These values must always come from `ctx.session`.
+Do not place domain-specific logic in global helpers.
+
+If logic belongs only to Attendance:
+
+```text id="1nn7zt"
+attendance/helpers/
+```
+
+If logic belongs only to Timetable:
+
+```text id="3qtv0w"
+timetable/helpers/
+```
+
+Only promote logic to global `helpers` when it is genuinely generic and used across unrelated features.
+
+Do not prematurely create shared abstractions.
 
 ---
 
-# Model Design
+# 12. Authentication and Authorization
 
-Prefer small reusable functions.
+Authentication and caller-based authorization belong at the public application boundary.
 
-Example:
+Public queries and mutations should:
 
-```
-create()
-
-list()
-
-getById()
-
-findByEmail()
-
-findByAlias()
-
-patch()
-
-toDto()
+```text id="21frgf"
+Validate Input
+      ↓
+Authenticate
+      ↓
+Authorize
+      ↓
+Execute Domain Operation
 ```
 
-Avoid large functions that perform multiple unrelated operations.
+Models must not authenticate users or inspect the currently authenticated caller.
+
+Avoid:
+
+```ts id="74nifc"
+// model/student.ts
+
+const user = await getCurrentUser(ctx);
+```
+
+Prefer:
+
+```ts id="zj25zi"
+// mutations.ts
+
+const user = await requireUser(ctx);
+
+await requireInstitutionAccess(
+  ctx,
+  user,
+  institutionId,
+);
+
+await Student.create(ctx, input);
+```
+
+Business invariants still belong inside models.
+
+Authentication, authorization, and domain validation are separate responsibilities.
 
 ---
 
-# Database Access
+# 13. Database Access
+
+A feature's model owns database access for entities belonging to that feature.
+
+Prefer using another feature's model API rather than directly querying its tables.
+
+Avoid:
+
+```ts id="k52ayw"
+// Inside Attendance
+
+ctx.db
+  .query("programSubjects")
+  .withIndex(...)
+```
+
+Prefer:
+
+```ts id="9xb93g"
+ProgramSubject.getForStageAndSubject(...)
+```
 
 Use:
 
-```
-ctx.db.get(id)
-```
+- `ctx.db.get()` for simple direct document retrieval
+- indexed Convex queries for querying an entity's own data
+- `convex-helpers/server/relationships` for join-like operations and relationship traversal
 
-when querying by `_id`.
-
-Use indexes only for non-primary key lookups.
+Do not create abstractions merely to hide one line of Convex code.
 
 ---
 
-# Error Handling
+# 14. Testing
 
-Models should throw domain errors only.
+Tests must live inside the feature they test.
 
-Examples:
-
-- Student not found
-- Faculty already exists
-- Duplicate email
-- Duplicate USN
-
-Permission errors belong in public functions.
-
-Keep entity based errors in helpers/errors file with it's entity name
-Example:
-    PROGRAM: {
-        NOT_FOUND: {code:"PROGRAM_NOT_FOUND", message: "Program not found"}
-        }
-    FACULTY: {
-        NOT_FOUND: {code:"FACULTY_NOT_FOUND", message: "Faculty not found"},
-        FACULTY_EMAIL_ALREADY_EXISTS: {code:"FACULTY_EMAIL_ALREADY_EXISTS, message:"Faculty email already exists"}
-    }
-
-keep base erros related some authorization in BASE
-
-
----
-
-# Helpers
-
-Shared logic belongs inside `functions/helpers`.
-
-Examples:
-
-- permission helpers
-- institution helpers
-- slug validation
-- pagination helpers
-- common validators
-
-Before creating a helper, search the project for an existing implementation.
-
-Do not duplicate helper logic.
-
----
-
-## Testing Guidelines
-
-Write tests that are easy to read, maintain, and extend.
-
-### Test Behaviour
-
-Test public functions as black-box APIs.
-
-Focus on:
-
-- successful execution
-- authentication
-- authorization
-- validation failures
-- resource not found
-- duplicate constraints
-- edge cases
-
-Avoid testing implementation details.
-
----
-
-### Keep Tests DRY
-
-Avoid duplicating setup across tests.
-
-Extract common setup into reusable helper functions.
-
-Examples:
-
-- `createTest()`
-- `seedOwners()`
-- `seedInstitutions()`
-- `seedPrograms()`
-- `seedFaculty()`
-- `signInAsOwner()`
-
-Reuse existing helpers before creating new ones.
-
----
-
-### One Responsibility Per Test
-
-Each test should verify one behaviour.
-
-Good:
-
-```ts
-it("creates a faculty member")
-```
-
-```ts
-it("rejects duplicate email")
-```
-
-```ts
-it("requires authentication")
-```
-
-Avoid testing multiple unrelated behaviours in the same test.
-
----
-
-### Prefer Readable Setup
-
-Keep Arrange / Act / Assert sections obvious.
-
-Avoid large inline object literals repeated across multiple tests.
-
-Extract reusable fixtures where appropriate.
+There is no global application `tests/` directory.
 
 Example:
 
-```ts
-const faculty = createFacultyInput();
+```text id="u4u9qp"
+attendance/
+├── tests/
+│   ├── queries.test.ts
+│   └── mutations.test.ts
+├── queries.ts
+└── mutations.ts
 ```
 
-instead of repeating the same object dozens of times.
+We use Vitest.
 
----
+For now, tests may test **only public Convex queries and mutations**.
 
-### Minimize Seed Data
+## Allowed Testing Boundary
 
-Seed only the data required for the scenario being tested.
+```text id="wb26z0"
+Test
+  ↓
+Public Query / Mutation
+  ↓
+Authentication + Authorization
+  ↓
+Models
+  ↓
+Relationship Helpers
+  ↓
+Database
+```
 
-Avoid creating unnecessary organizations, institutions, programs, or users.
-
----
-
-### Avoid Magic Values
-
-Prefer descriptive constants over random strings.
+Tests should verify observable application behavior through public entry points.
 
 Example:
 
-```ts
-const EMAIL = "john@example.com";
-const PROGRAM_NAME = "Computer Science";
+```ts id="g0ktwk"
+describe("Attendance Queries", () => {
+  it("returns attendance registers");
+  it("returns session details");
+  it("requires authentication");
+  it("rejects unauthorized access");
+});
 ```
 
-instead of repeating literals throughout the file.
-
----
-
-### Test Helpers
-
-If multiple test files require the same setup, move it into `tests/test.helpers.ts`.
-
-Do not duplicate seed logic between test files.
-
----
-
-### Keep Tests Independent
-
-Every test must be able to run independently.
-
-Never depend on execution order or data created by another test.
-
----
-
-### Keep Tests Fast
-
-Avoid unnecessary database operations and repeated setup.
-
-Reuse helper functions rather than duplicating expensive initialization.
-
----
-
-### Naming
-
-Describe behaviour rather than implementation.
-
-Good:
-
-- creates a faculty member
-- rejects duplicate email
-- updates personal information
-- returns faculty by id
-- requires institution access
-
-Avoid names such as:
-
-- test create
-- update works
-- patch test
-
----
-
-### Refactoring
-
-When modifying tests:
-
-- remove duplicated setup
-- extract reusable fixtures
-- simplify assertions
-- improve readability
-
-Never duplicate code simply to make a test pass.
-
----
-
-# Naming Conventions
-
-Models:
-
-```
-Student.create()
-
-Student.list()
-
-Student.getById()
-
-Student.patch()
-
-Student.toDto()
+```ts id="a7lx78"
+describe("Attendance Mutations", () => {
+  it("marks attendance");
+  it("updates previously marked attendance");
+  it("rejects invalid sessions");
+  it("requires authorization");
+});
 ```
 
-Avoid generic names like:
+## Do Not Write Direct Tests For
 
-```
-updateEntity()
+Do not directly test:
 
-save()
+- model functions
+- helpers
+- validators
+- DTO transformers
+- resource assemblers
+- relationship utilities
+- internal implementation details
 
-execute()
+If a model or helper contains important behavior, verify that behavior indirectly through the public query or mutation that uses it.
 
-process()
-```
-
-Function names should clearly describe their behaviour.
+No direct unit testing is required for now.
 
 ---
 
-# AI Agent Rules
+# 15. Test-Driven Development
 
-Always follow the existing architecture before introducing a new pattern.
+We follow Test-Driven Development at the public API boundary.
 
-When implementing a new entity:
+For a new feature or public operation:
 
-1. Update schema.
-2. Create the model.
-3. Create public functions.
-4. Write tests.
-5. Reuse existing helpers.
-6. Return DTOs.
+1. Understand the domain and existing feature dependencies.
+2. Define or update the feature-owned Convex schema if required.
+3. Compose the feature schema into the global `schema.ts`.
+4. Define input and output validators.
+5. Define the public query or mutation contract.
+6. Create or update the feature's query or mutation test file.
+7. Write failing tests against the public function.
+8. Add or extend the required model APIs.
+9. Implement business logic and orchestration.
+10. Make all public API tests pass.
+11. Refactor internal implementation without changing public behavior.
 
-Never introduce:
+Tests should focus on observable behavior rather than implementation details.
 
-- repositories
-- service layers
-- controllers
-- dependency injection
-- generic CRUD abstractions
+Internal refactoring should not require rewriting tests when public behavior remains unchanged.
 
-unless explicitly requested.
+---
 
-Prefer consistency over clever abstractions.
+# 16. Refactoring Strategy
 
-If similar functionality already exists elsewhere in the project, follow that implementation style instead of inventing a new one.
+Refactor dependency-first.
 
-When uncertain, choose the simpler solution that matches the existing codebase.
+Prefer stabilizing foundational features before highly composed features.
+
+A typical direction is:
+
+```text id="apoycq"
+Institution
+    ↓
+Program
+    ↓
+Academic Stage
+    ↓
+Class
+    ↓
+Subject / Program Subject
+    ↓
+Class Batch
+    ↓
+Timetable
+    ↓
+Attendance
+```
+
+For each feature:
+
+1. Move all feature-specific code into the feature folder.
+2. Move its table definitions into the feature's `schema.ts`.
+3. Export the feature tables as a `*Tables` object.
+4. Compose those tables into the global `schema.ts`.
+5. Preserve existing public behavior.
+6. Establish clear model APIs.
+7. Replace duplicated relationship traversal with `convex-helpers/server/relationships`.
+8. Remove direct access to tables owned by other features when an appropriate model API exists.
+9. Write or update tests against `queries.ts` and `mutations.ts`.
+10. Make all feature tests pass.
+11. Refactor internal implementation.
+12. Move to the next dependent feature.
+
+Do not perform a full codebase rewrite.
+
+Refactor incrementally from foundational features toward dependent features.
+
+Do not attempt to perfect an entire feature before moving forward.
+
+Refactor enough to establish clear, stable, and reusable boundaries.
+
+---
+
+# 17. General Rules
+
+- Use a feature-based folder structure.
+- Keep all feature-specific code inside its feature.
+- Each feature owns its database table definitions.
+- Export feature tables as a named `*Tables` object.
+- Compose all feature tables in the global `schema.ts` using spread operators.
+- Keep tests inside the feature they test.
+- Test only public queries and mutations for now.
+- Do not write direct unit tests for models, helpers, or internal implementation.
+- Use `convex-helpers/server/relationships` for join-like operations and relationship traversal.
+- Keep public functions small and focused.
+- Keep orchestration readable at a high level.
+- Keep entity-specific database knowledge inside the owning feature.
+- Cross-feature dependencies are allowed when required by the use case.
+- Avoid cross-feature implementation knowledge.
+- Prefer meaningful domain APIs over generic abstractions.
+- Do not create abstractions solely to reduce line count.
+- Do not prematurely create shared helpers.
+- Validate all external input.
+- Define explicit public return contracts.
+- Perform authentication and authorization at public application boundaries.
+- Models must not perform authentication or caller-based authorization.
+- Never modify files inside `_generated`.
+- Follow existing feature patterns before introducing new ones.
+- Prefer incremental refactoring over large rewrites.
+- Optimize for code that is easy to trace, test, debug, and change.

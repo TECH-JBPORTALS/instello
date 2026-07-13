@@ -266,7 +266,7 @@ export const BasicInfoForm = withForm({
 												if (!parsed.success) return undefined;
 
 												const { available } = await convex.query(
-													api.institutions.checkCode,
+													api.institution.queries.checkCode,
 													{ code },
 												);
 

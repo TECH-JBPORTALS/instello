@@ -1,7 +1,9 @@
-import type { Infer } from "convex/values";
-import type { Doc, Id } from "../_generated/dataModel";
-import { vv } from "../schema";
-import type { AppMutationCtx, AppQueryCtx } from "./common.types";
+import type { Doc, Id } from "../../_generated/dataModel";
+import type { AppMutationCtx, AppQueryCtx } from "../../model/common.types";
+import type { CategoryDto } from "../validator/studentCategory";
+
+export type { CategoryDto } from "../validator/studentCategory";
+export { CategoryDtoSchema } from "../validator/studentCategory";
 
 export const DEFAULT_CATEGORY_NAMES = [
 	"GM",
@@ -21,15 +23,6 @@ export const DEFAULT_CATEGORY_NAMES = [
 	"Ex-Army",
 	"SNQ",
 ] as const;
-
-export const CategoryDtoSchema = vv.object({
-	_id: vv.id("institutionStudentCategories"),
-	name: vv.string(),
-	createdAt: vv.number(),
-	updatedAt: vv.number(),
-});
-
-export type CategoryDto = Infer<typeof CategoryDtoSchema>;
 
 export function toDto(
 	category: Doc<"institutionStudentCategories">,

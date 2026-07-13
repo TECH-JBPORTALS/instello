@@ -8,6 +8,12 @@
  * @module
  */
 
+import type * as academicPattern_model_academicPattern from "../academicPattern/model/academicPattern.js";
+import type * as academicPattern_model_academicStage from "../academicPattern/model/academicStage.js";
+import type * as academicPattern_mutations from "../academicPattern/mutations.js";
+import type * as academicPattern_queries from "../academicPattern/queries.js";
+import type * as academicPattern_validator_academicPattern from "../academicPattern/validator/academicPattern.js";
+import type * as academicPattern_validator_academicStage from "../academicPattern/validator/academicStage.js";
 import type * as academicPatterns from "../academicPatterns.js";
 import type * as academicStages from "../academicStages.js";
 import type * as attendance from "../attendance.js";
@@ -25,9 +31,15 @@ import type * as helpers_slug from "../helpers/slug.js";
 import type * as helpers_timetableSchedule from "../helpers/timetableSchedule.js";
 import type * as helpers_utils from "../helpers/utils.js";
 import type * as http from "../http.js";
+import type * as institution_model_institution from "../institution/model/institution.js";
+import type * as institution_model_institutionAcademicPattern from "../institution/model/institutionAcademicPattern.js";
+import type * as institution_model_studentCategory from "../institution/model/studentCategory.js";
+import type * as institution_mutations from "../institution/mutations.js";
+import type * as institution_queries from "../institution/queries.js";
+import type * as institution_validator_institution from "../institution/validator/institution.js";
+import type * as institution_validator_institutionAcademicPattern from "../institution/validator/institutionAcademicPattern.js";
+import type * as institution_validator_studentCategory from "../institution/validator/studentCategory.js";
 import type * as institutions from "../institutions.js";
-import type * as model_academicPattern from "../model/academicPattern.js";
-import type * as model_academicStage from "../model/academicStage.js";
 import type * as model_attendanceActivityLog from "../model/attendanceActivityLog.js";
 import type * as model_attendanceRecord from "../model/attendanceRecord.js";
 import type * as model_attendanceRegister from "../model/attendanceRegister.js";
@@ -36,9 +48,6 @@ import type * as model_attendanceSessionDetails from "../model/attendanceSession
 import type * as model_class from "../model/class.js";
 import type * as model_classBatch from "../model/classBatch.js";
 import type * as model_faculty from "../model/faculty.js";
-import type * as model_institution from "../model/institution.js";
-import type * as model_institutionAcademicPattern from "../model/institutionAcademicPattern.js";
-import type * as model_institutionStudentCategory from "../model/institutionStudentCategory.js";
 import type * as model_ownerOrganization from "../model/ownerOrganization.js";
 import type * as model_program from "../model/program.js";
 import type * as model_programSubject from "../model/programSubject.js";
@@ -65,6 +74,12 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "academicPattern/model/academicPattern": typeof academicPattern_model_academicPattern;
+  "academicPattern/model/academicStage": typeof academicPattern_model_academicStage;
+  "academicPattern/mutations": typeof academicPattern_mutations;
+  "academicPattern/queries": typeof academicPattern_queries;
+  "academicPattern/validator/academicPattern": typeof academicPattern_validator_academicPattern;
+  "academicPattern/validator/academicStage": typeof academicPattern_validator_academicStage;
   academicPatterns: typeof academicPatterns;
   academicStages: typeof academicStages;
   attendance: typeof attendance;
@@ -82,9 +97,15 @@ declare const fullApi: ApiFromModules<{
   "helpers/timetableSchedule": typeof helpers_timetableSchedule;
   "helpers/utils": typeof helpers_utils;
   http: typeof http;
+  "institution/model/institution": typeof institution_model_institution;
+  "institution/model/institutionAcademicPattern": typeof institution_model_institutionAcademicPattern;
+  "institution/model/studentCategory": typeof institution_model_studentCategory;
+  "institution/mutations": typeof institution_mutations;
+  "institution/queries": typeof institution_queries;
+  "institution/validator/institution": typeof institution_validator_institution;
+  "institution/validator/institutionAcademicPattern": typeof institution_validator_institutionAcademicPattern;
+  "institution/validator/studentCategory": typeof institution_validator_studentCategory;
   institutions: typeof institutions;
-  "model/academicPattern": typeof model_academicPattern;
-  "model/academicStage": typeof model_academicStage;
   "model/attendanceActivityLog": typeof model_attendanceActivityLog;
   "model/attendanceRecord": typeof model_attendanceRecord;
   "model/attendanceRegister": typeof model_attendanceRegister;
@@ -93,9 +114,6 @@ declare const fullApi: ApiFromModules<{
   "model/class": typeof model_class;
   "model/classBatch": typeof model_classBatch;
   "model/faculty": typeof model_faculty;
-  "model/institution": typeof model_institution;
-  "model/institutionAcademicPattern": typeof model_institutionAcademicPattern;
-  "model/institutionStudentCategory": typeof model_institutionStudentCategory;
   "model/ownerOrganization": typeof model_ownerOrganization;
   "model/program": typeof model_program;
   "model/programSubject": typeof model_programSubject;

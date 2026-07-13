@@ -47,7 +47,7 @@ import { mainNavSections } from "@/components/sidebars/institution-sidebar/nav-i
 import { institutionUrl, protocol, rootDomain } from "@/lib/utils";
 
 export function InstitutionsList() {
-	const institutions = useQuery(api.institutions.listMyOwned);
+	const institutions = useQuery(api.institution.queries.listMyOwned);
 
 	if (isUndefined(institutions)) return <InstitutionListSkeleton count={10} />;
 

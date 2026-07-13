@@ -1,31 +1,12 @@
-import type { Infer } from "convex/values";
-import type { Doc, Id } from "../_generated/dataModel";
-import { buildStagesForPattern } from "../helpers/academicPatternTemplates";
-import { ERROR_CODES, throwAppError } from "../helpers/constants";
-import { vv } from "../schema";
-import type { AppMutationCtx, AppQueryCtx } from "./common.types";
+import type { Doc, Id } from "../../_generated/dataModel";
+import { buildStagesForPattern } from "../../helpers/academicPatternTemplates";
+import { ERROR_CODES, throwAppError } from "../../helpers/constants";
+import type { AppMutationCtx, AppQueryCtx } from "../../model/common.types";
+import type { AcademicStageDto, PatchCore, PatchMetadata } from "../validator/academicStage";
+import { AcademicStageDtoSchema } from "../validator/academicStage";
 
-export const PatchMetadataSchema = vv.object({
-	name: vv.optional(vv.string()),
-	alias: vv.optional(vv.string()),
-});
-
-export const PatchCoreSchema = vv.object({
-	sequenceNumber: vv.optional(vv.number()),
-	yearNumber: vv.optional(vv.number()),
-});
-
-export const AcademicStageDtoSchema = vv.object({
-	_id: vv.id("academicStages"),
-	name: vv.string(),
-	alias: vv.string(),
-	academicPatternId: vv.id("academicPatterns"),
-	sequenceNumber: vv.number(),
-	yearNumber: vv.number(),
-	createdAt: vv.number(),
-});
-
-export type AcademicStageDto = Infer<typeof AcademicStageDtoSchema>;
+export { AcademicStageDtoSchema, PatchCoreSchema, PatchMetadataSchema } from "../validator/academicStage";
+export type { AcademicStageDto } from "../validator/academicStage";
 
 /** Maps a stage document to its API DTO. */
 export function toDto(stage: Doc<"academicStages">): AcademicStageDto {
@@ -101,7 +82,7 @@ export async function insertForPattern(
 export async function patchMetadata(
 	ctx: AppMutationCtx,
 	id: Id<"academicStages">,
-	body: Infer<typeof PatchMetadataSchema>,
+	body: PatchMetadata,
 ) {
 	const stage = await ctx.db.get("academicStages", id);
 
@@ -187,7 +168,7 @@ export async function resyncForPatternCoreChange(
 export async function patchCore(
 	ctx: AppMutationCtx,
 	id: Id<"academicStages">,
-	body: Infer<typeof PatchCoreSchema>,
+	body: PatchCore,
 ) {
 	const stage = await ctx.db.get("academicStages", id);
 

@@ -1,6 +1,12 @@
 "use client";
 
 import { api } from "@instello/convex/api";
+import { FieldError } from "@instello/ui/components/field";
+import {
+	InputGroup,
+	InputGroupAddon,
+	InputGroupInput,
+} from "@instello/ui/components/input-group";
 import {
 	Select,
 	SelectContent,
@@ -9,22 +15,54 @@ import {
 	SelectValue,
 } from "@instello/ui/components/select";
 import { Spinner } from "@instello/ui/components/spinner";
-import { useState } from "react";
 import * as v from "valibot";
-import { InlineTextField } from "@/features/students/sections/fields/inline-text-field";
+import {
+	InlineFormField,
+	type InlineFormFieldRenderProps,
+} from "@/components/common/inline-form-field";
 import { useInsMutation } from "@/hooks/convex-react";
-import { getConvexErrorMessage } from "@/lib/convex-error";
 import { INDIAN_STATES } from "@/lib/indian-states";
 
 function useUpdateInstitution() {
-	return useInsMutation(api.institutions.update);
+	return useInsMutation(api.institution.mutations.update);
+}
+
+function renderTextControl(
+	field: InlineFormFieldRenderProps<string>,
+	placeholder?: string,
+) {
+	return (
+		<>
+			<InputGroup className="min-w-3xs">
+				{field.isSubmitting && (
+					<InputGroupAddon align="inline-start">
+						<Spinner className="size-4 text-muted-foreground" />
+					</InputGroupAddon>
+				)}
+				<InputGroupInput
+					value={field.value}
+					onChange={(event) => field.onChange(event.target.value)}
+					onBlur={field.onBlur}
+					onKeyDown={(event) => {
+						if (event.key === "Escape") {
+							field.onEscape();
+						}
+					}}
+					disabled={field.isSubmitting}
+					placeholder={placeholder}
+					aria-invalid={field.isInvalid}
+				/>
+			</InputGroup>
+			{field.isInvalid && <FieldError errors={field.errors} />}
+		</>
+	);
 }
 
 export function InstitutionNameField({ savedValue }: { savedValue: string }) {
 	const update = useUpdateInstitution();
 
 	return (
-		<InlineTextField
+		<InlineFormField
 			fieldName="name"
 			savedValue={savedValue}
 			validator={v.object({
@@ -33,7 +71,9 @@ export function InstitutionNameField({ savedValue }: { savedValue: string }) {
 			onSave={async (name) => {
 				await update({ body: { name } });
 			}}
-		/>
+		>
+			{(field) => renderTextControl(field)}
+		</InlineFormField>
 	);
 }
 
@@ -45,7 +85,7 @@ export function InstitutionAddressLineField({
 	const update = useUpdateInstitution();
 
 	return (
-		<InlineTextField
+		<InlineFormField
 			fieldName="addressLine"
 			savedValue={savedValue}
 			validator={v.object({
@@ -54,7 +94,9 @@ export function InstitutionAddressLineField({
 			onSave={async (addressLine) => {
 				await update({ body: { addressLine } });
 			}}
-		/>
+		>
+			{(field) => renderTextControl(field)}
+		</InlineFormField>
 	);
 }
 
@@ -66,7 +108,7 @@ export function InstitutionDistrictField({
 	const update = useUpdateInstitution();
 
 	return (
-		<InlineTextField
+		<InlineFormField
 			fieldName="district"
 			savedValue={savedValue}
 			validator={v.object({
@@ -75,7 +117,9 @@ export function InstitutionDistrictField({
 			onSave={async (district) => {
 				await update({ body: { district } });
 			}}
-		/>
+		>
+			{(field) => renderTextControl(field)}
+		</InlineFormField>
 	);
 }
 
@@ -87,7 +131,7 @@ export function InstitutionZipCodeField({
 	const update = useUpdateInstitution();
 
 	return (
-		<InlineTextField
+		<InlineFormField
 			fieldName="zipCode"
 			savedValue={savedValue}
 			validator={v.object({
@@ -101,7 +145,9 @@ export function InstitutionZipCodeField({
 			onSave={async (zipCode) => {
 				await update({ body: { zipCode } });
 			}}
-		/>
+		>
+			{(field) => renderTextControl(field)}
+		</InlineFormField>
 	);
 }
 
@@ -113,7 +159,7 @@ export function InstitutionCountryField({
 	const update = useUpdateInstitution();
 
 	return (
-		<InlineTextField
+		<InlineFormField
 			fieldName="country"
 			savedValue={savedValue}
 			validator={v.object({
@@ -122,54 +168,52 @@ export function InstitutionCountryField({
 			onSave={async (country) => {
 				await update({ body: { country } });
 			}}
-		/>
+		>
+			{(field) => renderTextControl(field)}
+		</InlineFormField>
 	);
 }
 
 export function InstitutionStateField({ savedValue }: { savedValue: string }) {
 	const update = useUpdateInstitution();
-	const [isSaving, setIsSaving] = useState(false);
-	const [error, setError] = useState<string | null>(null);
 
 	return (
-		<div className="flex flex-col items-end gap-1">
-			<Select
-				value={savedValue}
-				disabled={isSaving}
-				onValueChange={(value) => {
-					if (!value || value === savedValue) return;
-					setError(null);
-					setIsSaving(true);
-					void update({ body: { state: value } })
-						.catch((saveError) => {
-							setError(
-								getConvexErrorMessage(saveError, "Failed to save state"),
-							);
-						})
-						.finally(() => {
-							setIsSaving(false);
-						});
-				}}
-			>
-				<SelectTrigger size="sm" className="min-w-44">
-					{isSaving ? (
-						<Spinner className="size-4 text-muted-foreground" />
-					) : null}
-					<SelectValue placeholder="Select state" />
-				</SelectTrigger>
-				<SelectContent>
-					{INDIAN_STATES.map((state) => (
-						<SelectItem key={state} value={state}>
-							{state}
-						</SelectItem>
-					))}
-				</SelectContent>
-			</Select>
-			{error && (
-				<p className="text-xs text-destructive" role="alert">
-					{error}
-				</p>
+		<InlineFormField
+			fieldName="state"
+			savedValue={savedValue}
+			validator={v.object({
+				state: v.pipe(v.string(), v.nonEmpty("State is required")),
+			})}
+			onSave={async (state) => {
+				await update({ body: { state } });
+			}}
+			className="flex flex-col items-end gap-1"
+		>
+			{(field) => (
+				<Select
+					value={field.value}
+					disabled={field.isSubmitting}
+					onValueChange={(value) => {
+						if (!value) return;
+						field.onChange(value);
+						field.submit();
+					}}
+				>
+					<SelectTrigger size="sm" className="min-w-44">
+						{field.isSubmitting ? (
+							<Spinner className="size-4 text-muted-foreground" />
+						) : null}
+						<SelectValue placeholder="Select state" />
+					</SelectTrigger>
+					<SelectContent>
+						{INDIAN_STATES.map((state) => (
+							<SelectItem key={state} value={state}>
+								{state}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
 			)}
-		</div>
+		</InlineFormField>
 	);
 }

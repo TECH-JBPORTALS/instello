@@ -20,7 +20,7 @@ import { ProgramsList } from "./programs-list";
 export default function Programs() {
 	const [open, setOpen] = useState(false);
 	const institutionSlug = useInstitutionSlug();
-	const institution = useQuery(api.institutions.getBySlug, {
+	const institution = useQuery(api.institution.queries.getBySlug, {
 		slug: institutionSlug,
 	});
 

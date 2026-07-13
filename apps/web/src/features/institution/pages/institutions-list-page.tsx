@@ -9,7 +9,7 @@ import {
 	PageHeaderStart,
 	PageHeaderTitle,
 } from "@/components/common/page-header";
-import { InstitutionsList } from "./institutions-list";
+import { InstitutionsList } from "../components/institutions-list";
 
 export function InstitutionsListPage() {
 	return (

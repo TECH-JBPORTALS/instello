@@ -21,11 +21,11 @@ import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { components } from "../_generated/api";
 import { env, internalMutation } from "../_generated/server";
+import * as AcademicPattern from "../academicPattern/model/academicPattern";
 import { authComponent, createAuth } from "../auth";
 import type { Doc as BetterAuthDoc } from "../betterAuth/_generated/dataModel";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
-import * as AcademicPattern from "../model/academicPattern";
-import * as InstitutionAcademicPattern from "../model/institutionAcademicPattern";
+import * as InstitutionAcademicPattern from "../institution/model/institutionAcademicPattern";
 import * as OwnerOrganization from "../model/ownerOrganization";
 
 const ownersList: Owner[] = [
