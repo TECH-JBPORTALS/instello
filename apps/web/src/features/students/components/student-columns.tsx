@@ -5,7 +5,7 @@ import { Badge } from "@instello/ui/components/badge";
 import { Checkbox } from "@instello/ui/components/checkbox";
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { getStudentDisplayName } from "./forms/shared-form";
+import { getStudentDisplayName } from "../forms/shared-form";
 import { StudentAvatar } from "./student-avatar";
 
 export type StudentSummary = {

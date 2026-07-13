@@ -1,16 +1,22 @@
-import { paginationOptsValidator } from "convex/server";
-import * as Class from "./class/model/class";
-import * as ClassBatch from "./class/model/classBatch";
-import { ERROR_CODES, throwAppError } from "./helpers/constants";
-import { insMutation, insQuery } from "./helpers/customFunctions";
-import * as InstitutionStudentCategory from "./institution/model/studentCategory";
+import * as Class from "../class/model/class";
+import * as ClassBatch from "../class/model/classBatch";
+import { ERROR_CODES, throwAppError } from "../helpers/constants";
+import { insMutation } from "../helpers/customFunctions";
+import * as InstitutionStudentCategory from "../institution/model/studentCategory";
+import { vv } from "../schema";
 import * as Student from "./model/student";
-import { vv } from "./schema";
+import {
+	CreateInputSchema,
+	PatchAcademicInfoSchema,
+	PatchContactInfoSchema,
+	PatchFamilyInfoSchema,
+	PatchPersonalInfoSchema,
+} from "./validator/student";
 
 /** Creates a student in the current institution for a class */
 export const create = insMutation({
 	permissions: ["student:create"],
-	args: Student.CreateInputSchema,
+	args: CreateInputSchema,
 	returns: vv.id("students"),
 	handler: async (ctx, args) => {
 		const cls = await Class.ensureInInstitution(
@@ -51,56 +57,12 @@ export const create = insMutation({
 	},
 });
 
-/** Lists students in a class (paginated), optionally scoped to a single batch */
-export const list = insQuery({
-	permissions: ["student:view"],
-	args: {
-		classId: vv.id("classes"),
-		batchId: vv.optional(vv.id("classBatches")),
-		paginationOpts: paginationOptsValidator,
-	},
-	returns: Student.PaginatedStudentListSchema,
-	handler: async (ctx, args) => {
-		const cls = await Class.ensureInInstitution(
-			ctx,
-			args.classId,
-			ctx.institution._id,
-		);
-
-		if (args.batchId) {
-			await ClassBatch.ensureInClass(ctx, args.batchId, cls._id);
-		}
-
-		return await Student.list(ctx, {
-			classId: args.classId,
-			batchId: args.batchId,
-			paginationOpts: args.paginationOpts,
-		});
-	},
-});
-
-/** Get student by id in the current institution */
-export const getById = insQuery({
-	permissions: ["student:view"],
-	args: { id: vv.id("students") },
-	returns: Student.StudentDtoSchema,
-	handler: async (ctx, args) => {
-		const student = await Student.getById(ctx, args.id, ctx.institution._id);
-
-		if (!student) {
-			throwAppError(ERROR_CODES.STUDENT.NOT_FOUND);
-		}
-
-		return await Student.toDto(ctx, student);
-	},
-});
-
 /** Update student personal info */
 export const updatePersonalInfo = insMutation({
 	permissions: ["student:update"],
 	args: {
 		id: vv.id("students"),
-		body: Student.PatchPersonalInfoSchema,
+		body: PatchPersonalInfoSchema,
 	},
 	returns: vv.null(),
 	handler: async (ctx, args) => {
@@ -120,7 +82,7 @@ export const updateContactInfo = insMutation({
 	permissions: ["student:update"],
 	args: {
 		id: vv.id("students"),
-		body: Student.PatchContactInfoSchema,
+		body: PatchContactInfoSchema,
 	},
 	returns: vv.null(),
 	handler: async (ctx, args) => {
@@ -140,7 +102,7 @@ export const updateAcademicInfo = insMutation({
 	permissions: ["student:update"],
 	args: {
 		id: vv.id("students"),
-		body: Student.PatchAcademicInfoSchema,
+		body: PatchAcademicInfoSchema,
 	},
 	returns: vv.null(),
 	handler: async (ctx, args) => {
@@ -160,7 +122,7 @@ export const updateFamilyInfo = insMutation({
 	permissions: ["student:update"],
 	args: {
 		id: vv.id("students"),
-		body: Student.PatchFamilyInfoSchema,
+		body: PatchFamilyInfoSchema,
 	},
 	returns: vv.null(),
 	handler: async (ctx, args) => {
@@ -172,19 +134,6 @@ export const updateFamilyInfo = insMutation({
 
 		await Student.patchFamilyInfo(ctx, student, args.body);
 		return null;
-	},
-});
-
-/** Lists student categories for the institution */
-export const listCategories = insQuery({
-	permissions: ["student:view"],
-	args: {},
-	returns: vv.array(InstitutionStudentCategory.CategoryDtoSchema),
-	handler: async (ctx) => {
-		return await InstitutionStudentCategory.listByInstitution(
-			ctx,
-			ctx.institution._id,
-		);
 	},
 });
 
@@ -251,7 +200,11 @@ export const bulkMove = insMutation({
 					batchId: args.targetBatchId,
 				});
 			} else {
-				await ClassBatch.clearBatch(ctx, studentId);
+				await ctx.db.patch("students", studentId, {
+					classId: targetClass._id,
+					batchId: undefined,
+					updatedAt: Date.now(),
+				});
 			}
 		}
 

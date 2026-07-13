@@ -323,12 +323,12 @@ describe("attendance.mark", () => {
 		);
 
 		const categories = await authed.mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 
 		const studentId = await authed.mutation(
-			api.students.create,
+			api.student.mutations.create,
 			withSlug(ins1, createStudentInput(classes.class1._id, categories[0]._id)),
 		);
 
@@ -472,12 +472,12 @@ describe("attendance.mark", () => {
 		);
 
 		const categories = await authed.mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 
 		const studentId = await authed.mutation(
-			api.students.create,
+			api.student.mutations.create,
 			withSlug(ins1, createStudentInput(classes.class1._id, categories[0]._id)),
 		);
 
@@ -551,12 +551,12 @@ describe("attendance.mark", () => {
 		);
 
 		const categories = await authed.mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 
 		const studentId = await authed.mutation(
-			api.students.create,
+			api.student.mutations.create,
 			withSlug(ins1, createStudentInput(classes.class1._id, categories[0]._id)),
 		);
 

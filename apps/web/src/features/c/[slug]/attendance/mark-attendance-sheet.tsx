@@ -37,8 +37,8 @@ import { IconSearch, IconUsers } from "@tabler/icons-react";
 import { isEmpty } from "lodash";
 import { useEffect, useMemo, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { StudentAvatar } from "@/features/students/components/student-avatar";
 import { getStudentDisplayName } from "@/features/students/forms/shared-form";
-import { StudentAvatar } from "@/features/students/student-avatar";
 import {
 	useInsMutation,
 	useInsPaginatedQuery,
@@ -111,7 +111,7 @@ export function MarkAttendanceSheet({
 		open && session?.recordId !== undefined && existingEntries === undefined;
 
 	const { results, status, loadMore, isLoading } = useInsPaginatedQuery(
-		api.students.list,
+		api.student.queries.list,
 		register
 			? {
 					classId: register.classId,

@@ -13,10 +13,10 @@ import {
 import { useInsMutation, useInsQuery } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
-import { AddStudentButton } from "./add-student-button";
-import { StudentsList } from "./students-list";
+import { AddStudentButton } from "../components/add-student-button";
+import { StudentsList } from "../components/students-list";
 
-export function StudentsView() {
+export function StudentsListPage() {
 	const programAlias = useProgramAlias();
 	const classSlug = useClassSlug();
 	const program = useInsQuery(api.program.queries.getByAlias, {
@@ -26,7 +26,9 @@ export function StudentsView() {
 		api.class.queries.getBySlug,
 		program && classSlug ? { programId: program._id, classSlug } : "skip",
 	);
-	const ensureCategories = useInsMutation(api.students.ensureCategories);
+	const ensureCategories = useInsMutation(
+		api.student.mutations.ensureCategories,
+	);
 
 	useEffect(() => {
 		void ensureCategories({});

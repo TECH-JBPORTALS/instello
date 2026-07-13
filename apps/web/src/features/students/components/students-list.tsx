@@ -29,12 +29,13 @@ import { DataTable } from "@/components/common/data-table";
 import { useInsPaginatedQuery, useInsQuery } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
+import { cn } from "@/lib/utils";
+import { STUDENT_LIST_PAGE_SIZE } from "../constants";
+import { getStudentDisplayName } from "../forms/shared-form";
+import { studentPath } from "../student-path";
 import { BulkActionsBar } from "./bulk-actions-bar";
-import { STUDENT_LIST_PAGE_SIZE } from "./constants";
-import { NewStudentDialog } from "./dialogs/new-student-dialog";
-import { getStudentDisplayName } from "./forms/shared-form";
+import { NewStudentDialog } from "./new-student-dialog";
 import { createStudentColumns, type StudentSummary } from "./student-columns";
-import { studentPath } from "./student-path";
 
 const ALL_BATCHES_TAB = "all";
 
@@ -76,9 +77,15 @@ function StudentsListEmpty({
 	);
 }
 
-function StudentsListSkeleton({ count }: { count: number }) {
+function StudentsListSkeleton({
+	count,
+	className,
+}: {
+	count: number;
+	className?: string;
+}) {
 	return (
-		<div className="rounded-lg border shadow-xs">
+		<div className={cn("rounded-lg border shadow-xs", className)}>
 			{Array.from({ length: count }).map((_, i) => (
 				<Item
 					key={i}
@@ -101,7 +108,7 @@ function FlatStudentsList({ classId }: { classId: Id<"classes"> }) {
 	const programAlias = useProgramAlias();
 	const classSlug = useClassSlug();
 	const { results, status, loadMore, isLoading } = useInsPaginatedQuery(
-		api.students.list,
+		api.student.queries.list,
 		{ classId },
 		{ initialNumItems: STUDENT_LIST_PAGE_SIZE },
 	);
@@ -183,7 +190,7 @@ function BatchedStudentsList({ classId }: { classId: Id<"classes"> }) {
 			: (activeBatch as Id<"classBatches">);
 
 	const { results, status, loadMore, isLoading } = useInsPaginatedQuery(
-		api.students.list,
+		api.student.queries.list,
 		{ classId, batchId: activeBatchId },
 		{ initialNumItems: STUDENT_LIST_PAGE_SIZE },
 	);
@@ -307,7 +314,7 @@ function BatchedStudentsList({ classId }: { classId: Id<"classes"> }) {
 				<InfiniteScroll
 					dataLength={filteredResults.length}
 					next={() => loadMore(STUDENT_LIST_PAGE_SIZE)}
-					hasMore={!isSearching && status === "CanLoadMore"}
+					hasMore={(!isSearching && status === "CanLoadMore") || isLoading}
 					loader={<StudentsListSkeleton count={3} />}
 				>
 					<div className="overflow-hidden rounded-lg border bg-card shadow-xs">
@@ -319,7 +326,6 @@ function BatchedStudentsList({ classId }: { classId: Id<"classes"> }) {
 							onRowSelectionChange={setRowSelection}
 						/>
 					</div>
-					{isLoading && <StudentsListSkeleton count={3} />}
 				</InfiniteScroll>
 			)}
 

@@ -19,7 +19,7 @@ import { TimetableEditorView } from "@/features/c/[slug]/timetable/timetable-edi
 import { TimetableHistoryView } from "@/features/c/[slug]/timetable/timetable-history-view";
 import { TimetableView } from "@/features/c/[slug]/timetable/timetable-view";
 import { classPath } from "@/features/classes/class-path";
-import { StudentsView } from "@/features/students/students-view";
+import { StudentsListPage } from "@/features/students/pages/students-list-page";
 import { useInsQuery, useInstitutionSlug } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
@@ -71,7 +71,7 @@ function ClassSectionPage({
 }
 
 export function StudentsPage() {
-	return <StudentsView />;
+	return <StudentsListPage />;
 }
 
 export function SubjectsPage() {

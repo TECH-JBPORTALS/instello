@@ -17,7 +17,7 @@ import { Kbd } from "@instello/ui/components/kbd";
 import { IconArrowUpRight, IconGitBranch } from "@tabler/icons-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useInsMutation, useInsQuery } from "@/hooks/convex-react";
-import { ConfirmBulkActionDialog } from "./dialogs/confirm-bulk-action-dialog";
+import { ConfirmBulkActionDialog } from "./confirm-bulk-action-dialog";
 
 export type SelectedStudent = {
 	_id: Id<"students">;
@@ -64,7 +64,7 @@ export function BulkActionsBar({
 	const splitIntoNewBatch = useInsMutation(
 		api.class.mutations.splitIntoNewBatch,
 	);
-	const bulkMove = useInsMutation(api.students.bulkMove);
+	const bulkMove = useInsMutation(api.student.mutations.bulkMove);
 
 	const selectedCount = selectedStudents.length;
 

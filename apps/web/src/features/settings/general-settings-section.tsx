@@ -18,7 +18,7 @@ import {
 } from "@instello/ui/components/item";
 import { IconLogout } from "@tabler/icons-react";
 import * as v from "valibot";
-import { InlineTextField } from "@/features/students/sections/fields/inline-text-field";
+import { InlineTextField } from "@/components/common/inline-text-field";
 import { protocol, rootDomain } from "@/lib/utils";
 import { ProfileImageField } from "./profile-image-field";
 

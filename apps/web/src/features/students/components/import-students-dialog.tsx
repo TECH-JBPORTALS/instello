@@ -228,10 +228,12 @@ export function ImportStudentsDialog({
 	isGroupsEnabled = false,
 }: ImportStudentsDialogProps) {
 	const inputRef = useRef<HTMLInputElement>(null);
-	const createStudent = useInsMutation(api.students.create);
-	const ensureCategories = useInsMutation(api.students.ensureCategories);
+	const createStudent = useInsMutation(api.student.mutations.create);
+	const ensureCategories = useInsMutation(
+		api.student.mutations.ensureCategories,
+	);
 	const categories = useInsQuery(
-		api.students.listCategories,
+		api.student.queries.listCategories,
 		open ? {} : "skip",
 	);
 	const batches = useInsQuery(

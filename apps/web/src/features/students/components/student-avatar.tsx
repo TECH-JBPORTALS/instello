@@ -6,7 +6,7 @@ import {
 	AvatarImage,
 } from "@instello/ui/components/avatar";
 import { IconUser } from "@tabler/icons-react";
-import { getStudentInitials } from "./forms/shared-form";
+import { getStudentInitials } from "../forms/shared-form";
 
 export function StudentAvatar({
 	firstName,

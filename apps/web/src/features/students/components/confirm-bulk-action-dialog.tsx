@@ -18,7 +18,7 @@ import { Spinner } from "@instello/ui/components/spinner";
 import { IconAlertCircle } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { getConvexErrorMessage } from "@/lib/convex-error";
-import { StudentAvatar } from "../student-avatar";
+import { StudentAvatar } from "./student-avatar";
 
 const MAX_VISIBLE_AVATARS = 5;
 

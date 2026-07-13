@@ -48,12 +48,12 @@ export function NewStudentDialog({
 }: NewStudentDialogProps) {
 	const [step, setStep] = useState(0);
 	const [globalError, setGlobalError] = useState<string | null>(null);
-	const createStudent = useInsMutation(api.students.create);
+	const createStudent = useInsMutation(api.student.mutations.create);
 	const generateImageUploadUrl = useInsMutation(
-		api.students.generateImageUploadUrl,
+		api.student.mutations.generateImageUploadUrl,
 	);
 	const categories = useInsQuery(
-		api.students.listCategories,
+		api.student.queries.listCategories,
 		open ? {} : "skip",
 	);
 	const batches = useInsQuery(

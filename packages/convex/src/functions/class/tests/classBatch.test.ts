@@ -63,13 +63,13 @@ describe("classes.enableSectionGroups", () => {
 	}) => {
 		const authed = asOwner(user1, ins1);
 		const categories = await authed.mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 
 		for (let i = 0; i < 3; i++) {
 			await authed.mutation(
-				api.students.create,
+				api.student.mutations.create,
 				withSlug(
 					ins1,
 					createStudentInput(classes.class1._id, categories[0]._id, {
@@ -86,7 +86,7 @@ describe("classes.enableSectionGroups", () => {
 		);
 
 		const students = await authed.query(
-			api.students.list,
+			api.student.queries.list,
 			withSlug(ins1, {
 				classId: classes.class1._id,
 				paginationOpts: { numItems: 10, cursor: null },
@@ -176,12 +176,12 @@ describe("classes.disableSectionGroups", () => {
 	}) => {
 		const authed = asOwner(user1, ins1);
 		const categories = await authed.mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 
 		const studentId = await authed.mutation(
-			api.students.create,
+			api.student.mutations.create,
 			withSlug(ins1, createStudentInput(classes.class1._id, categories[0]._id)),
 		);
 
@@ -217,7 +217,7 @@ describe("classes.disableSectionGroups", () => {
 		expect(classStudents.every((s) => s.batchId === undefined)).toBe(true);
 
 		const student = await authed.query(
-			api.students.getById,
+			api.student.queries.getById,
 			withSlug(ins1, { id: studentId }),
 		);
 		expect(student).toBeTruthy();
@@ -284,7 +284,7 @@ describe("students.create (with batch assignment)", () => {
 	}) => {
 		const authed = asOwner(user1, ins1);
 		const categories = await authed.mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 
@@ -299,12 +299,12 @@ describe("students.create (with batch assignment)", () => {
 		);
 
 		const studentId = await authed.mutation(
-			api.students.create,
+			api.student.mutations.create,
 			withSlug(ins1, createStudentInput(classes.class1._id, categories[0]._id)),
 		);
 
 		const student = await authed.query(
-			api.students.getById,
+			api.student.queries.getById,
 			withSlug(ins1, { id: studentId }),
 		);
 
@@ -319,7 +319,7 @@ describe("students.create (with batch assignment)", () => {
 	}) => {
 		const authed = asOwner(user1, ins1);
 		const categories = await authed.mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 
@@ -335,7 +335,7 @@ describe("students.create (with batch assignment)", () => {
 		const targetBatch = batches[1];
 
 		const studentId = await authed.mutation(
-			api.students.create,
+			api.student.mutations.create,
 			withSlug(
 				ins1,
 				createStudentInput(classes.class1._id, categories[0]._id, {
@@ -345,7 +345,7 @@ describe("students.create (with batch assignment)", () => {
 		);
 
 		const student = await authed.query(
-			api.students.getById,
+			api.student.queries.getById,
 			withSlug(ins1, { id: studentId }),
 		);
 
@@ -361,7 +361,7 @@ describe("students.create (with batch assignment)", () => {
 	}) => {
 		const authed = asOwner(user1, ins1);
 		const categories = await authed.mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 
@@ -381,7 +381,7 @@ describe("students.create (with batch assignment)", () => {
 
 		await expectAppError(
 			authed.mutation(
-				api.students.create,
+				api.student.mutations.create,
 				withSlug(
 					ins1,
 					createStudentInput(classes.class1._id, categories[0]._id, {
@@ -401,7 +401,7 @@ describe("students.create (with batch assignment)", () => {
 	}) => {
 		const authed = asOwner(user1, ins1);
 		const categories = await authed.mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 
@@ -416,7 +416,7 @@ describe("students.create (with batch assignment)", () => {
 
 		await expectAppError(
 			authed.mutation(
-				api.students.create,
+				api.student.mutations.create,
 				withSlug(
 					ins1,
 					createStudentInput(classes.class1._id, categories[0]._id, {
@@ -471,7 +471,7 @@ describe("classBatches.getRemovePreview", () => {
 	}) => {
 		const authed = asOwner(user1, ins1);
 		const categories = await authed.mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 
@@ -489,7 +489,7 @@ describe("classBatches.getRemovePreview", () => {
 
 		for (let i = 0; i < 2; i++) {
 			await authed.mutation(
-				api.students.create,
+				api.student.mutations.create,
 				withSlug(
 					ins1,
 					createStudentInput(classes.class1._id, categories[0]._id, {
@@ -620,7 +620,7 @@ describe("classBatches.remove", () => {
 	}) => {
 		const authed = asOwner(user1, ins1);
 		const categories = await authed.mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 
@@ -636,7 +636,7 @@ describe("classBatches.remove", () => {
 		const batchToDelete = batches[0];
 
 		const studentId = await authed.mutation(
-			api.students.create,
+			api.student.mutations.create,
 			withSlug(
 				ins1,
 				createStudentInput(classes.class1._id, categories[0]._id, {
@@ -663,7 +663,7 @@ describe("classBatches.remove", () => {
 		}
 
 		const student = await authed.query(
-			api.students.getById,
+			api.student.queries.getById,
 			withSlug(ins1, { id: studentId }),
 		);
 
@@ -688,7 +688,7 @@ describe("classBatches.remove", () => {
 	}) => {
 		const authed = asOwner(user1, ins1);
 		const categories = await authed.mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 
@@ -710,7 +710,7 @@ describe("classBatches.remove", () => {
 		if (!targetBatchId) throw new Error("Expected move target batch");
 
 		const studentId = await authed.mutation(
-			api.students.create,
+			api.student.mutations.create,
 			withSlug(
 				ins1,
 				createStudentInput(classes.class1._id, categories[0]._id, {
@@ -1063,5 +1063,303 @@ describe("classBatches.remove", () => {
 
 		expect(listed.find((b) => b._id === batches[0]._id)).toBeUndefined();
 		expect(listed).toHaveLength(1);
+	});
+});
+
+describe("classBatches.listMoveTargets", () => {
+	test("requires authentication", async ({ t, ins1, classes }) => {
+		await expectAppError(
+			t.query(
+				api.class.queries.listBatchMoveTargets,
+				withSlug(ins1, { classId: classes.class1._id }),
+			),
+			ERROR_CODES.BASE.UNAUTHORIZED,
+		);
+	});
+
+	test("excludes the current class itself when it has no batches enabled", async ({
+		user1,
+		ins1,
+		classes,
+		asOwner,
+	}) => {
+		const authed = asOwner(user1, ins1);
+
+		const targets = await authed.query(
+			api.class.queries.listBatchMoveTargets,
+			withSlug(ins1, { classId: classes.class1._id }),
+		);
+
+		expect(
+			targets.some((target) => target.classId === classes.class1._id),
+		).toBe(false);
+	});
+
+	test("lists a batch-enabled sibling class as targets when the current class has no batches enabled", async ({
+		user1,
+		ins1,
+		classes,
+		asOwner,
+	}) => {
+		const authed = asOwner(user1, ins1);
+
+		await authed.mutation(
+			api.class.mutations.enableSectionGroups,
+			withSlug(ins1, { id: classes.class2._id }),
+		);
+
+		const targets = await authed.query(
+			api.class.queries.listBatchMoveTargets,
+			withSlug(ins1, { classId: classes.class1._id }),
+		);
+
+		const siblingTargets = targets.filter(
+			(target) => target.classId === classes.class2._id,
+		);
+
+		expect(siblingTargets).toHaveLength(2);
+		expect(siblingTargets.every((target) => !target.isCurrentClass)).toBe(true);
+		expect(siblingTargets.every((target) => target.batchId !== undefined)).toBe(
+			true,
+		);
+	});
+
+	test("lists the current class's own batches without a class prefix", async ({
+		user1,
+		ins1,
+		classes,
+		asOwner,
+	}) => {
+		const authed = asOwner(user1, ins1);
+
+		await authed.mutation(
+			api.class.mutations.enableSectionGroups,
+			withSlug(ins1, { id: classes.class1._id }),
+		);
+
+		const targets = await authed.query(
+			api.class.queries.listBatchMoveTargets,
+			withSlug(ins1, { classId: classes.class1._id }),
+		);
+
+		const ownBatchTargets = targets.filter(
+			(target) => target.classId === classes.class1._id,
+		);
+
+		expect(ownBatchTargets).toHaveLength(2);
+		expect(ownBatchTargets.every((target) => target.isCurrentClass)).toBe(true);
+		expect(ownBatchTargets.map((target) => target.batchLabel)).toEqual([
+			"B01",
+			"B02",
+		]);
+	});
+
+	test("lists a batch-enabled sibling class as class + batch pairs", async ({
+		user1,
+		ins1,
+		classes,
+		asOwner,
+	}) => {
+		const authed = asOwner(user1, ins1);
+
+		await authed.mutation(
+			api.class.mutations.enableSectionGroups,
+			withSlug(ins1, { id: classes.class1._id }),
+		);
+		await authed.mutation(
+			api.class.mutations.enableSectionGroups,
+			withSlug(ins1, { id: classes.class2._id }),
+		);
+
+		const targets = await authed.query(
+			api.class.queries.listBatchMoveTargets,
+			withSlug(ins1, { classId: classes.class1._id }),
+		);
+
+		const siblingTargets = targets.filter(
+			(target) => target.classId === classes.class2._id,
+		);
+
+		expect(siblingTargets).toHaveLength(2);
+		expect(siblingTargets.every((target) => !target.isCurrentClass)).toBe(true);
+		expect(
+			siblingTargets.every((target) => target.className === "Class 2"),
+		).toBe(true);
+		expect(siblingTargets.every((target) => target.batchId !== undefined)).toBe(
+			true,
+		);
+	});
+
+	test("lists a non-batch sibling class as a single bare-class target", async ({
+		user1,
+		ins1,
+		classes,
+		asOwner,
+	}) => {
+		const authed = asOwner(user1, ins1);
+
+		await authed.mutation(
+			api.class.mutations.enableSectionGroups,
+			withSlug(ins1, { id: classes.class1._id }),
+		);
+
+		const targets = await authed.query(
+			api.class.queries.listBatchMoveTargets,
+			withSlug(ins1, { classId: classes.class1._id }),
+		);
+
+		const siblingTargets = targets.filter(
+			(target) => target.classId === classes.class2._id,
+		);
+
+		expect(siblingTargets).toEqual([
+			{
+				classId: classes.class2._id,
+				className: "Class 2",
+				batchId: undefined,
+				batchLabel: undefined,
+				isCurrentClass: false,
+			},
+		]);
+	});
+
+	test("excludes classes from another institution's program", async ({
+		user1,
+		ins1,
+		classes,
+		asOwner,
+	}) => {
+		const authed = asOwner(user1, ins1);
+
+		await authed.mutation(
+			api.class.mutations.enableSectionGroups,
+			withSlug(ins1, { id: classes.class1._id }),
+		);
+
+		const targets = await authed.query(
+			api.class.queries.listBatchMoveTargets,
+			withSlug(ins1, { classId: classes.class1._id }),
+		);
+
+		expect(
+			targets.some((target) => target.classId === classes.class3._id),
+		).toBe(false);
+	});
+});
+
+describe("classBatches.splitIntoNewBatch", () => {
+	test("requires authentication", async ({ t, ins1, classes }) => {
+		await expectAppError(
+			t.mutation(
+				api.class.mutations.splitIntoNewBatch,
+				withSlug(ins1, { classId: classes.class1._id, studentIds: [] }),
+			),
+			ERROR_CODES.BASE.UNAUTHORIZED,
+		);
+	});
+
+	test("rejects when batches are not enabled", async ({
+		user1,
+		ins1,
+		classes,
+		asOwner,
+	}) => {
+		await expectAppError(
+			asOwner(user1, ins1).mutation(
+				api.class.mutations.splitIntoNewBatch,
+				withSlug(ins1, { classId: classes.class1._id, studentIds: [] }),
+			),
+			ERROR_CODES.CLASS.BATCHES_NOT_ENABLED,
+		);
+	});
+
+	test("creates the next-numbered batch and moves the given students into it", async ({
+		user1,
+		ins1,
+		classes,
+		asOwner,
+	}) => {
+		const authed = asOwner(user1, ins1);
+		const categories = await authed.mutation(
+			api.student.mutations.ensureCategories,
+			withSlug(ins1, {}),
+		);
+
+		await authed.mutation(
+			api.class.mutations.enableSectionGroups,
+			withSlug(ins1, { id: classes.class1._id }),
+		);
+
+		const studentIds = [];
+		for (let i = 0; i < 2; i++) {
+			const studentId = await authed.mutation(
+				api.student.mutations.create,
+				withSlug(
+					ins1,
+					createStudentInput(classes.class1._id, categories[0]._id, {
+						usn: `1MS21CS10${i}`,
+						email: `split-student${i}@example.com`,
+					}),
+				),
+			);
+			studentIds.push(studentId);
+		}
+
+		const newBatch = await authed.mutation(
+			api.class.mutations.splitIntoNewBatch,
+			withSlug(ins1, { classId: classes.class1._id, studentIds }),
+		);
+
+		expect(newBatch.numIdx).toBe(3);
+		expect(newBatch.label).toBe("B03");
+
+		for (const studentId of studentIds) {
+			const student = await authed.query(
+				api.student.queries.getById,
+				withSlug(ins1, { id: studentId }),
+			);
+			expect(student.batchId).toBe(newBatch._id);
+			expect(student.batchLabel).toBe("B03");
+		}
+	});
+
+	test("rejects a student that doesn't belong to the class", async ({
+		user1,
+		ins1,
+		classes,
+		asOwner,
+	}) => {
+		const authed = asOwner(user1, ins1);
+		const categories = await authed.mutation(
+			api.student.mutations.ensureCategories,
+			withSlug(ins1, {}),
+		);
+
+		await authed.mutation(
+			api.class.mutations.enableSectionGroups,
+			withSlug(ins1, { id: classes.class1._id }),
+		);
+
+		const otherClassStudentId = await authed.mutation(
+			api.student.mutations.create,
+			withSlug(
+				ins1,
+				createStudentInput(classes.class2._id, categories[0]._id, {
+					usn: "1MS21CS200",
+					email: "other-class-student@example.com",
+				}),
+			),
+		);
+
+		await expectAppError(
+			authed.mutation(
+				api.class.mutations.splitIntoNewBatch,
+				withSlug(ins1, {
+					classId: classes.class1._id,
+					studentIds: [otherClassStudentId],
+				}),
+			),
+			ERROR_CODES.STUDENT.NOT_FOUND,
+		);
 	});
 });

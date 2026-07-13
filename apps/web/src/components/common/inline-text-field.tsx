@@ -117,8 +117,3 @@ export function InlineTextField({
 		</form>
 	);
 }
-
-export type StudentFieldProps = {
-	studentId: import("@instello/convex/dataModel").Id<"students">;
-	savedValue: string;
-};

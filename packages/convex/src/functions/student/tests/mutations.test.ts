@@ -1,6 +1,6 @@
 import { describe, expect } from "vitest";
-import { api } from "../_generated/api";
-import { ERROR_CODES } from "../helpers/constants";
+import { api } from "../../_generated/api";
+import { ERROR_CODES } from "../../helpers/constants";
 import {
 	classTest,
 	createStudentInput,
@@ -8,18 +8,18 @@ import {
 	STUDENT_EMAIL,
 	STUDENT_USN,
 	withSlug,
-} from "./fixtures/index.setup";
+} from "../../tests/fixtures/index.setup";
 
 const test = classTest();
 
-describe("students.ensureCategories", () => {
+describe("student.mutations.ensureCategories", () => {
 	test("seeds default categories for an institution", async ({
 		user1,
 		ins1,
 		asOwner,
 	}) => {
 		const categories = await asOwner(user1, ins1).mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 
@@ -47,9 +47,9 @@ describe("students.ensureCategories", () => {
 	test("is idempotent", async ({ user1, ins1, asOwner }) => {
 		const authed = asOwner(user1, ins1);
 
-		await authed.mutation(api.students.ensureCategories, withSlug(ins1, {}));
+		await authed.mutation(api.student.mutations.ensureCategories, withSlug(ins1, {}));
 		const second = await authed.mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 
@@ -57,11 +57,11 @@ describe("students.ensureCategories", () => {
 	});
 });
 
-describe("students.create", () => {
+describe("student.mutations.create", () => {
 	test("requires authentication", async ({ t, ins1, classes }) => {
 		const categoryId = await t.run(async (ctx) => {
 			const { seedDefaults, listByInstitution } = await import(
-				"../institution/model/studentCategory"
+				"../../institution/model/studentCategory"
 			);
 			await seedDefaults(ctx, ins1._id);
 			const categories = await listByInstitution(ctx, ins1._id);
@@ -70,7 +70,7 @@ describe("students.create", () => {
 
 		await expectAppError(
 			t.mutation(
-				api.students.create,
+				api.student.mutations.create,
 				withSlug(ins1, createStudentInput(classes.class1._id, categoryId)),
 			),
 			ERROR_CODES.BASE.UNAUTHORIZED,
@@ -84,12 +84,12 @@ describe("students.create", () => {
 		asOwner,
 	}) => {
 		const categories = await asOwner(user1, ins1).mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 
 		const studentId = await asOwner(user1, ins1).mutation(
-			api.students.create,
+			api.student.mutations.create,
 			withSlug(
 				ins1,
 				createStudentInput(classes.class1._id, categories[0]._id, {
@@ -101,7 +101,7 @@ describe("students.create", () => {
 		expect(studentId).toBeDefined();
 
 		const student = await asOwner(user1, ins1).query(
-			api.students.getById,
+			api.student.queries.getById,
 			withSlug(ins1, { id: studentId }),
 		);
 
@@ -121,18 +121,18 @@ describe("students.create", () => {
 	test("rejects duplicate USN", async ({ user1, ins1, classes, asOwner }) => {
 		const authed = asOwner(user1, ins1);
 		const categories = await authed.mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 
 		await authed.mutation(
-			api.students.create,
+			api.student.mutations.create,
 			withSlug(ins1, createStudentInput(classes.class1._id, categories[0]._id)),
 		);
 
 		await expectAppError(
 			authed.mutation(
-				api.students.create,
+				api.student.mutations.create,
 				withSlug(
 					ins1,
 					createStudentInput(classes.class1._id, categories[0]._id, {
@@ -152,18 +152,18 @@ describe("students.create", () => {
 	}) => {
 		const authed = asOwner(user1, ins1);
 		const categories = await authed.mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 
 		await authed.mutation(
-			api.students.create,
+			api.student.mutations.create,
 			withSlug(ins1, createStudentInput(classes.class1._id, categories[0]._id)),
 		);
 
 		await expectAppError(
 			authed.mutation(
-				api.students.create,
+				api.student.mutations.create,
 				withSlug(
 					ins1,
 					createStudentInput(classes.class1._id, categories[0]._id, {
@@ -182,13 +182,13 @@ describe("students.create", () => {
 		asOwner,
 	}) => {
 		const categories = await asOwner(user1, ins1).mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 
 		await expectAppError(
 			asOwner(user1, ins1).mutation(
-				api.students.create,
+				api.student.mutations.create,
 				withSlug(
 					ins1,
 					createStudentInput(classes.class1._id, categories[0]._id, {
@@ -207,12 +207,12 @@ describe("students.create", () => {
 		asOwner,
 	}) => {
 		const categories = await asOwner(user1, ins1).mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 
 		const studentId = await asOwner(user1, ins1).mutation(
-			api.students.create,
+			api.student.mutations.create,
 			withSlug(
 				ins1,
 				createStudentInput(classes.class1._id, categories[0]._id, {
@@ -229,7 +229,7 @@ describe("students.create", () => {
 		);
 
 		const student = await asOwner(user1, ins1).query(
-			api.students.getById,
+			api.student.queries.getById,
 			withSlug(ins1, { id: studentId }),
 		);
 
@@ -253,13 +253,13 @@ describe("students.create", () => {
 		asOwner,
 	}) => {
 		const categories = await asOwner(user1, ins1).mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 
 		await expectAppError(
 			asOwner(user1, ins1).mutation(
-				api.students.create,
+				api.student.mutations.create,
 				withSlug(
 					ins1,
 					createStudentInput(classes.class1._id, categories[0]._id, {
@@ -280,16 +280,16 @@ describe("students.create", () => {
 		asOwner,
 	}) => {
 		const categories1 = await asOwner(user1, ins1).mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 		const categories2 = await asOwner(user2, ins2).mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins2, {}),
 		);
 
 		const id1 = await asOwner(user1, ins1).mutation(
-			api.students.create,
+			api.student.mutations.create,
 			withSlug(
 				ins1,
 				createStudentInput(classes.class1._id, categories1[0]._id),
@@ -297,7 +297,7 @@ describe("students.create", () => {
 		);
 
 		const id2 = await asOwner(user2, ins2).mutation(
-			api.students.create,
+			api.student.mutations.create,
 			withSlug(
 				ins2,
 				createStudentInput(classes.class3._id, categories2[0]._id, {
@@ -312,77 +312,8 @@ describe("students.create", () => {
 	});
 });
 
-describe("students.list", () => {
-	test("returns paginated students for a class", async ({
-		user1,
-		ins1,
-		classes,
-		asOwner,
-	}) => {
-		const authed = asOwner(user1, ins1);
-		const categories = await authed.mutation(
-			api.students.ensureCategories,
-			withSlug(ins1, {}),
-		);
 
-		await authed.mutation(
-			api.students.create,
-			withSlug(ins1, createStudentInput(classes.class1._id, categories[0]._id)),
-		);
-
-		await authed.mutation(
-			api.students.create,
-			withSlug(
-				ins1,
-				createStudentInput(classes.class1._id, categories[0]._id, {
-					usn: "1MS21CS002",
-					email: "student2@example.com",
-				}),
-			),
-		);
-
-		const result = await authed.query(
-			api.students.list,
-			withSlug(ins1, {
-				classId: classes.class1._id,
-				paginationOpts: { numItems: 10, cursor: null },
-			}),
-		);
-
-		expect(result.page).toHaveLength(2);
-		expect(result.isDone).toBe(true);
-	});
-
-	test("does not return students from other classes", async ({
-		user1,
-		ins1,
-		classes,
-		asOwner,
-	}) => {
-		const authed = asOwner(user1, ins1);
-		const categories = await authed.mutation(
-			api.students.ensureCategories,
-			withSlug(ins1, {}),
-		);
-
-		await authed.mutation(
-			api.students.create,
-			withSlug(ins1, createStudentInput(classes.class2._id, categories[0]._id)),
-		);
-
-		const result = await authed.query(
-			api.students.list,
-			withSlug(ins1, {
-				classId: classes.class1._id,
-				paginationOpts: { numItems: 10, cursor: null },
-			}),
-		);
-
-		expect(result.page).toHaveLength(0);
-	});
-});
-
-describe("students.updatePersonalInfo", () => {
+describe("student.mutations.updatePersonalInfo", () => {
 	test("updates student personal info", async ({
 		user1,
 		ins1,
@@ -391,17 +322,17 @@ describe("students.updatePersonalInfo", () => {
 	}) => {
 		const authed = asOwner(user1, ins1);
 		const categories = await authed.mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 
 		const studentId = await authed.mutation(
-			api.students.create,
+			api.student.mutations.create,
 			withSlug(ins1, createStudentInput(classes.class1._id, categories[0]._id)),
 		);
 
 		await authed.mutation(
-			api.students.updatePersonalInfo,
+			api.student.mutations.updatePersonalInfo,
 			withSlug(ins1, {
 				id: studentId,
 				body: { firstName: "Updated", gender: "female" },
@@ -409,7 +340,7 @@ describe("students.updatePersonalInfo", () => {
 		);
 
 		const student = await authed.query(
-			api.students.getById,
+			api.student.queries.getById,
 			withSlug(ins1, { id: studentId }),
 		);
 
@@ -418,7 +349,7 @@ describe("students.updatePersonalInfo", () => {
 	});
 });
 
-describe("students.updateFamilyInfo", () => {
+describe("student.mutations.updateFamilyInfo", () => {
 	test("updates family and address info", async ({
 		user1,
 		ins1,
@@ -427,17 +358,17 @@ describe("students.updateFamilyInfo", () => {
 	}) => {
 		const authed = asOwner(user1, ins1);
 		const categories = await authed.mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 
 		const studentId = await authed.mutation(
-			api.students.create,
+			api.student.mutations.create,
 			withSlug(ins1, createStudentInput(classes.class1._id, categories[0]._id)),
 		);
 
 		await authed.mutation(
-			api.students.updateFamilyInfo,
+			api.student.mutations.updateFamilyInfo,
 			withSlug(ins1, {
 				id: studentId,
 				body: {
@@ -452,7 +383,7 @@ describe("students.updateFamilyInfo", () => {
 		);
 
 		const student = await authed.query(
-			api.students.getById,
+			api.student.queries.getById,
 			withSlug(ins1, { id: studentId }),
 		);
 
@@ -475,24 +406,226 @@ describe("students.updateFamilyInfo", () => {
 	}) => {
 		const authed = asOwner(user1, ins1);
 		const categories = await authed.mutation(
-			api.students.ensureCategories,
+			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
 		);
 
 		const studentId = await authed.mutation(
-			api.students.create,
+			api.student.mutations.create,
 			withSlug(ins1, createStudentInput(classes.class1._id, categories[0]._id)),
 		);
 
 		await expectAppError(
 			authed.mutation(
-				api.students.updateFamilyInfo,
+				api.student.mutations.updateFamilyInfo,
 				withSlug(ins1, {
 					id: studentId,
 					body: { motherPhoneNumber: "12345" },
 				}),
 			),
 			ERROR_CODES.BASE.INVALID_PHONE,
+		);
+	});
+});
+
+describe("student.mutations.bulkMove", () => {
+	test("requires authentication", async ({ t, ins1, classes }) => {
+		await expectAppError(
+			t.mutation(
+				api.student.mutations.bulkMove,
+				withSlug(ins1, {
+					studentIds: [],
+					targetClassId: classes.class2._id,
+				}),
+			),
+			ERROR_CODES.BASE.UNAUTHORIZED,
+		);
+	});
+
+	test("moves a student into a batch of another class", async ({
+		user1,
+		ins1,
+		classes,
+		asOwner,
+	}) => {
+		const authed = asOwner(user1, ins1);
+		const categories = await authed.mutation(
+			api.student.mutations.ensureCategories,
+			withSlug(ins1, {}),
+		);
+
+		await authed.mutation(
+			api.class.mutations.enableSectionGroups,
+			withSlug(ins1, { id: classes.class1._id }),
+		);
+		await authed.mutation(
+			api.class.mutations.enableSectionGroups,
+			withSlug(ins1, { id: classes.class2._id }),
+		);
+
+		const studentId = await authed.mutation(
+			api.student.mutations.create,
+			withSlug(
+				ins1,
+				createStudentInput(classes.class1._id, categories[0]._id, {
+					usn: "1MS21CS300",
+					email: "move-student@example.com",
+				}),
+			),
+		);
+
+		const targetBatches = await authed.query(
+			api.class.queries.listBatches,
+			withSlug(ins1, { classId: classes.class2._id }),
+		);
+		const targetBatch = targetBatches[0];
+
+		await authed.mutation(
+			api.student.mutations.bulkMove,
+			withSlug(ins1, {
+				studentIds: [studentId],
+				targetClassId: classes.class2._id,
+				targetBatchId: targetBatch._id,
+			}),
+		);
+
+		const student = await authed.query(
+			api.student.queries.getById,
+			withSlug(ins1, { id: studentId }),
+		);
+
+		expect(student.classId).toBe(classes.class2._id);
+		expect(student.batchId).toBe(targetBatch._id);
+		expect(student.batchLabel).toBe(targetBatch.label);
+	});
+
+	test("moves a student into a class without batches and clears batchId", async ({
+		user1,
+		ins1,
+		classes,
+		asOwner,
+	}) => {
+		const authed = asOwner(user1, ins1);
+		const categories = await authed.mutation(
+			api.student.mutations.ensureCategories,
+			withSlug(ins1, {}),
+		);
+
+		await authed.mutation(
+			api.class.mutations.enableSectionGroups,
+			withSlug(ins1, { id: classes.class1._id }),
+		);
+
+		const studentId = await authed.mutation(
+			api.student.mutations.create,
+			withSlug(
+				ins1,
+				createStudentInput(classes.class1._id, categories[0]._id, {
+					usn: "1MS21CS301",
+					email: "move-student2@example.com",
+				}),
+			),
+		);
+
+		await authed.mutation(
+			api.student.mutations.bulkMove,
+			withSlug(ins1, {
+				studentIds: [studentId],
+				targetClassId: classes.class2._id,
+			}),
+		);
+
+		const student = await authed.query(
+			api.student.queries.getById,
+			withSlug(ins1, { id: studentId }),
+		);
+
+		expect(student.classId).toBe(classes.class2._id);
+		expect(student.batchId).toBeUndefined();
+		expect(student.batchLabel).toBeUndefined();
+	});
+
+	test("rejects moving into a batch-enabled class without a targetBatchId", async ({
+		user1,
+		ins1,
+		classes,
+		asOwner,
+	}) => {
+		const authed = asOwner(user1, ins1);
+		const categories = await authed.mutation(
+			api.student.mutations.ensureCategories,
+			withSlug(ins1, {}),
+		);
+
+		await authed.mutation(
+			api.class.mutations.enableSectionGroups,
+			withSlug(ins1, { id: classes.class1._id }),
+		);
+		await authed.mutation(
+			api.class.mutations.enableSectionGroups,
+			withSlug(ins1, { id: classes.class2._id }),
+		);
+
+		const studentId = await authed.mutation(
+			api.student.mutations.create,
+			withSlug(
+				ins1,
+				createStudentInput(classes.class1._id, categories[0]._id, {
+					usn: "1MS21CS302",
+					email: "move-student3@example.com",
+				}),
+			),
+		);
+
+		await expectAppError(
+			authed.mutation(
+				api.student.mutations.bulkMove,
+				withSlug(ins1, {
+					studentIds: [studentId],
+					targetClassId: classes.class2._id,
+				}),
+			),
+			ERROR_CODES.CLASS.BATCH_REQUIRED,
+		);
+	});
+
+	test("rejects an unknown student", async ({
+		user1,
+		ins1,
+		classes,
+		asOwner,
+		t,
+	}) => {
+		const authed = asOwner(user1, ins1);
+		const categories = await authed.mutation(
+			api.student.mutations.ensureCategories,
+			withSlug(ins1, {}),
+		);
+
+		const studentId = await authed.mutation(
+			api.student.mutations.create,
+			withSlug(
+				ins1,
+				createStudentInput(classes.class1._id, categories[0]._id, {
+					usn: "1MS21CS303",
+					email: "move-student4@example.com",
+				}),
+			),
+		);
+
+		await t.run(async (ctx) => {
+			await ctx.db.delete("students", studentId);
+		});
+
+		await expectAppError(
+			authed.mutation(
+				api.student.mutations.bulkMove,
+				withSlug(ins1, {
+					studentIds: [studentId],
+					targetClassId: classes.class2._id,
+				}),
+			),
+			ERROR_CODES.STUDENT.NOT_FOUND,
 		);
 	});
 });

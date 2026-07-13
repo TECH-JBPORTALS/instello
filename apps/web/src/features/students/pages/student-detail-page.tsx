@@ -14,17 +14,17 @@ import { PageHeader, PageHeaderStart } from "@/components/common/page-header";
 import { useInsQuery } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
-import { getStudentDisplayName } from "./forms/shared-form";
-import { StudentSettingsSection } from "./sections/student-settings-section";
-import { StudentAvatar } from "./student-avatar";
-import { studentsListPath } from "./student-path";
+import { StudentAvatar } from "../components/student-avatar";
+import { StudentSettingsSection } from "../components/student-settings-section";
+import { getStudentDisplayName } from "../forms/shared-form";
+import { studentsListPath } from "../student-path";
 
 export function StudentDetailPage() {
 	const { studentId } = useParams<{ studentId: string }>();
 	const programAlias = useProgramAlias();
 	const classSlug = useClassSlug();
 	const student = useInsQuery(
-		api.students.getById,
+		api.student.queries.getById,
 		studentId ? { id: studentId as Id<"students"> } : "skip",
 	);
 

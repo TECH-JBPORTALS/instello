@@ -18,8 +18,8 @@ import {
 	IconTableImport,
 } from "@tabler/icons-react";
 import { useState } from "react";
-import { ImportStudentsDialog } from "./dialogs/import-students-dialog";
-import { NewStudentDialog } from "./dialogs/new-student-dialog";
+import { ImportStudentsDialog } from "./import-students-dialog";
+import { NewStudentDialog } from "./new-student-dialog";
 
 export function AddStudentButton({
 	classId,

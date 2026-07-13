@@ -3,7 +3,7 @@
 import { api } from "@instello/convex/api";
 import type { Id } from "@instello/convex/dataModel";
 import * as v from "valibot";
-import { InlineTextField } from "@/features/students/sections/fields/inline-text-field";
+import { InlineTextField } from "@/components/common/inline-text-field";
 import { useInsMutation } from "@/hooks/convex-react";
 
 type ProgramFieldProps = {

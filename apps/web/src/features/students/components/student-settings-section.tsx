@@ -1,6 +1,5 @@
 "use client";
 
-import type { Id } from "@instello/convex/dataModel";
 import {
 	Card,
 	CardDescription,
@@ -15,55 +14,28 @@ import {
 	ItemGroup,
 	ItemTitle,
 } from "@instello/ui/components/item";
-import type { GenderOption } from "../constants";
-import { StudentImageField } from "./fields/student-image-field";
-import {
-	CategoryField,
-	GenderField,
-	StateField,
-} from "./fields/student-select-fields";
 import {
 	AddressLineField,
 	ApaarIdField,
+	CategoryField,
 	CityField,
 	EmailField,
 	FatherNameField,
 	FatherPhoneField,
 	FirstNameField,
+	GenderField,
 	LastNameField,
 	MotherNameField,
 	MotherPhoneField,
 	PhoneField,
 	PostalCodeField,
+	StateField,
+	StudentImageField,
+	type StudentSettingsProps,
 	UsnField,
-} from "./fields/student-text-fields";
+} from "./student-settings-fields";
 
-type StudentSettingsSectionProps = {
-	student: {
-		_id: Id<"students">;
-		firstName: string;
-		lastName: string;
-		usn: string;
-		email: string;
-		gender: GenderOption;
-		categoryId: Id<"institutionStudentCategories">;
-		phoneNumber: string;
-		apaarId?: string;
-		image?: string;
-		fatherName?: string;
-		fatherPhoneNumber?: string;
-		motherName?: string;
-		motherPhoneNumber?: string;
-		addressLine?: string;
-		city?: string;
-		state?: string;
-		postalCode?: string;
-	};
-};
-
-export function StudentSettingsSection({
-	student,
-}: StudentSettingsSectionProps) {
+export function StudentSettingsSection({ student }: StudentSettingsProps) {
 	return (
 		<div className="space-y-8">
 			<Card className="bg-transparent! shadow-none! ring-0!">

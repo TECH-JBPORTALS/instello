@@ -2,7 +2,7 @@ import { internal } from "../_generated/api";
 import { internalMutation } from "../_generated/server";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import { insMutation } from "../helpers/customFunctions";
-import * as Student from "../model/student";
+import * as Student from "../student/model/student";
 import * as Program from "../program/model/program";
 import { vv } from "../schema";
 import * as Class from "./model/class";

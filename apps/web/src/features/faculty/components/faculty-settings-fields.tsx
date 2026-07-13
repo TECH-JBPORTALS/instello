@@ -12,7 +12,7 @@ import { Spinner } from "@instello/ui/components/spinner";
 import { revalidateLogic, useForm } from "@tanstack/react-form-nextjs";
 import { useEffect, useState } from "react";
 import * as v from "valibot";
-import { InlineTextField } from "@/features/students/sections/fields/inline-text-field";
+import { InlineTextField } from "@/components/common/inline-text-field";
 import { useInsMutation } from "@/hooks/convex-react";
 import { getConvexErrorMessage } from "@/lib/convex-error";
 import {

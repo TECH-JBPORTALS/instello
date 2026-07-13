@@ -12,7 +12,7 @@ import { Spinner } from "@instello/ui/components/spinner";
 import { useMutation } from "convex/react";
 import { useState } from "react";
 import * as v from "valibot";
-import { InlineTextField } from "@/features/students/sections/fields/inline-text-field";
+import { InlineTextField } from "@/components/common/inline-text-field";
 import { getConvexErrorMessage } from "@/lib/convex-error";
 import { INDIAN_STATES } from "@/lib/indian-states";
 
