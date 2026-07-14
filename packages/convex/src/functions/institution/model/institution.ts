@@ -1,4 +1,4 @@
-import type { AppQueryCtx } from "@/model/common.types";
+import type { AppQueryCtx } from "#model/common.types";
 import type { InstitutionListItem } from "../validator/institution";
 import * as InstitutionAcademicPattern from "./institutionAcademicPattern";
 

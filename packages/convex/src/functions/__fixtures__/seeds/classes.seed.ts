@@ -1,5 +1,5 @@
-import type { Doc, Id } from "@/_generated/dataModel";
-import type { AppMutationCtx } from "@/model/common.types";
+import type { AppMutationCtx } from "#/model/common.types";
+import type { Doc, Id } from "#_generated/dataModel";
 import { CLASS_1, CLASS_2, CLASS_3 } from "../constants.setup";
 
 export type SeededClasses = {

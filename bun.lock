@@ -82,7 +82,7 @@
         "@types/react": "catalog:",
         "@types/react-dom": "catalog:",
         "convex-test": "^0.0.53",
-        "typescript": "6.0.3",
+        "typescript": "catalog:",
         "vite": "catalog:",
         "vitest": "catalog:",
       },
@@ -96,9 +96,11 @@
         "react-email": "6.8.1",
       },
       "devDependencies": {
+        "@biomejs/biome": "catalog:",
         "@react-email/ui": "6.8.1",
         "@types/react": "19.2.14",
         "@types/react-dom": "19.2.3",
+        "typescript": "catalog:",
       },
     },
     "packages/ui": {

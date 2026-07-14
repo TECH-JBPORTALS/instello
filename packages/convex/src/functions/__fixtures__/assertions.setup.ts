@@ -1,5 +1,5 @@
 import { expect } from "vitest";
-import type { AppErrorCode } from "@/helpers/constants";
+import type { AppErrorCode } from "#helpers/constants";
 
 export async function expectAppError(
 	promise: Promise<unknown>,

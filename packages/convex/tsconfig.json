@@ -12,10 +12,9 @@
 		"skipLibCheck": true,
 		"noEmit": true,
 		"jsx": "preserve",
-		"types": ["node", "vitest/globals", "vite/client"],
-		"paths": {
-			"@/*": ["./src/functions/*"]
-		}
+		"rootDir": ".",
+		"outDir": "dist",
+		"types": ["node", "vitest/globals", "vite/client"]
 	},
 	"include": ["src/**/*", "convex-dev.d.ts"],
 	"exclude": ["**/_generated/**/*", "node_modules"]

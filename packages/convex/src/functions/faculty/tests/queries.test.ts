@@ -5,9 +5,9 @@ import {
 	institutionTest,
 	seedFaculty,
 	withSlug,
-} from "@/__fixtures__/index.setup";
-import { api } from "@/_generated/api";
-import { ERROR_CODES } from "@/helpers/constants";
+} from "#__fixtures__/index.setup";
+import { api } from "#_generated/api";
+import { ERROR_CODES } from "#helpers/constants";
 
 const test = institutionTest();
 

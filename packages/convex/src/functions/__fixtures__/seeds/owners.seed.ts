@@ -1,5 +1,5 @@
-import { components } from "@/_generated/api";
-import type { AppMutationCtx } from "@/model/common.types";
+import { components } from "#_generated/api";
+import type { AppMutationCtx } from "#model/common.types";
 import {
 	OWNER_1_EMAIL,
 	OWNER_1_NAME,

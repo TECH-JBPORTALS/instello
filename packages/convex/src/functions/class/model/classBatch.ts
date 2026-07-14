@@ -1,6 +1,6 @@
-import type { Doc, Id } from "@/_generated/dataModel";
-import { ERROR_CODES, throwAppError } from "@/helpers/constants";
-import type { AppMutationCtx, AppQueryCtx } from "@/model/common.types";
+import type { Doc, Id } from "#_generated/dataModel";
+import { ERROR_CODES, throwAppError } from "#helpers/constants";
+import type { AppMutationCtx, AppQueryCtx } from "#model/common.types";
 import type {
 	BatchDto,
 	BatchNamingConvention,

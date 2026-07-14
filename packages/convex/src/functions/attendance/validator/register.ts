@@ -1,5 +1,5 @@
 import type { Infer } from "convex/values";
-import { vv } from "@/schema";
+import { vv } from "#schema";
 import { SessionStatusSchema } from "./session";
 
 export const RegisterStatusSchema = vv.union(

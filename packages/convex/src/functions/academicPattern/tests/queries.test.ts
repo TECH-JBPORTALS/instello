@@ -1,7 +1,7 @@
 import { describe, expect } from "vitest";
-import { expectAppError, ownerOrgTest } from "@/__fixtures__/index.setup";
-import { api } from "@/_generated/api";
-import { ERROR_CODES } from "@/helpers/constants";
+import { expectAppError, ownerOrgTest } from "#__fixtures__/index.setup";
+import { api } from "#_generated/api";
+import { ERROR_CODES } from "#helpers/constants";
 
 describe("academicPatterns.list", () => {
 	const test = ownerOrgTest();

@@ -1,6 +1,6 @@
 import type { Infer } from "convex/values";
-import { ClassStageSummarySchema } from "@/class/validator/class";
-import { vv } from "@/schema";
+import { ClassStageSummarySchema } from "#class/validator/class";
+import { vv } from "#schema";
 
 export const PeriodTimeSchema = vv.object({
 	startTime: vv.number(),

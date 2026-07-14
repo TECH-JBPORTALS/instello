@@ -1,7 +1,7 @@
-import type { Doc, Id } from "@/_generated/dataModel";
-import * as AcademicStage from "@/academicPattern/model/academicStage";
-import * as InstitutionAcademicPattern from "@/institution/model/institutionAcademicPattern";
-import type { AppMutationCtx } from "@/model/common.types";
+import type { Doc, Id } from "#_generated/dataModel";
+import * as AcademicStage from "#academicPattern/model/academicStage";
+import * as InstitutionAcademicPattern from "#institution/model/institutionAcademicPattern";
+import type { AppMutationCtx } from "#model/common.types";
 
 export type SeededAcademicAdoptions = {
 	ins1PatternId: Id<"academicPatterns">;

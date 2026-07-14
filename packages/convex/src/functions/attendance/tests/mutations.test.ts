@@ -5,9 +5,9 @@ import {
 	expectAppError,
 	seedSubjects,
 	withSlug,
-} from "@/__fixtures__/index.setup";
-import { api } from "@/_generated/api";
-import type { Id } from "@/_generated/dataModel";
+} from "#__fixtures__/index.setup";
+import { api } from "#_generated/api";
+import type { Id } from "#_generated/dataModel";
 import {
 	ATTENDANCE_GRACE_PERIOD_MS,
 	formatTimeRange,
@@ -15,12 +15,12 @@ import {
 	sessionDateToDayStartMs,
 	sessionWindowMs,
 	weekdayFromSessionDate,
-} from "@/helpers/academicSchedule";
-import { ERROR_CODES } from "@/helpers/constants";
+} from "#helpers/academicSchedule";
+import { ERROR_CODES } from "#helpers/constants";
 import {
 	buildDefaultPeriods,
 	DEFAULT_TIMETABLE_SESSION_CONFIG,
-} from "@/helpers/timetableSchedule";
+} from "#helpers/timetableSchedule";
 import {
 	computeSessionStatus,
 	pickHighlightSession,

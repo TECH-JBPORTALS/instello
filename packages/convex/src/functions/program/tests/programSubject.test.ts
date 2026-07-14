@@ -3,9 +3,9 @@ import {
 	expectAppError,
 	programSubjectTest,
 	withSlug,
-} from "@/__fixtures__/index.setup";
-import { api } from "@/_generated/api";
-import { ERROR_CODES } from "@/helpers/constants";
+} from "#__fixtures__/index.setup";
+import { api } from "#_generated/api";
+import { ERROR_CODES } from "#helpers/constants";
 
 describe("program.allocateSubjects", () => {
 	const test = programSubjectTest();

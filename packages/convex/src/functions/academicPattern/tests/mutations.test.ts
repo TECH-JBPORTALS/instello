@@ -4,9 +4,9 @@ import {
 	ownerOrgInstitutionTest,
 	ownerOrgTest,
 	ownerUserIdentity,
-} from "@/__fixtures__/index.setup";
-import { api } from "@/_generated/api";
-import { ERROR_CODES } from "@/helpers/constants";
+} from "#__fixtures__/index.setup";
+import { api } from "#_generated/api";
+import { ERROR_CODES } from "#helpers/constants";
 
 describe("ownerOrganizations.create", () => {
 	const test = ownerOrgTest();

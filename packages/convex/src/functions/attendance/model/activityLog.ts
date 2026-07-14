@@ -1,6 +1,6 @@
-import { components } from "@/_generated/api";
-import type { Id } from "@/_generated/dataModel";
-import type { AppMutationCtx, AppQueryCtx } from "@/model/common.types";
+import { components } from "#_generated/api";
+import type { Id } from "#_generated/dataModel";
+import type { AppMutationCtx, AppQueryCtx } from "#model/common.types";
 import { splitUserName } from "../helpers";
 import type { ActivityChange, ActivityLogDto } from "../validator/activity";
 import type { EntryStatus } from "../validator/record";

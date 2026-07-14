@@ -3,8 +3,8 @@ import {
 	classTest,
 	createStudentInput,
 	withSlug,
-} from "@/__fixtures__/index.setup";
-import { api } from "@/_generated/api";
+} from "#__fixtures__/index.setup";
+import { api } from "#_generated/api";
 
 const test = classTest();
 

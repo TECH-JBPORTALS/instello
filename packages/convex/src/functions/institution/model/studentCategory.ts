@@ -1,5 +1,5 @@
-import type { Doc, Id } from "@/_generated/dataModel";
-import type { AppMutationCtx, AppQueryCtx } from "@/model/common.types";
+import type { Doc, Id } from "#_generated/dataModel";
+import type { AppMutationCtx, AppQueryCtx } from "#model/common.types";
 import type { CategoryDto } from "../validator/studentCategory";
 
 export type { CategoryDto } from "../validator/studentCategory";

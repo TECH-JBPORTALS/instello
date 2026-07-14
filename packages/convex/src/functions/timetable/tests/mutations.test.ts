@@ -4,11 +4,11 @@ import {
 	expectAppError,
 	seedSubjects,
 	withSlug,
-} from "@/__fixtures__/index.setup";
-import { api } from "@/_generated/api";
-import type { Id } from "@/_generated/dataModel";
-import { ERROR_CODES } from "@/helpers/constants";
-import { buildDefaultPeriods, timeOfDayMs } from "@/helpers/timetableSchedule";
+} from "#/__fixtures__/index.setup";
+import { api } from "#_generated/api";
+import type { Id } from "#_generated/dataModel";
+import { ERROR_CODES } from "#helpers/constants";
+import { buildDefaultPeriods, timeOfDayMs } from "#helpers/timetableSchedule";
 
 const timetableTest = classTest().extend(
 	"subjects",

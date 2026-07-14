@@ -1,4 +1,4 @@
-import { ERROR_CODES } from "@/helpers/constants";
+import { ERROR_CODES } from "#helpers/constants";
 import { expectAppError } from "./assertions.setup";
 
 export const expectUnauthorized = {

@@ -1,5 +1,5 @@
-import type { Doc } from "@/_generated/dataModel";
-import type { AppMutationCtx } from "@/model/common.types";
+import type { Doc } from "#_generated/dataModel";
+import type { AppMutationCtx } from "#model/common.types";
 import {
 	SUBJECT_APPLIED_SCIENCE,
 	SUBJECT_MATH,

@@ -1,12 +1,12 @@
-import { components } from "@/_generated/api";
-import type { Doc, Id } from "@/_generated/dataModel";
-import * as Class from "@/class/model/class";
-import * as ClassBatch from "@/class/model/classBatch";
-import { ERROR_CODES, throwAppError } from "@/helpers/constants";
-import { normalizeSessionConfig } from "@/helpers/timetableSchedule";
-import type { AppMutationCtx, AppQueryCtx } from "@/model/common.types";
-import * as Program from "@/program/model/program";
-import * as Subject from "@/subject/model/subject";
+import { components } from "#_generated/api";
+import type { Doc, Id } from "#_generated/dataModel";
+import * as Class from "#class/model/class";
+import * as ClassBatch from "#class/model/classBatch";
+import { ERROR_CODES, throwAppError } from "#helpers/constants";
+import { normalizeSessionConfig } from "#helpers/timetableSchedule";
+import type { AppMutationCtx, AppQueryCtx } from "#model/common.types";
+import * as Program from "#program/model/program";
+import * as Subject from "#subject/model/subject";
 import * as Timetable from "../model/timetable";
 import * as TimetableSlot from "../model/timetableSlot";
 import type {

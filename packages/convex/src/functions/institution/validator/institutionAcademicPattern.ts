@@ -1,5 +1,5 @@
 import type { Infer } from "convex/values";
-import { vv } from "@/schema";
+import { vv } from "#schema";
 
 export const AdoptedPatternSummarySchema = vv.object({
 	_id: vv.id("academicPatterns"),
