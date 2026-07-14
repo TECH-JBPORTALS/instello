@@ -17,7 +17,12 @@ import {
 	PageHeaderStart,
 	PageHeaderTitle,
 } from "@/components/common/page-header";
-import { TimetableEditorShell } from "@/components/timetable/timetable";
+import { TimetableEditorShell } from "@/components/timetable/timetable-editor-shell";
+import type {
+	TimetableBatchOption,
+	TimetableSubjectOption,
+} from "@/components/timetable/types";
+import { useTimetableEditor } from "@/components/timetable/use-timetable-editor";
 import {
 	createDefaultSessionConfig,
 	dtoToHourSpans,
@@ -28,12 +33,7 @@ import {
 	mapProgramSubjects,
 	sessionConfigEqual,
 	type TimetableDto,
-} from "@/components/timetable/timetable-mappers";
-import type {
-	TimetableBatchOption,
-	TimetableSubjectOption,
-} from "@/components/timetable/types";
-import { useTimetableEditor } from "@/components/timetable/use-timetable-editor";
+} from "@/features/timetable/mappers";
 import { useInsMutation, useInsQuery } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
@@ -89,7 +89,7 @@ function TimetableEditorLoaded({
 		batches,
 	});
 
-	const createTimetable = useInsMutation(api.timetables.create);
+	const createTimetable = useInsMutation(api.timetable.mutations.create);
 
 	const hasChanges = latestTimetable
 		? !hourSpansEqual(editor.spans, initialSpans) ||
@@ -198,7 +198,7 @@ function TimetableSavePanel({
 	);
 }
 
-export function TimetableEditorView({ basePath }: { basePath: string }) {
+export function ClassTimetableEditorPage({ basePath }: { basePath: string }) {
 	const programAlias = useProgramAlias();
 	const classSlug = useClassSlug();
 
@@ -211,7 +211,7 @@ export function TimetableEditorView({ basePath }: { basePath: string }) {
 	);
 
 	const latestTimetable = useInsQuery(
-		api.timetables.getOrNull,
+		api.timetable.queries.getOrNull,
 		program && classSlug
 			? { programId: program._id, classAlias: classSlug }
 			: "skip",

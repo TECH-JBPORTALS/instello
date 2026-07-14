@@ -182,7 +182,7 @@ export async function list(
 }
 
 export async function getById(
-	ctx: AppQueryCtx,
+	ctx: AppQueryCtx | AppMutationCtx,
 	id: Id<"subjects">,
 	institutionId?: string,
 ) {

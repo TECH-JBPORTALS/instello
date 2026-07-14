@@ -15,11 +15,11 @@ import {
 } from "@/components/common/page-header";
 import { AttendanceRegisterView } from "@/features/c/[slug]/attendance/attendance-register-view";
 import { AttendanceView } from "@/features/c/[slug]/attendance/attendance-view";
-import { TimetableEditorView } from "@/features/c/[slug]/timetable/timetable-editor-view";
-import { TimetableHistoryView } from "@/features/c/[slug]/timetable/timetable-history-view";
-import { TimetableView } from "@/features/c/[slug]/timetable/timetable-view";
 import { classPath } from "@/features/classes/class-path";
 import { StudentsListPage } from "@/features/students/pages/students-list-page";
+import { ClassTimetableEditorPage } from "@/features/timetable/pages/class-timetable-editor-page";
+import { ClassTimetableHistoryPage } from "@/features/timetable/pages/class-timetable-history-page";
+import { ClassTimetablePage } from "@/features/timetable/pages/class-timetable-page";
 import { useInsQuery, useInstitutionSlug } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
@@ -110,7 +110,9 @@ export function TimetablePage() {
 	const programAlias = useProgramAlias();
 	const classSlug = useClassSlug();
 	return (
-		<TimetableView basePath={classPath(programAlias, classSlug, "timetable")} />
+		<ClassTimetablePage
+			basePath={classPath(programAlias, classSlug, "timetable")}
+		/>
 	);
 }
 
@@ -118,7 +120,7 @@ export function TimetableEditorPage() {
 	const programAlias = useProgramAlias();
 	const classSlug = useClassSlug();
 	return (
-		<TimetableEditorView
+		<ClassTimetableEditorPage
 			basePath={classPath(programAlias, classSlug, "timetable")}
 		/>
 	);
@@ -128,7 +130,7 @@ export function TimetableHistoryPage() {
 	const programAlias = useProgramAlias();
 	const classSlug = useClassSlug();
 	return (
-		<TimetableHistoryView
+		<ClassTimetableHistoryPage
 			basePath={classPath(programAlias, classSlug, "timetable")}
 		/>
 	);

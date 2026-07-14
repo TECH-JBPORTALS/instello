@@ -7,7 +7,6 @@ import {
 	createDefaultSessionConfig,
 	sessionConfigsEqual,
 } from "@/components/timetable/timetable-config-utils";
-import type { TimetableItem } from "@/components/timetable/timetable-display";
 import type {
 	TimetablePublishInfoProps,
 	TimetableVersionEntry,
@@ -20,14 +19,16 @@ import type {
 } from "@/components/timetable/types";
 
 export type TimetableDto = NonNullable<
-	FunctionReturnType<typeof api.timetables.getOrNull>
+	FunctionReturnType<typeof api.timetable.queries.getOrNull>
 >;
 
 export type TimetableVersionDto = FunctionReturnType<
-	typeof api.timetables.listVersions
+	typeof api.timetable.queries.listVersions
 >[number];
 
-type SlotInput = FunctionArgs<typeof api.timetables.create>["slots"][number];
+type SlotInput = FunctionArgs<
+	typeof api.timetable.mutations.create
+>["slots"][number];
 
 type ProgramSubjectListItem = FunctionReturnType<
 	typeof api.program.queries.listSubjectsByStage
@@ -110,18 +111,6 @@ export function hourSpansEqual(
 		JSON.stringify(normalizeSlotInputs(hourSpansToSlotInputs(current))) ===
 		JSON.stringify(normalizeSlotInputs(hourSpansToSlotInputs(initial)))
 	);
-}
-
-export function dtoToTimetableItems(timetable: TimetableDto): TimetableItem[] {
-	return timetable.slots.map((slot) => ({
-		day: slot.day,
-		startHour: slot.startHour,
-		endHour: slot.endHour,
-		subject: slot.subject.name,
-		room: slot.room,
-		batch: slot.batch?.name,
-		color: slot.subject.color,
-	}));
 }
 
 export function mapProgramSubjects(

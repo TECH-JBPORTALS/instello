@@ -6,8 +6,10 @@ import * as AttendanceRecord from "./model/attendanceRecord";
 import * as AttendanceRegister from "./model/attendanceRegister";
 import * as AttendanceSession from "./model/attendanceSession";
 import * as AttendanceSessionDetails from "./model/attendanceSessionDetails";
-import * as Timetable from "./model/timetable";
 import { vv } from "./schema";
+import * as Timetable from "./timetable/model/timetable";
+import * as TimetableSlot from "./timetable/model/timetableSlot";
+import * as TimetableService from "./timetable/service/timetable";
 
 const TimeContextSchema = {
 	now: vv.number(),
@@ -30,7 +32,7 @@ export const bootstrapRegisters = insMutation({
 	},
 	returns: vv.null(),
 	handler: async (ctx, args) => {
-		const cls = await Timetable.resolveClass(ctx, {
+		const cls = await TimetableService.resolveClass(ctx, {
 			programId: args.programId,
 			classAlias: args.classSlug,
 			institutionId: ctx.institution._id,
@@ -41,10 +43,7 @@ export const bootstrapRegisters = insMutation({
 			return null;
 		}
 
-		const slots = await ctx.db
-			.query("timetableSlots")
-			.withIndex("by_timetable", (q) => q.eq("timetableId", latest._id))
-			.collect();
+		const slots = await TimetableSlot.listByTimetable(ctx, latest._id);
 
 		await AttendanceRegister.syncFromTimetable(ctx, {
 			classId: cls._id,
@@ -73,7 +72,7 @@ export const listRegisters = insQuery({
 	},
 	returns: vv.array(AttendanceRegister.AttendanceRegisterDtoSchema),
 	handler: async (ctx, args) => {
-		const cls = await Timetable.resolveClass(ctx, {
+		const cls = await TimetableService.resolveClass(ctx, {
 			programId: args.programId,
 			classAlias: args.classSlug,
 			institutionId: ctx.institution._id,

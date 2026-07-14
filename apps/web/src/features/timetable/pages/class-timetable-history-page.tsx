@@ -21,8 +21,8 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import Container from "@/components/common/container";
 import { PageHeader, PageHeaderStart } from "@/components/common/page-header";
-import { mapVersionSummaries } from "@/components/timetable/timetable-mappers";
 import type { TimetableVersionEntry } from "@/components/timetable/timetable-publish-info";
+import { mapVersionSummaries } from "@/features/timetable/mappers";
 import { useInsQuery } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
@@ -39,7 +39,7 @@ function TimetableHistorySkeleton() {
 	);
 }
 
-export function TimetableHistoryView({ basePath }: { basePath: string }) {
+export function ClassTimetableHistoryPage({ basePath }: { basePath: string }) {
 	const programAlias = useProgramAlias();
 	const classSlug = useClassSlug();
 
@@ -52,7 +52,7 @@ export function TimetableHistoryView({ basePath }: { basePath: string }) {
 	);
 
 	const versions = useInsQuery(
-		api.timetables.listVersions,
+		api.timetable.queries.listVersions,
 		program && classSlug
 			? { programId: program._id, classAlias: classSlug }
 			: "skip",

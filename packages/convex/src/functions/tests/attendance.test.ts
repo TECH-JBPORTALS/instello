@@ -95,7 +95,7 @@ describe("attendance register sync", () => {
 		user1,
 	}) => {
 		await asOwner(user1, ins1).mutation(
-			api.timetables.create,
+			api.timetable.mutations.create,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				classAlias: classes.class1.slug,
@@ -134,7 +134,7 @@ describe("attendance register sync", () => {
 		};
 
 		await authed.mutation(
-			api.timetables.create,
+			api.timetable.mutations.create,
 			withSlug(ins1, {
 				...base,
 				changeMessage: "v1",
@@ -147,7 +147,7 @@ describe("attendance register sync", () => {
 		);
 
 		await authed.mutation(
-			api.timetables.create,
+			api.timetable.mutations.create,
 			withSlug(ins1, {
 				...base,
 				changeMessage: "v2",
@@ -187,7 +187,7 @@ describe("attendance.listSessions", () => {
 		const session = testSessionContext();
 		const authed = asOwner(user1, ins1);
 		await authed.mutation(
-			api.timetables.create,
+			api.timetable.mutations.create,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				classAlias: classes.class1.slug,
@@ -248,7 +248,7 @@ describe("attendance.listSessions", () => {
 		const sessionConfig = DEFAULT_TIMETABLE_SESSION_CONFIG;
 
 		await authed.mutation(
-			api.timetables.create,
+			api.timetable.mutations.create,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				classAlias: classes.class1.slug,
@@ -309,7 +309,7 @@ describe("attendance.mark", () => {
 		const session = testSessionContext();
 		const authed = asOwner(user1, ins1);
 		await authed.mutation(
-			api.timetables.create,
+			api.timetable.mutations.create,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				classAlias: classes.class1.slug,
@@ -388,7 +388,7 @@ describe("attendance.mark", () => {
 		};
 
 		await authed.mutation(
-			api.timetables.create,
+			api.timetable.mutations.create,
 			withSlug(ins1, {
 				...base,
 				changeMessage: "v1",
@@ -413,7 +413,7 @@ describe("attendance.mark", () => {
 		)!;
 
 		await authed.mutation(
-			api.timetables.create,
+			api.timetable.mutations.create,
 			withSlug(ins1, {
 				...base,
 				changeMessage: "v2",
@@ -458,7 +458,7 @@ describe("attendance.mark", () => {
 		const session = testSessionContext();
 		const authed = asOwner(user1, ins1);
 		await authed.mutation(
-			api.timetables.create,
+			api.timetable.mutations.create,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				classAlias: classes.class1.slug,
@@ -537,7 +537,7 @@ describe("attendance.mark", () => {
 		const session = testSessionContext();
 		const authed = asOwner(user1, ins1);
 		await authed.mutation(
-			api.timetables.create,
+			api.timetable.mutations.create,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				classAlias: classes.class1.slug,
@@ -624,7 +624,7 @@ describe("attendance.mark", () => {
 		const session = testSessionContext();
 		const authed = asOwner(user1, ins1);
 		await authed.mutation(
-			api.timetables.create,
+			api.timetable.mutations.create,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				classAlias: classes.class1.slug,

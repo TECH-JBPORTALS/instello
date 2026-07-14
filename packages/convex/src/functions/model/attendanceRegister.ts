@@ -6,10 +6,10 @@ import * as ClassBatch from "../class/model/classBatch";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import * as ProgramSubject from "../program/model/programSubject";
 import { vv } from "../schema";
+import type { SlotInput } from "../timetable/validator/timetable";
 import * as AttendanceActivityLog from "./attendanceActivityLog";
 import * as AttendanceSession from "./attendanceSession";
 import type { AppMutationCtx, AppQueryCtx } from "./common.types";
-import type { SlotInput } from "./timetable";
 
 export const RegisterStatusSchema = vv.union(
 	vv.literal("active"),

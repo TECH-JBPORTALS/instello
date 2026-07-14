@@ -1,37 +1,14 @@
-import { ERROR_CODES, throwAppError } from "./helpers/constants";
-import { insMutation, insQuery } from "./helpers/customFunctions";
+import { ERROR_CODES, throwAppError } from "../helpers/constants";
+import { insQuery } from "../helpers/customFunctions";
+import * as Program from "../program/model/program";
+import { vv } from "../schema";
 import * as Timetable from "./model/timetable";
-import * as Program from "./program/model/program";
-import { vv } from "./schema";
-
-/** Create a new timetable version for the class */
-export const create = insMutation({
-	permissions: ["class:update"],
-	args: {
-		programId: vv.id("programs"),
-		classAlias: vv.string(),
-		changeMessage: vv.string(),
-		slots: vv.array(Timetable.SlotInputSchema),
-		sessionConfig: vv.optional(Timetable.TimetableSessionConfigSchema),
-	},
-	returns: Timetable.TimetableDtoSchema,
-	handler: async (ctx, args) => {
-		const cls = await Timetable.resolveClass(ctx, {
-			programId: args.programId,
-			classAlias: args.classAlias,
-			institutionId: ctx.institution._id,
-		});
-
-		return await Timetable.create(ctx, {
-			classId: cls._id,
-			institutionId: ctx.institution._id,
-			createdBy: ctx.session.userId,
-			changeMessage: args.changeMessage,
-			slots: args.slots,
-			sessionConfig: args.sessionConfig,
-		});
-	},
-});
+import * as TimetableService from "./service/timetable";
+import {
+	ProgramTimetableListItemSchema,
+	TimetableDtoSchema,
+	TimetableVersionDtoSchema,
+} from "./validator/timetable";
 
 /** Get latest timetable for class, or null when none exists */
 export const getOrNull = insQuery({
@@ -40,9 +17,9 @@ export const getOrNull = insQuery({
 		programId: vv.id("programs"),
 		classAlias: vv.string(),
 	},
-	returns: vv.union(Timetable.TimetableDtoSchema, vv.null()),
+	returns: vv.union(TimetableDtoSchema, vv.null()),
 	handler: async (ctx, args) => {
-		const cls = await Timetable.resolveClass(ctx, {
+		const cls = await TimetableService.resolveClass(ctx, {
 			programId: args.programId,
 			classAlias: args.classAlias,
 			institutionId: ctx.institution._id,
@@ -53,7 +30,7 @@ export const getOrNull = insQuery({
 			return null;
 		}
 
-		return await Timetable.toDto(ctx, latest);
+		return await TimetableService.toDto(ctx, latest);
 	},
 });
 
@@ -64,9 +41,9 @@ export const get = insQuery({
 		programId: vv.id("programs"),
 		classAlias: vv.string(),
 	},
-	returns: Timetable.TimetableDtoSchema,
+	returns: TimetableDtoSchema,
 	handler: async (ctx, args) => {
-		const cls = await Timetable.resolveClass(ctx, {
+		const cls = await TimetableService.resolveClass(ctx, {
 			programId: args.programId,
 			classAlias: args.classAlias,
 			institutionId: ctx.institution._id,
@@ -77,7 +54,7 @@ export const get = insQuery({
 			throwAppError(ERROR_CODES.TIMETABLE.NOT_FOUND);
 		}
 
-		return await Timetable.toDto(ctx, latest);
+		return await TimetableService.toDto(ctx, latest);
 	},
 });
 
@@ -88,15 +65,15 @@ export const listVersions = insQuery({
 		programId: vv.id("programs"),
 		classAlias: vv.string(),
 	},
-	returns: vv.array(Timetable.TimetableVersionDtoSchema),
+	returns: vv.array(TimetableVersionDtoSchema),
 	handler: async (ctx, args) => {
-		const cls = await Timetable.resolveClass(ctx, {
+		const cls = await TimetableService.resolveClass(ctx, {
 			programId: args.programId,
 			classAlias: args.classAlias,
 			institutionId: ctx.institution._id,
 		});
 
-		return await Timetable.listVersions(ctx, cls._id);
+		return await TimetableService.listVersions(ctx, cls._id);
 	},
 });
 
@@ -108,9 +85,9 @@ export const getByVersion = insQuery({
 		classAlias: vv.string(),
 		version: vv.number(),
 	},
-	returns: Timetable.TimetableDtoSchema,
+	returns: TimetableDtoSchema,
 	handler: async (ctx, args) => {
-		const cls = await Timetable.resolveClass(ctx, {
+		const cls = await TimetableService.resolveClass(ctx, {
 			programId: args.programId,
 			classAlias: args.classAlias,
 			institutionId: ctx.institution._id,
@@ -121,7 +98,7 @@ export const getByVersion = insQuery({
 			throwAppError(ERROR_CODES.TIMETABLE.VERSION_NOT_FOUND);
 		}
 
-		return await Timetable.toDto(ctx, timetable);
+		return await TimetableService.toDto(ctx, timetable);
 	},
 });
 
@@ -131,7 +108,7 @@ export const listByProgram = insQuery({
 	args: {
 		programId: vv.id("programs"),
 	},
-	returns: vv.array(Timetable.ProgramTimetableListItemSchema),
+	returns: vv.array(ProgramTimetableListItemSchema),
 	handler: async (ctx, args) => {
 		const program = await Program.getById(
 			ctx,
@@ -142,7 +119,7 @@ export const listByProgram = insQuery({
 			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
 		}
 
-		return await Timetable.listLatestByProgram(ctx, {
+		return await TimetableService.listLatestByProgram(ctx, {
 			programId: args.programId,
 			institutionId: ctx.institution._id,
 		});

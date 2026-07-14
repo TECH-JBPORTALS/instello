@@ -82,7 +82,10 @@ export async function listByClass(
 	);
 }
 
-export async function getById(ctx: AppQueryCtx, id: Id<"classBatches">) {
+export async function getById(
+	ctx: AppQueryCtx | AppMutationCtx,
+	id: Id<"classBatches">,
+) {
 	const batch = await ctx.db.get("classBatches", id);
 	if (!batch || !isLive(batch)) return null;
 	return batch;

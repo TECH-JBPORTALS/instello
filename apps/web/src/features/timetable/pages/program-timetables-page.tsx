@@ -1,8 +1,6 @@
 "use client";
 
 import { api } from "@instello/convex/api";
-import { Avatar, AvatarFallback } from "@instello/ui/components/avatar";
-import { Badge } from "@instello/ui/components/badge";
 import { Card, CardHeader, CardTitle } from "@instello/ui/components/card";
 import {
 	Empty,
@@ -13,18 +11,12 @@ import {
 } from "@instello/ui/components/empty";
 import {
 	Item,
-	ItemActions,
 	ItemContent,
-	ItemDescription,
 	ItemGroup,
 	ItemMedia,
-	ItemTitle,
 } from "@instello/ui/components/item";
 import { Skeleton } from "@instello/ui/components/skeleton";
-import { IconTable, IconTag, IconUser } from "@tabler/icons-react";
-import type { FunctionReturnType } from "convex/server";
-import { formatDistanceToNow } from "date-fns";
-import Link from "next/link";
+import { IconTable } from "@tabler/icons-react";
 import Container from "@/components/common/container";
 import {
 	PageHeader,
@@ -32,13 +24,13 @@ import {
 	PageHeaderStart,
 	PageHeaderTitle,
 } from "@/components/common/page-header";
-import { programPath } from "@/features/programs/program-path";
+import {
+	ProgramTimetableClassItem,
+	type ProgramTimetableItem,
+} from "@/features/timetable/components/program-timetable-class-item";
 import { useInsQuery } from "@/hooks/convex-react";
 import { useProgramAlias } from "@/hooks/use-program-alias";
 
-type ProgramTimetableItem = FunctionReturnType<
-	typeof api.timetables.listByProgram
->[number];
 type StageSummary = ProgramTimetableItem["class"]["stage"];
 
 interface StageGroup {
@@ -93,73 +85,13 @@ function ProgramTimetablesSkeleton() {
 	);
 }
 
-function ClassTimetableRow({
-	item,
-	programAlias,
-}: {
-	item: ProgramTimetableItem;
-	programAlias: string;
-}) {
-	const { class: cls, timetable } = item;
-
-	return (
-		<Item
-			className="border-x-0 border-t-0 hover:bg-accent/30 last:border-b-0 relative rounded-none border-border!"
-			render={
-				<Link href={programPath(programAlias, `timetables/${cls.slug}`)} />
-			}
-		>
-			<ItemMedia variant="icon">
-				<Avatar size="lg" className="after:rounded-lg">
-					<AvatarFallback className="rounded-lg">
-						<IconTable />
-					</AvatarFallback>
-				</Avatar>
-			</ItemMedia>
-			<ItemContent>
-				<ItemTitle>{cls.name}</ItemTitle>
-				{timetable ? (
-					<div className="flex items-center gap-1.5">
-						<Avatar size="xs">
-							<AvatarFallback>
-								<IconUser className="size-3" />
-							</AvatarFallback>
-						</Avatar>
-						<strong className="text-xs text-muted-foreground">
-							{`${timetable.commitedBy.firstName} ${timetable.commitedBy.lastName}`.trim()}
-						</strong>
-						<span className="text-muted-foreground font-bold">·</span>
-						<ItemDescription className="truncate text-muted-foreground">
-							{timetable.changeMessage}
-						</ItemDescription>
-					</div>
-				) : (
-					<ItemDescription className="text-muted-foreground">
-						Not published yet
-					</ItemDescription>
-				)}
-			</ItemContent>
-			{timetable ? (
-				<ItemActions>
-					<span className="text-xs text-muted-foreground">
-						{formatDistanceToNow(timetable.updatedAt, { addSuffix: true })}
-					</span>
-					<Badge variant="outline" className="gap-1">
-						<IconTag className="size-3" />v{timetable.version}
-					</Badge>
-				</ItemActions>
-			) : null}
-		</Item>
-	);
-}
-
-export function ProgramTimetablesView() {
+export function ProgramTimetablesPage() {
 	const programAlias = useProgramAlias();
 	const program = useInsQuery(api.program.queries.getByAlias, {
 		alias: programAlias,
 	});
 	const items = useInsQuery(
-		api.timetables.listByProgram,
+		api.timetable.queries.listByProgram,
 		program ? { programId: program._id } : "skip",
 	);
 
@@ -203,7 +135,7 @@ export function ProgramTimetablesView() {
 							</CardHeader>
 							<ItemGroup className="bg-card" variant="stack">
 								{group.classes.map((item) => (
-									<ClassTimetableRow
+									<ProgramTimetableClassItem
 										key={item.class._id}
 										item={item}
 										programAlias={programAlias}

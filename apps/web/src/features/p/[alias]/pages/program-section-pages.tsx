@@ -1,11 +1,8 @@
 "use client";
 
 import { api } from "@instello/convex/api";
-import { Button } from "@instello/ui/components/button";
-import { IconArrowLeft } from "@tabler/icons-react";
 import { useConvex } from "convex/react";
 import { ConvexError } from "convex/values";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { useEffect } from "react";
 import Container from "@/components/common/container";
@@ -16,12 +13,10 @@ import {
 	PageHeaderTitle,
 } from "@/components/common/page-header";
 import { UpcomingFeaturePreview } from "@/components/common/upcoming-feature-preview/upcoming-feature-preview";
-import { TimetableHistoryView } from "@/features/c/[slug]/timetable/timetable-history-view";
-import { TimetableView } from "@/features/c/[slug]/timetable/timetable-view";
-import { ProgramTimetablesView } from "@/features/p/[alias]/timetable/program-timetables-view";
-import { programPath } from "@/features/programs/program-path";
+import { ProgramClassTimetableHistoryPage } from "@/features/timetable/pages/program-class-timetable-history-page";
+import { ProgramClassTimetablePage } from "@/features/timetable/pages/program-class-timetable-page";
+import { ProgramTimetablesPage } from "@/features/timetable/pages/program-timetables-page";
 import { useInsQuery, useInstitutionSlug } from "@/hooks/convex-react";
-import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
 import {
 	type FeaturePreviewKey,
@@ -90,47 +85,10 @@ export function FacultyPage() {
 }
 
 export function TimetablesPage() {
-	return <ProgramTimetablesView />;
+	return <ProgramTimetablesPage />;
 }
 
-export function ProgramClassTimetablePage() {
-	const programAlias = useProgramAlias();
-	const classSlug = useClassSlug();
-
-	return (
-		<>
-			<Container className="pb-0">
-				<PageHeader className="h-fit">
-					<PageHeaderStart>
-						<Button
-							nativeButton={false}
-							render={<Link href={programPath(programAlias, `timetables`)} />}
-							variant={"ghost"}
-							className={"rounded-full text-muted-foreground -mx-3.5"}
-						>
-							<IconArrowLeft /> Program Timetables
-						</Button>
-					</PageHeaderStart>
-				</PageHeader>
-			</Container>
-
-			<TimetableView
-				basePath={programPath(programAlias, `timetables/${classSlug}`)}
-			/>
-		</>
-	);
-}
-
-export function ProgramClassTimetableHistoryPage() {
-	const programAlias = useProgramAlias();
-	const classSlug = useClassSlug();
-
-	return (
-		<TimetableHistoryView
-			basePath={programPath(programAlias, `timetables/${classSlug}`)}
-		/>
-	);
-}
+export { ProgramClassTimetableHistoryPage, ProgramClassTimetablePage };
 
 export function AttendancePage() {
 	return (

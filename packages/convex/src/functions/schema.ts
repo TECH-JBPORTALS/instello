@@ -8,6 +8,7 @@ import { institutionTables } from "./institution/schema";
 import { programTables } from "./program/schema";
 import { studentTables } from "./student/schema";
 import { subjectTables } from "./subject/schema";
+import { timetableTables } from "./timetable/schema";
 
 const tables = {
 	/** This model is only for owner who owns an organization.
@@ -55,46 +56,7 @@ const tables = {
 	...subjectTables,
 	...classTables,
 	...studentTables,
-
-	timetable: defineTable({
-		classId: v.id("classes"),
-		version: v.number(),
-		createdBy: v.string(),
-		changeMessage: v.string(),
-		effectiveFrom: v.number(),
-		sessionConfig: v.optional(
-			v.object({
-				totalHours: v.number(),
-				periods: v.array(
-					v.object({
-						startTime: v.number(),
-						endTime: v.number(),
-					}),
-				),
-				lunchBreak: v.optional(
-					v.object({
-						enabled: v.boolean(),
-						afterPeriod: v.number(),
-						startTime: v.number(),
-						endTime: v.number(),
-					}),
-				),
-			}),
-		),
-		createdAt: v.number(),
-		updatedAt: v.number(),
-	}).index("by_class_and_version", ["classId", "version"]),
-
-	timetableSlots: defineTable({
-		timetableId: v.id("timetable"),
-		subjectId: v.id("subjects"),
-		batchId: v.optional(v.id("classBatches")),
-		/** 0 = Monday … 5 = Saturday */
-		day: v.number(),
-		startHour: v.number(),
-		endHour: v.number(),
-		room: v.optional(v.string()),
-	}).index("by_timetable", ["timetableId"]),
+	...timetableTables,
 
 	/** One register per unique subject (+ optional batch) in the class timetable */
 	attendanceRegisters: defineTable({

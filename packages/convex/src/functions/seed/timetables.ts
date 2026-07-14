@@ -19,10 +19,11 @@ import type { Id } from "../_generated/dataModel";
 import { env, internalMutation, type MutationCtx } from "../_generated/server";
 import * as Class from "../class/model/class";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
-import type { SlotInput } from "../model/timetable";
-import * as Timetable from "../model/timetable";
+import * as AttendanceRegister from "../model/attendanceRegister";
 import { vv } from "../schema";
 import * as Subject from "../subject/model/subject";
+import * as Timetable from "../timetable/model/timetable";
+import type { SlotInput } from "../timetable/validator/timetable";
 
 const THEORY_ALIASES = ["mathematics", "engineering-physics"] as const;
 const LAB_ALIASES = ["data-structures-lab", "oop-lab"] as const;
@@ -95,7 +96,7 @@ export const setForClass = internalMutation({
 			`🌱 Seeding timetable for class ${cls.name} (${cls.slug}) with ${slots.length} slots`,
 		);
 
-		const dto = await Timetable.create(ctx, {
+		const timetable = await Timetable.create(ctx, {
 			classId: cls._id,
 			institutionId,
 			createdBy,
@@ -103,12 +104,19 @@ export const setForClass = internalMutation({
 			slots,
 		});
 
-		console.info(` ✅ Timetable v${dto.version} created (${dto._id})`);
+		await AttendanceRegister.syncFromTimetable(ctx, {
+			classId: cls._id,
+			slots,
+		});
+
+		console.info(
+			` ✅ Timetable v${timetable.version} created (${timetable._id})`,
+		);
 
 		return {
-			timetableId: dto._id,
-			version: dto.version,
-			slotCount: dto.slots.length,
+			timetableId: timetable._id,
+			version: timetable.version,
+			slotCount: slots.length,
 		};
 	},
 });

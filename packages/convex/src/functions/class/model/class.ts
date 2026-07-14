@@ -7,6 +7,7 @@ import { slugifyName } from "../../helpers/slug";
 import * as InstitutionAcademicPattern from "../../institution/model/institutionAcademicPattern";
 import type { AppMutationCtx, AppQueryCtx } from "../../model/common.types";
 import * as Program from "../../program/model/program";
+import * as Timetable from "../../timetable/model/timetable";
 import type {
 	ClassDto,
 	ClassListItem,
@@ -284,7 +285,10 @@ export async function listForSwitcher(
 }
 
 /** Get class by id */
-export async function getById(ctx: AppQueryCtx, id: Id<"classes">) {
+export async function getById(
+	ctx: AppQueryCtx | AppMutationCtx,
+	id: Id<"classes">,
+) {
 	const cls = await ctx.db.get("classes", id);
 	if (!cls || !isLive(cls)) return null;
 	return cls;
@@ -425,30 +429,7 @@ async function deleteTimetablesForClass(
 	ctx: AppMutationCtx,
 	classId: Id<"classes">,
 ): Promise<boolean> {
-	const timetables = await ctx.db
-		.query("timetable")
-		.withIndex("by_class_and_version", (q) => q.eq("classId", classId))
-		.take(DELETE_BATCH_SIZE);
-
-	if (timetables.length === 0) return false;
-
-	for (const timetable of timetables) {
-		const slots = await ctx.db
-			.query("timetableSlots")
-			.withIndex("by_timetable", (q) => q.eq("timetableId", timetable._id))
-			.take(DELETE_BATCH_SIZE);
-
-		if (slots.length > 0) {
-			for (const slot of slots) {
-				await ctx.db.delete("timetableSlots", slot._id);
-			}
-			return true;
-		}
-
-		await ctx.db.delete("timetable", timetable._id);
-	}
-
-	return true;
+	return await Timetable.deleteForClass(ctx, classId);
 }
 
 async function deleteStudentsForClass(

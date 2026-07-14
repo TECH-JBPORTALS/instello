@@ -50,7 +50,6 @@ import type * as model_attendanceRegister from "../model/attendanceRegister.js";
 import type * as model_attendanceSession from "../model/attendanceSession.js";
 import type * as model_attendanceSessionDetails from "../model/attendanceSessionDetails.js";
 import type * as model_ownerOrganization from "../model/ownerOrganization.js";
-import type * as model_timetable from "../model/timetable.js";
 import type * as ownerOrganizations from "../ownerOrganizations.js";
 import type * as program_model_program from "../program/model/program.js";
 import type * as program_model_programSubject from "../program/model/programSubject.js";
@@ -71,7 +70,12 @@ import type * as subject_model_subject from "../subject/model/subject.js";
 import type * as subject_mutations from "../subject/mutations.js";
 import type * as subject_queries from "../subject/queries.js";
 import type * as subject_validator_subject from "../subject/validator/subject.js";
-import type * as timetables from "../timetables.js";
+import type * as timetable_model_timetable from "../timetable/model/timetable.js";
+import type * as timetable_model_timetableSlot from "../timetable/model/timetableSlot.js";
+import type * as timetable_mutations from "../timetable/mutations.js";
+import type * as timetable_queries from "../timetable/queries.js";
+import type * as timetable_service_timetable from "../timetable/service/timetable.js";
+import type * as timetable_validator_timetable from "../timetable/validator/timetable.js";
 import type * as users from "../users.js";
 
 import type {
@@ -123,7 +127,6 @@ declare const fullApi: ApiFromModules<{
   "model/attendanceSession": typeof model_attendanceSession;
   "model/attendanceSessionDetails": typeof model_attendanceSessionDetails;
   "model/ownerOrganization": typeof model_ownerOrganization;
-  "model/timetable": typeof model_timetable;
   ownerOrganizations: typeof ownerOrganizations;
   "program/model/program": typeof program_model_program;
   "program/model/programSubject": typeof program_model_programSubject;
@@ -144,7 +147,12 @@ declare const fullApi: ApiFromModules<{
   "subject/mutations": typeof subject_mutations;
   "subject/queries": typeof subject_queries;
   "subject/validator/subject": typeof subject_validator_subject;
-  timetables: typeof timetables;
+  "timetable/model/timetable": typeof timetable_model_timetable;
+  "timetable/model/timetableSlot": typeof timetable_model_timetableSlot;
+  "timetable/mutations": typeof timetable_mutations;
+  "timetable/queries": typeof timetable_queries;
+  "timetable/service/timetable": typeof timetable_service_timetable;
+  "timetable/validator/timetable": typeof timetable_validator_timetable;
   users: typeof users;
 }>;
 

@@ -23,13 +23,13 @@ import {
 	PageHeaderStart,
 	PageHeaderTitle,
 } from "@/components/common/page-header";
-import { TimetableViewer } from "@/components/timetable/timetable";
+import { TimetableViewer } from "@/components/timetable/timetable-editor";
+import { TimetablePublishInfo } from "@/components/timetable/timetable-publish-info";
 import {
 	dtoToHourSpans,
 	dtoToPublishInfo,
 	mapProgramSubjects,
-} from "@/components/timetable/timetable-mappers";
-import { TimetablePublishInfo } from "@/components/timetable/timetable-publish-info";
+} from "@/features/timetable/mappers";
 import { useInsQuery } from "@/hooks/convex-react";
 import { useClassSlug } from "@/hooks/use-class-slug";
 import { useProgramAlias } from "@/hooks/use-program-alias";
@@ -43,7 +43,7 @@ function TimetableViewSkeleton() {
 	);
 }
 
-export function TimetableView({ basePath }: { basePath: string }) {
+export function ClassTimetablePage({ basePath }: { basePath: string }) {
 	const programAlias = useProgramAlias();
 	const classSlug = useClassSlug();
 	const searchParams = useSearchParams();
@@ -63,14 +63,14 @@ export function TimetableView({ basePath }: { basePath: string }) {
 	);
 
 	const latestTimetable = useInsQuery(
-		api.timetables.getOrNull,
+		api.timetable.queries.getOrNull,
 		program && classSlug
 			? { programId: program._id, classAlias: classSlug }
 			: "skip",
 	);
 
 	const versionedTimetable = useInsQuery(
-		api.timetables.getByVersion,
+		api.timetable.queries.getByVersion,
 		program && classSlug && viewingHistoricalVersion
 			? {
 					programId: program._id,
