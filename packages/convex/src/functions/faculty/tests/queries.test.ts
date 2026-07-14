@@ -1,6 +1,4 @@
 import { describe, expect } from "vitest";
-import { api } from "@/_generated/api";
-import { ERROR_CODES } from "@/helpers/constants";
 import {
 	expectAppError,
 	FACULTY_EMAIL,
@@ -8,6 +6,8 @@ import {
 	seedFaculty,
 	withSlug,
 } from "@/__fixtures__/index.setup";
+import { api } from "@/_generated/api";
+import { ERROR_CODES } from "@/helpers/constants";
 
 const test = institutionTest();
 

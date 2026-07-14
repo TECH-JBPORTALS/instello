@@ -76,7 +76,9 @@ export function AttendanceView() {
 			? { programId: program._id, classSlug, ...timeContext }
 			: "skip",
 	);
-	const bootstrapRegisters = useInsMutation(api.attendance.mutations.bootstrapRegisters);
+	const bootstrapRegisters = useInsMutation(
+		api.attendance.mutations.bootstrapRegisters,
+	);
 
 	useEffect(() => {
 		const timeout = setTimeout(() => {

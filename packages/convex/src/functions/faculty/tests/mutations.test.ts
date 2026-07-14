@@ -1,6 +1,4 @@
 import { describe, expect } from "vitest";
-import { api } from "@/_generated/api";
-import { ERROR_CODES } from "@/helpers/constants";
 import {
 	createFacultyInput,
 	expectAppError,
@@ -12,6 +10,8 @@ import {
 	seedFacultyMember,
 	withSlug,
 } from "@/__fixtures__/index.setup";
+import { api } from "@/_generated/api";
+import { ERROR_CODES } from "@/helpers/constants";
 
 const test = institutionTest();
 

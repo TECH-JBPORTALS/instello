@@ -1,6 +1,4 @@
 import { describe, expect } from "vitest";
-import { api } from "@/_generated/api";
-import { ERROR_CODES } from "@/helpers/constants";
 import {
 	EXPECTED_PROGRAMS_INS1,
 	expectAppError,
@@ -9,6 +7,8 @@ import {
 	programTest,
 	withSlug,
 } from "@/__fixtures__/index.setup";
+import { api } from "@/_generated/api";
+import { ERROR_CODES } from "@/helpers/constants";
 
 describe("programs.checkAlias", () => {
 	const test = programTest();

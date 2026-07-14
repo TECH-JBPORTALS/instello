@@ -1,6 +1,4 @@
 import { describe, expect } from "vitest";
-import { api } from "@/_generated/api";
-import { ERROR_CODES } from "@/helpers/constants";
 import {
 	baseTest,
 	expectAppError,
@@ -11,6 +9,8 @@ import {
 	ownerUserIdentity,
 	seedSingleInstitution,
 } from "@/__fixtures__/index.setup";
+import { api } from "@/_generated/api";
+import { ERROR_CODES } from "@/helpers/constants";
 
 describe("institutions.listMyOwned", () => {
 	const test = institutionTest();

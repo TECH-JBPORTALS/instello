@@ -1,6 +1,4 @@
 import { describe, expect } from "vitest";
-import { api } from "@/_generated/api";
-import { ERROR_CODES } from "@/helpers/constants";
 import {
 	classTest,
 	createStudentInput,
@@ -9,6 +7,8 @@ import {
 	STUDENT_USN,
 	withSlug,
 } from "@/__fixtures__/index.setup";
+import { api } from "@/_generated/api";
+import { ERROR_CODES } from "@/helpers/constants";
 
 const test = classTest();
 
@@ -47,7 +47,10 @@ describe("student.mutations.ensureCategories", () => {
 	test("is idempotent", async ({ user1, ins1, asOwner }) => {
 		const authed = asOwner(user1, ins1);
 
-		await authed.mutation(api.student.mutations.ensureCategories, withSlug(ins1, {}));
+		await authed.mutation(
+			api.student.mutations.ensureCategories,
+			withSlug(ins1, {}),
+		);
 		const second = await authed.mutation(
 			api.student.mutations.ensureCategories,
 			withSlug(ins1, {}),
@@ -311,7 +314,6 @@ describe("student.mutations.create", () => {
 		expect(id1).not.toEqual(id2);
 	});
 });
-
 
 describe("student.mutations.updatePersonalInfo", () => {
 	test("updates student personal info", async ({

@@ -8,10 +8,7 @@ import {
 import { api } from "@/_generated/api";
 import type { Id } from "@/_generated/dataModel";
 import { ERROR_CODES } from "@/helpers/constants";
-import {
-	buildDefaultPeriods,
-	timeOfDayMs,
-} from "@/helpers/timetableSchedule";
+import { buildDefaultPeriods, timeOfDayMs } from "@/helpers/timetableSchedule";
 
 const timetableTest = classTest().extend(
 	"subjects",

@@ -1,6 +1,4 @@
 import { describe, expect, vi } from "vitest";
-import { api } from "@/_generated/api";
-import { ERROR_CODES } from "@/helpers/constants";
 import {
 	classTest,
 	createClassBody,
@@ -8,6 +6,8 @@ import {
 	programTest,
 	withSlug,
 } from "@/__fixtures__/index.setup";
+import { api } from "@/_generated/api";
+import { ERROR_CODES } from "@/helpers/constants";
 
 describe("classes.create", () => {
 	const test = programTest();
