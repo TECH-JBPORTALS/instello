@@ -9,12 +9,13 @@ import { admin } from "better-auth/plugins/admin";
 import { organization } from "better-auth/plugins/organization";
 import * as InsPermissions from "../better-auth/ins-permissions";
 import * as UserPermissions from "../better-auth/user-permissions";
-import { components } from "./_generated/api";
+import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import { env } from "./_generated/server";
 import authConfig from "./auth.config";
 import authSchema from "./betterAuth/schema";
 import { ERROR_CODES, RESERVED_SUBDOMAINS } from "./helpers/constants";
+import { requireActionCtx } from "@convex-dev/better-auth/utils";
 
 const siteUrl = env.SITE_URL;
 const betterAuthSecret = env.BETTER_AUTH_SECRET;
@@ -139,6 +140,19 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 				/** Number of institutions owner can create in his organization */
 				organizationLimit: 10,
 				cancelPendingInvitationsOnReInvite: true,
+
+				/** Send invitation email to the user when being invited to join an institution */
+				async sendInvitationEmail(data) {
+					const actionCtx = requireActionCtx(ctx);
+					await actionCtx.runAction(internal.emails.sendInvitationEmail, {
+						email: data.email,
+						institutionName: data.organization.name,
+						invitedByEmail: data.inviter.user.email,
+						invitedByName: data.inviter.user.name,
+						role: data.role as "faculty" | "principal",
+						token: data.id,
+					});
+				},
 				organizationHooks: {
 					async beforeCreateOrganization(data) {
 						if (RESERVED_SUBDOMAINS.has(data.organization.code))

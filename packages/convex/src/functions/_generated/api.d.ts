@@ -33,6 +33,7 @@ import type * as class_mutations from "../class/mutations.js";
 import type * as class_queries from "../class/queries.js";
 import type * as class_validator_class from "../class/validator/class.js";
 import type * as class_validator_classBatch from "../class/validator/classBatch.js";
+import type * as emails from "../emails.js";
 import type * as faculty_model_faculty from "../faculty/model/faculty.js";
 import type * as faculty_mutations from "../faculty/mutations.js";
 import type * as faculty_queries from "../faculty/queries.js";
@@ -116,6 +117,7 @@ declare const fullApi: ApiFromModules<{
   "class/queries": typeof class_queries;
   "class/validator/class": typeof class_validator_class;
   "class/validator/classBatch": typeof class_validator_classBatch;
+  emails: typeof emails;
   "faculty/model/faculty": typeof faculty_model_faculty;
   "faculty/mutations": typeof faculty_mutations;
   "faculty/queries": typeof faculty_queries;
@@ -196,4 +198,5 @@ export declare const internal: FilterApi<
 
 export declare const components: {
   betterAuth: import("../betterAuth/_generated/component.js").ComponentApi<"betterAuth">;
+  resend: import("@convex-dev/resend/_generated/component.js").ComponentApi<"resend">;
 };
