@@ -1,6 +1,13 @@
 import { describe, expect } from "vitest";
-import { api } from "../_generated/api";
-import type { Id } from "../_generated/dataModel";
+import {
+	classTest,
+	createStudentInput,
+	expectAppError,
+	seedSubjects,
+	withSlug,
+} from "../../__fixtures__/index.setup";
+import { api } from "../../_generated/api";
+import type { Id } from "../../_generated/dataModel";
 import {
 	ATTENDANCE_GRACE_PERIOD_MS,
 	formatTimeRange,
@@ -8,24 +15,17 @@ import {
 	sessionDateToDayStartMs,
 	sessionWindowMs,
 	weekdayFromSessionDate,
-} from "../helpers/academicSchedule";
-import { ERROR_CODES } from "../helpers/constants";
+} from "../../helpers/academicSchedule";
+import { ERROR_CODES } from "../../helpers/constants";
 import {
 	buildDefaultPeriods,
 	DEFAULT_TIMETABLE_SESSION_CONFIG,
-} from "../helpers/timetableSchedule";
+} from "../../helpers/timetableSchedule";
 import {
 	computeSessionStatus,
 	pickHighlightSession,
 	sortSessionsForDisplay,
-} from "../model/attendanceSession";
-import {
-	classTest,
-	createStudentInput,
-	expectAppError,
-	seedSubjects,
-	withSlug,
-} from "./fixtures/index.setup";
+} from "../model/session";
 
 const attendanceTest = classTest().extend(
 	"subjects",
@@ -201,7 +201,7 @@ describe("attendance.listSessions", () => {
 		);
 
 		const registers = await authed.query(
-			api.attendance.listRegisters,
+			api.attendance.queries.listRegisters,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				classSlug: classes.class1.slug,
@@ -214,7 +214,7 @@ describe("attendance.listSessions", () => {
 		expect(mathRegister).toBeDefined();
 
 		const groups = await authed.query(
-			api.attendance.listSessions,
+			api.attendance.queries.listSessions,
 			withSlug(ins1, {
 				// biome-ignore lint/style/noNonNullAssertion: mathRegister is guaranteed to be defined
 				registerId: mathRegister!._id,
@@ -263,7 +263,7 @@ describe("attendance.listSessions", () => {
 		);
 
 		const registers = await authed.query(
-			api.attendance.listRegisters,
+			api.attendance.queries.listRegisters,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				classSlug: classes.class1.slug,
@@ -276,7 +276,7 @@ describe("attendance.listSessions", () => {
 		expect(mathRegister).toBeDefined();
 
 		const groups = await authed.query(
-			api.attendance.listSessions,
+			api.attendance.queries.listSessions,
 			withSlug(ins1, {
 				// biome-ignore lint/style/noNonNullAssertion: mathRegister is guaranteed to be defined
 				registerId: mathRegister!._id,
@@ -333,7 +333,7 @@ describe("attendance.mark", () => {
 		);
 
 		const registers = await authed.query(
-			api.attendance.listRegisters,
+			api.attendance.queries.listRegisters,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				classSlug: classes.class1.slug,
@@ -345,7 +345,7 @@ describe("attendance.mark", () => {
 		)!;
 
 		const result = await authed.mutation(
-			api.attendance.mark,
+			api.attendance.mutations.mark,
 			withSlug(ins1, {
 				registerId: mathRegister._id,
 				sessionDate: session.sessionDate,
@@ -401,7 +401,7 @@ describe("attendance.mark", () => {
 		);
 
 		const registersV1 = await authed.query(
-			api.attendance.listRegisters,
+			api.attendance.queries.listRegisters,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				classSlug: classes.class1.slug,
@@ -430,7 +430,7 @@ describe("attendance.mark", () => {
 
 		await expectAppError(
 			authed.mutation(
-				api.attendance.mark,
+				api.attendance.mutations.mark,
 				withSlug(ins1, {
 					registerId: scienceRegister._id,
 					sessionDate: session.sessionDate,
@@ -482,7 +482,7 @@ describe("attendance.mark", () => {
 		);
 
 		const registers = await authed.query(
-			api.attendance.listRegisters,
+			api.attendance.queries.listRegisters,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				classSlug: classes.class1.slug,
@@ -503,7 +503,7 @@ describe("attendance.mark", () => {
 		const now = sessionEndMs + ATTENDANCE_GRACE_PERIOD_MS + 1;
 
 		const result = await authed.mutation(
-			api.attendance.mark,
+			api.attendance.mutations.mark,
 			withSlug(ins1, {
 				registerId: mathRegister._id,
 				sessionDate: session.sessionDate,
@@ -561,7 +561,7 @@ describe("attendance.mark", () => {
 		);
 
 		const registers = await authed.query(
-			api.attendance.listRegisters,
+			api.attendance.queries.listRegisters,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				classSlug: classes.class1.slug,
@@ -583,7 +583,7 @@ describe("attendance.mark", () => {
 		};
 
 		await authed.mutation(
-			api.attendance.mark,
+			api.attendance.mutations.mark,
 			withSlug(ins1, {
 				...markArgs,
 				entries: [{ studentId, status: "present" }],
@@ -591,7 +591,7 @@ describe("attendance.mark", () => {
 		);
 
 		await authed.mutation(
-			api.attendance.mark,
+			api.attendance.mutations.mark,
 			withSlug(ins1, {
 				...markArgs,
 				now: session.now + 60_000,
@@ -638,7 +638,7 @@ describe("attendance.mark", () => {
 		);
 
 		const registers = await authed.query(
-			api.attendance.listRegisters,
+			api.attendance.queries.listRegisters,
 			withSlug(ins1, {
 				programId: programs.me._id,
 				classSlug: classes.class1.slug,
@@ -658,7 +658,7 @@ describe("attendance.mark", () => {
 
 		await expectAppError(
 			authed.mutation(
-				api.attendance.mark,
+				api.attendance.mutations.mark,
 				withSlug(ins1, {
 					registerId: mathRegister._id,
 					sessionDate: session.sessionDate,

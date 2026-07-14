@@ -1,4 +1,10 @@
 import { describe, expect } from "vitest";
+import {
+	classTest,
+	expectAppError,
+	seedSubjects,
+	withSlug,
+} from "../../__fixtures__/index.setup";
 import { api } from "../../_generated/api";
 import type { Id } from "../../_generated/dataModel";
 import { ERROR_CODES } from "../../helpers/constants";
@@ -6,12 +12,6 @@ import {
 	buildDefaultPeriods,
 	timeOfDayMs,
 } from "../../helpers/timetableSchedule";
-import {
-	classTest,
-	expectAppError,
-	seedSubjects,
-	withSlug,
-} from "../../tests/fixtures/index.setup";
 
 const timetableTest = classTest().extend(
 	"subjects",

@@ -1,13 +1,13 @@
 import { describe, expect } from "vitest";
-import { api } from "../../_generated/api";
-import type { Id } from "../../_generated/dataModel";
-import { ERROR_CODES } from "../../helpers/constants";
 import {
 	classTest,
 	expectAppError,
 	seedSubjects,
 	withSlug,
-} from "../../tests/fixtures/index.setup";
+} from "../../__fixtures__/index.setup";
+import { api } from "../../_generated/api";
+import type { Id } from "../../_generated/dataModel";
+import { ERROR_CODES } from "../../helpers/constants";
 
 const timetableTest = classTest().extend(
 	"subjects",

@@ -1,46 +1,11 @@
-import type { Infer } from "convex/values";
-import { components } from "../_generated/api";
-import type { Id } from "../_generated/dataModel";
-import { vv } from "../schema";
-import type { EntryStatus } from "./attendanceRecord";
-import type { AppMutationCtx, AppQueryCtx } from "./common.types";
+import { components } from "../../_generated/api";
+import type { Id } from "../../_generated/dataModel";
+import type { AppMutationCtx, AppQueryCtx } from "../../model/common.types";
+import { splitUserName } from "../helpers";
+import type { ActivityChange, ActivityLogDto } from "../validator/activity";
+import type { EntryStatus } from "../validator/record";
 
-export const ActivityChangeSchema = vv.object({
-	studentId: vv.id("students"),
-	previousStatus: vv.optional(
-		vv.union(vv.literal("present"), vv.literal("absent")),
-	),
-	newStatus: vv.union(vv.literal("present"), vv.literal("absent")),
-});
-
-export const ActivityLogDtoSchema = vv.object({
-	_id: vv.id("attendanceActivityLogs"),
-	recordId: vv.id("attendanceRecords"),
-	action: vv.union(vv.literal("marked"), vv.literal("updated")),
-	performedBy: vv.object({
-		_id: vv.string(),
-		name: vv.string(),
-		image: vv.optional(vv.string()),
-	}),
-	performedAt: vv.number(),
-	changes: vv.array(ActivityChangeSchema),
-});
-
-export type ActivityLogDto = Infer<typeof ActivityLogDtoSchema>;
-export type ActivityChange = Infer<typeof ActivityChangeSchema>;
-
-function splitUserName(name: string): { firstName: string; lastName: string } {
-	const trimmed = name.trim();
-	const spaceIndex = trimmed.indexOf(" ");
-	if (spaceIndex === -1) {
-		return { firstName: trimmed, lastName: "" };
-	}
-	return {
-		firstName: trimmed.slice(0, spaceIndex),
-		lastName: trimmed.slice(spaceIndex + 1).trim(),
-	};
-}
-
+/** Append a new activity log for a record. */
 export async function appendLog(
 	ctx: AppMutationCtx,
 	args: {
@@ -60,6 +25,7 @@ export async function appendLog(
 	});
 }
 
+/** Get latest activity log for a record. */
 export async function getLatestForRecord(
 	ctx: AppQueryCtx | AppMutationCtx,
 	recordId: Id<"attendanceRecords">,
@@ -73,6 +39,7 @@ export async function getLatestForRecord(
 	return logs[0];
 }
 
+/** List activity logs for a record. */
 export async function listByRecord(
 	ctx: AppQueryCtx | AppMutationCtx,
 	recordId: Id<"attendanceRecords">,
@@ -106,6 +73,7 @@ export async function listByRecord(
 	);
 }
 
+/** Build the changes array for an activity log. */
 export function buildChanges(args: {
 	entries: Array<{ studentId: Id<"students">; status: EntryStatus }>;
 	previousByStudentId: Map<Id<"students">, EntryStatus>;
@@ -132,6 +100,7 @@ export function buildChanges(args: {
 	return changes;
 }
 
+/** Build the summary for an activity log - an internal DTO function. */
 export async function toActivitySummary(
 	_ctx: AppQueryCtx | AppMutationCtx,
 	log: ActivityLogDto,

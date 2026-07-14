@@ -245,11 +245,11 @@ export function AttendanceRegisterView() {
 	const timeContext = useMemo(() => getAttendanceTimeContext(), []);
 
 	const register = useInsQuery(
-		api.attendance.getRegister,
+		api.attendance.queries.getRegister,
 		registerId ? { registerId } : "skip",
 	);
 	const sessionGroups = useInsQuery(
-		api.attendance.listSessions,
+		api.attendance.queries.listSessions,
 		registerId
 			? {
 					registerId,

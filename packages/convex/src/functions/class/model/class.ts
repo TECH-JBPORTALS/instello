@@ -5,6 +5,7 @@ import * as AcademicStage from "../../academicPattern/model/academicStage";
 import { ERROR_CODES, throwAppError } from "../../helpers/constants";
 import { slugifyName } from "../../helpers/slug";
 import * as InstitutionAcademicPattern from "../../institution/model/institutionAcademicPattern";
+import * as AttendanceRegister from "../../attendance/model/register";
 import type { AppMutationCtx, AppQueryCtx } from "../../model/common.types";
 import * as Program from "../../program/model/program";
 import * as Timetable from "../../timetable/model/timetable";
@@ -358,73 +359,6 @@ export async function markDeleting(ctx: AppMutationCtx, id: Id<"classes">) {
 	});
 }
 
-/** Delete attendance register tree */
-export async function deleteAttendanceRegisterTree(
-	ctx: AppMutationCtx,
-	registerId: Id<"attendanceRegisters">,
-): Promise<boolean> {
-	const records = await ctx.db
-		.query("attendanceRecords")
-		.withIndex("by_register_and_sessionDate", (q) =>
-			q.eq("registerId", registerId),
-		)
-		.take(DELETE_BATCH_SIZE);
-
-	if (records.length === 0) return false;
-
-	for (const record of records) {
-		const entries = await ctx.db
-			.query("attendanceEntries")
-			.withIndex("by_record", (q) => q.eq("recordId", record._id))
-			.take(DELETE_BATCH_SIZE);
-
-		if (entries.length > 0) {
-			for (const entry of entries) {
-				await ctx.db.delete("attendanceEntries", entry._id);
-			}
-			return true;
-		}
-
-		const logs = await ctx.db
-			.query("attendanceActivityLogs")
-			.withIndex("by_record", (q) => q.eq("recordId", record._id))
-			.take(DELETE_BATCH_SIZE);
-
-		if (logs.length > 0) {
-			for (const log of logs) {
-				await ctx.db.delete("attendanceActivityLogs", log._id);
-			}
-			return true;
-		}
-
-		await ctx.db.delete("attendanceRecords", record._id);
-	}
-
-	return true;
-}
-
-async function deleteAttendanceForClass(
-	ctx: AppMutationCtx,
-	classId: Id<"classes">,
-): Promise<boolean> {
-	const registers = await ctx.db
-		.query("attendanceRegisters")
-		.withIndex("by_class_and_status", (q) => q.eq("classId", classId))
-		.take(DELETE_BATCH_SIZE);
-
-	if (registers.length === 0) return false;
-
-	for (const register of registers) {
-		const hasMoreRecords = await deleteAttendanceRegisterTree(
-			ctx,
-			register._id,
-		);
-		if (hasMoreRecords) return true;
-		await ctx.db.delete("attendanceRegisters", register._id);
-	}
-	return true;
-}
-
 async function deleteTimetablesForClass(
 	ctx: AppMutationCtx,
 	classId: Id<"classes">,
@@ -477,7 +411,7 @@ export async function deleteCascadeBatch(
 	const cls = await getByIdIncludingDeleting(ctx, classId);
 	if (!cls) return false;
 
-	if (await deleteAttendanceForClass(ctx, cls._id)) return true;
+	if (await AttendanceRegister.deleteForClass(ctx, cls._id)) return true;
 	if (await deleteTimetablesForClass(ctx, cls._id)) return true;
 	if (await deleteStudentsForClass(ctx, cls._id)) return true;
 	if (await deleteBatchesForClass(ctx, cls._id)) return true;

@@ -71,12 +71,12 @@ export function AttendanceView() {
 	);
 
 	const registers = useInsQuery(
-		api.attendance.listRegisters,
+		api.attendance.queries.listRegisters,
 		program && classSlug
 			? { programId: program._id, classSlug, ...timeContext }
 			: "skip",
 	);
-	const bootstrapRegisters = useInsMutation(api.attendance.bootstrapRegisters);
+	const bootstrapRegisters = useInsMutation(api.attendance.mutations.bootstrapRegisters);
 
 	useEffect(() => {
 		const timeout = setTimeout(() => {

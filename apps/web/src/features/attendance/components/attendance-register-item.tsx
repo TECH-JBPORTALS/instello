@@ -23,7 +23,7 @@ import { classPath } from "@/features/classes/class-path";
 import { subjectColorStyles } from "@/features/subjects/constants";
 
 type AttendanceRegister = FunctionReturnType<
-	typeof api.attendance.listRegisters
+	typeof api.attendance.queries.listRegisters
 >[0];
 
 export function AttendanceRegisterItem({

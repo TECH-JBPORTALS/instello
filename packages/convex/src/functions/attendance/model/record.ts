@@ -1,25 +1,11 @@
-import type { Infer } from "convex/values";
-import type { Doc, Id } from "../_generated/dataModel";
-import { sessionWindowMs } from "../helpers/academicSchedule";
-import { ERROR_CODES, throwAppError } from "../helpers/constants";
-import { vv } from "../schema";
-import * as AttendanceActivityLog from "./attendanceActivityLog";
-import type { AppMutationCtx, AppQueryCtx } from "./common.types";
+import type { Doc, Id } from "../../_generated/dataModel";
+import { sessionWindowMs } from "../../helpers/academicSchedule";
+import { ERROR_CODES, throwAppError } from "../../helpers/constants";
+import type { AppMutationCtx, AppQueryCtx } from "../../model/common.types";
+import type { MarkEntryInput } from "../validator/record";
+import * as ActivityLog from "./activityLog";
 
-export const EntryStatusSchema = vv.union(
-	vv.literal("present"),
-	vv.literal("absent"),
-);
-
-export type EntryStatus = Infer<typeof EntryStatusSchema>;
-
-export const MarkEntryInputSchema = vv.object({
-	studentId: vv.id("students"),
-	status: EntryStatusSchema,
-});
-
-export type MarkEntryInput = Infer<typeof MarkEntryInputSchema>;
-
+/** Find a record by session key. */
 export async function findBySessionKey(
 	ctx: AppQueryCtx | AppMutationCtx,
 	args: {
@@ -43,6 +29,7 @@ export async function findBySessionKey(
 		.unique();
 }
 
+/** List entries for a record. */
 export async function listEntriesByRecord(
 	ctx: AppQueryCtx | AppMutationCtx,
 	recordId: Id<"attendanceRecords">,
@@ -53,6 +40,7 @@ export async function listEntriesByRecord(
 		.collect();
 }
 
+/** List records for a register on a specific date. */
 export async function listRecordsForRegisterOnDate(
 	ctx: AppQueryCtx | AppMutationCtx,
 	registerId: Id<"attendanceRegisters">,
@@ -66,6 +54,7 @@ export async function listRecordsForRegisterOnDate(
 		.collect();
 }
 
+/** List records for a register. */
 export async function listRecordsForRegister(
 	ctx: AppQueryCtx | AppMutationCtx,
 	registerId: Id<"attendanceRegisters">,
@@ -78,6 +67,7 @@ export async function listRecordsForRegister(
 		.collect();
 }
 
+/** Assert the markable window for a session. */
 export function assertMarkableWindow(args: {
 	now: number;
 	sessionDate: string;
@@ -97,6 +87,7 @@ export function assertMarkableWindow(args: {
 	}
 }
 
+/** Validate the students for a register. */
 export async function validateStudentsForRegister(
 	ctx: AppMutationCtx,
 	args: {
@@ -133,6 +124,7 @@ function countStatuses(entries: MarkEntryInput[]) {
 	return { presentCount, absentCount };
 }
 
+/** Save the attendance record for a session. */
 export async function save(
 	ctx: AppMutationCtx,
 	args: {
@@ -198,12 +190,12 @@ export async function save(
 			});
 		}
 
-		await AttendanceActivityLog.appendLog(ctx, {
+		await ActivityLog.appendLog(ctx, {
 			recordId,
 			action: "marked",
 			performedBy: args.performedBy,
 			performedAt: args.now,
-			changes: AttendanceActivityLog.buildChanges({
+			changes: ActivityLog.buildChanges({
 				entries: args.entries,
 				previousByStudentId: new Map(),
 				isCreate: true,
@@ -247,14 +239,14 @@ export async function save(
 		}
 	}
 
-	const changes = AttendanceActivityLog.buildChanges({
+	const changes = ActivityLog.buildChanges({
 		entries: args.entries,
 		previousByStudentId,
 		isCreate: false,
 	});
 
 	if (changes.length > 0) {
-		await AttendanceActivityLog.appendLog(ctx, {
+		await ActivityLog.appendLog(ctx, {
 			recordId: existing._id,
 			action: "updated",
 			performedBy: args.performedBy,
@@ -269,6 +261,3 @@ export async function save(
 	}
 	return record;
 }
-
-/** @deprecated Use save instead */
-export const mark = save;

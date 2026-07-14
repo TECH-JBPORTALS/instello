@@ -19,7 +19,7 @@ import type { Id } from "../_generated/dataModel";
 import { env, internalMutation, type MutationCtx } from "../_generated/server";
 import * as Class from "../class/model/class";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
-import * as AttendanceRegister from "../model/attendanceRegister";
+import * as AttendanceRegister from "../attendance/model/register";
 import { vv } from "../schema";
 import * as Subject from "../subject/model/subject";
 import * as Timetable from "../timetable/model/timetable";

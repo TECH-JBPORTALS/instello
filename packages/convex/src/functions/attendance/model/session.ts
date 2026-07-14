@@ -1,6 +1,5 @@
-import type { Infer } from "convex/values";
-import { components } from "../_generated/api";
-import type { Doc, Id } from "../_generated/dataModel";
+import { components } from "../../_generated/api";
+import type { Doc, Id } from "../../_generated/dataModel";
 import {
 	ATTENDANCE_GRACE_PERIOD_MS,
 	dayStartMsToSessionDate,
@@ -11,73 +10,27 @@ import {
 	sessionDateToDayStartMs,
 	sessionWindowMs,
 	weekdayFromSessionDate,
-} from "../helpers/academicSchedule";
-import { ERROR_CODES, throwAppError } from "../helpers/constants";
-import type { TimetableSessionConfig } from "../helpers/timetableSchedule";
-import { normalizeSessionConfig } from "../helpers/timetableSchedule";
-import { vv } from "../schema";
-import * as AttendanceRecord from "./attendanceRecord";
-import type { AttendanceRegisterDto } from "./attendanceRegister";
-import type { AppQueryCtx } from "./common.types";
-
-export const SessionStatusSchema = vv.union(
-	vv.literal("upcoming"),
-	vv.literal("ongoing"),
-	vv.literal("completed"),
-	vv.literal("missed"),
-);
-
-export type SessionStatus = Infer<typeof SessionStatusSchema>;
-
-export const SessionActorSchema = vv.object({
-	_id: vv.optional(vv.string()),
-	name: vv.string(),
-	image: vv.optional(vv.string()),
-});
-
-export const AttendanceSessionDtoSchema = vv.object({
-	sessionKey: vv.string(),
-	sessionDate: vv.string(),
-	day: vv.number(),
-	startHour: vv.number(),
-	endHour: vv.number(),
-	hourLabel: vv.string(),
-	timeRange: vv.string(),
-	status: SessionStatusSchema,
-	recordId: vv.optional(vv.id("attendanceRecords")),
-	actor: vv.optional(SessionActorSchema),
-	description: vv.string(),
-	stats: vv.optional(vv.string()),
-	updatedAt: vv.optional(vv.number()),
-	inGracePeriod: vv.boolean(),
-});
-
-export const AttendanceSessionGroupSchema = vv.object({
-	id: vv.string(),
-	label: vv.string(),
-	sessions: vv.array(AttendanceSessionDtoSchema),
-});
-
-export type AttendanceSessionDto = Infer<typeof AttendanceSessionDtoSchema>;
-export type AttendanceSessionGroup = Infer<typeof AttendanceSessionGroupSchema>;
+} from "../../helpers/academicSchedule";
+import { ERROR_CODES, throwAppError } from "../../helpers/constants";
+import type { TimetableSessionConfig } from "../../helpers/timetableSchedule";
+import { normalizeSessionConfig } from "../../helpers/timetableSchedule";
+import type { AppQueryCtx } from "../../model/common.types";
+import * as Timetable from "../../timetable/model/timetable";
+import * as TimetableSlot from "../../timetable/model/timetableSlot";
+import { splitUserName } from "../helpers";
+import type { AttendanceRegisterDto } from "../validator/register";
+import type {
+	AttendanceSessionDto,
+	AttendanceSessionGroup,
+	SessionStatus,
+} from "../validator/session";
+import * as Record from "./record";
 
 type SlotOccurrence = {
 	day: number;
 	startHour: number;
 	endHour: number;
 };
-
-function splitUserName(name: string): { firstName: string; lastName: string } {
-	const trimmed = name.trim();
-	const spaceIndex = trimmed.indexOf(" ");
-	if (spaceIndex === -1) {
-		return { firstName: trimmed, lastName: "" };
-	}
-	return {
-		firstName: trimmed.slice(0, spaceIndex),
-		lastName: trimmed.slice(spaceIndex + 1).trim(),
-	};
-}
 
 function sessionKey(args: {
 	sessionDate: string;
@@ -88,6 +41,7 @@ function sessionKey(args: {
 	return `${args.sessionDate}:${args.day}:${args.startHour}:${args.endHour}`;
 }
 
+/** Compute the session status based on the current time and the session window. */
 export function computeSessionStatus(args: {
 	now: number;
 	sessionDate: string;
@@ -124,24 +78,6 @@ export function computeSessionStatus(args: {
 	return { status: "ongoing", inGracePeriod };
 }
 
-async function listTimetableVersions(ctx: AppQueryCtx, classId: Id<"classes">) {
-	return await ctx.db
-		.query("timetable")
-		.withIndex("by_class_and_version", (q) => q.eq("classId", classId))
-		.order("desc")
-		.collect();
-}
-
-async function listSlotsForTimetable(
-	ctx: AppQueryCtx,
-	timetableId: Id<"timetable">,
-) {
-	return await ctx.db
-		.query("timetableSlots")
-		.withIndex("by_timetable", (q) => q.eq("timetableId", timetableId))
-		.collect();
-}
-
 export async function getEffectiveTimetable(
 	ctx: AppQueryCtx,
 	args: {
@@ -150,7 +86,7 @@ export async function getEffectiveTimetable(
 		timezoneOffsetMinutes: number;
 	},
 ) {
-	const versions = await listTimetableVersions(ctx, args.classId);
+	const versions = await Timetable.listByClass(ctx, args.classId);
 	const dayEndMs = endOfDayMs(args.sessionDate, args.timezoneOffsetMinutes);
 
 	let effective: (typeof versions)[number] | null = null;
@@ -165,7 +101,7 @@ export async function getEffectiveTimetable(
 		return null;
 	}
 
-	const slots = await listSlotsForTimetable(ctx, effective._id);
+	const slots = await TimetableSlot.listByTimetable(ctx, effective._id);
 	return {
 		timetable: effective,
 		slots,
@@ -450,7 +386,7 @@ async function listSessionsForDate(
 	);
 	if (occurrences.length === 0) return [];
 
-	const records = await AttendanceRecord.listRecordsForRegisterOnDate(
+	const records = await Record.listRecordsForRegisterOnDate(
 		ctx,
 		args.register._id,
 		args.sessionDate,
@@ -546,7 +482,7 @@ export async function getSessionForRegister(
 		timezoneOffsetMinutes: args.timezoneOffsetMinutes,
 	});
 
-	const record = await AttendanceRecord.findBySessionKey(ctx, {
+	const record = await Record.findBySessionKey(ctx, {
 		registerId: args.register._id,
 		sessionDate: args.sessionDate,
 		day: args.day,

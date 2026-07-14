@@ -107,7 +107,7 @@ export function SessionDetailsSheet({
 	const timeContext = useMemo(() => getAttendanceTimeContext(), []);
 
 	const details = useInsQuery(
-		api.attendance.getSessionDetails,
+		api.attendance.queries.getSessionDetails,
 		register && session && open
 			? {
 					registerId: register._id,
@@ -121,7 +121,7 @@ export function SessionDetailsSheet({
 	);
 
 	const activityLog = useInsQuery(
-		api.attendance.listActivityLog,
+		api.attendance.queries.listActivityLog,
 		details?.recordId ? { recordId: details.recordId } : "skip",
 	);
 

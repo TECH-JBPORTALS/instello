@@ -92,10 +92,10 @@ export function MarkAttendanceSheet({
 	>({});
 	const [isSaving, setIsSaving] = useState(false);
 
-	const markAttendance = useInsMutation(api.attendance.mark);
+	const markAttendance = useInsMutation(api.attendance.mutations.mark);
 
 	const existingEntries = useInsQuery(
-		api.attendance.getSessionEntries,
+		api.attendance.queries.getSessionEntries,
 		register && session?.recordId && open
 			? {
 					registerId: register._id,

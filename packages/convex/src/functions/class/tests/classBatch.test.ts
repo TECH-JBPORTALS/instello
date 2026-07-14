@@ -1,12 +1,12 @@
 import { describe, expect, vi } from "vitest";
-import { api } from "../../_generated/api";
-import { ERROR_CODES } from "../../helpers/constants";
 import {
 	classTest,
 	createStudentInput,
 	expectAppError,
 	withSlug,
-} from "../../tests/fixtures/index.setup";
+} from "../../__fixtures__/index.setup";
+import { api } from "../../_generated/api";
+import { ERROR_CODES } from "../../helpers/constants";
 
 const test = classTest();
 

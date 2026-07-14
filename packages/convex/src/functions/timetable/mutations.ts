@@ -1,5 +1,5 @@
 import { insMutation } from "../helpers/customFunctions";
-import * as AttendanceRegister from "../model/attendanceRegister";
+import * as AttendanceRegister from "../attendance/model/register";
 import { vv } from "../schema";
 import * as Timetable from "./model/timetable";
 import * as TimetableService from "./service/timetable";
