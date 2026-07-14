@@ -1,13 +1,13 @@
 import { describe, expect } from "vitest";
-import { api } from "../../_generated/api";
-import { ERROR_CODES } from "../../helpers/constants";
+import { api } from "@/_generated/api";
+import { ERROR_CODES } from "@/helpers/constants";
 import {
 	EXPECTED_SUBJECTS_INS1,
 	expectAppError,
 	SUBJECT_MATH,
 	subjectTest,
 	withSlug,
-} from "../../tests/fixtures/index.setup";
+} from "@/__fixtures__/index.setup";
 
 describe("subjects.checkAlias", () => {
 	const test = subjectTest();

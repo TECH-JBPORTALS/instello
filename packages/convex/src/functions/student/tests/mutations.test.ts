@@ -1,6 +1,6 @@
 import { describe, expect } from "vitest";
-import { api } from "../../_generated/api";
-import { ERROR_CODES } from "../../helpers/constants";
+import { api } from "@/_generated/api";
+import { ERROR_CODES } from "@/helpers/constants";
 import {
 	classTest,
 	createStudentInput,
@@ -8,7 +8,7 @@ import {
 	STUDENT_EMAIL,
 	STUDENT_USN,
 	withSlug,
-} from "../../tests/fixtures/index.setup";
+} from "@/__fixtures__/index.setup";
 
 const test = classTest();
 
@@ -61,7 +61,7 @@ describe("student.mutations.create", () => {
 	test("requires authentication", async ({ t, ins1, classes }) => {
 		const categoryId = await t.run(async (ctx) => {
 			const { seedDefaults, listByInstitution } = await import(
-				"../../institution/model/studentCategory"
+				"@/institution/model/studentCategory"
 			);
 			await seedDefaults(ctx, ins1._id);
 			const categories = await listByInstitution(ctx, ins1._id);

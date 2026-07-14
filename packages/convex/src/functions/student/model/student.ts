@@ -1,14 +1,14 @@
 import type { PaginationOptions } from "convex/server";
 import type { Infer } from "convex/values";
-import type { Doc, Id } from "../../_generated/dataModel";
-import * as ClassBatch from "../../class/model/classBatch";
-import { ERROR_CODES, throwAppError } from "../../helpers/constants";
+import type { Doc, Id } from "@/_generated/dataModel";
+import * as ClassBatch from "@/class/model/classBatch";
+import { ERROR_CODES, throwAppError } from "@/helpers/constants";
 import {
 	validateIndianPhoneNumber,
 	validateOptionalIndianPhoneNumber,
-} from "../../helpers/phone";
-import * as InstitutionStudentCategory from "../../institution/model/studentCategory";
-import type { AppMutationCtx, AppQueryCtx } from "../../model/common.types";
+} from "@/helpers/phone";
+import * as InstitutionStudentCategory from "@/institution/model/studentCategory";
+import type { AppMutationCtx, AppQueryCtx } from "@/model/common.types";
 import type {
 	CreateInput,
 	PaginatedStudentList,

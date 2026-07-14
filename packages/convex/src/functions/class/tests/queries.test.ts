@@ -1,11 +1,11 @@
 import { describe, expect } from "vitest";
-import { api } from "../../_generated/api";
-import { ERROR_CODES } from "../../helpers/constants";
+import { api } from "@/_generated/api";
+import { ERROR_CODES } from "@/helpers/constants";
 import {
 	classTest,
 	expectAppError,
 	withSlug,
-} from "../../tests/fixtures/index.setup";
+} from "@/__fixtures__/index.setup";
 
 describe("classes.list", () => {
 	const test = classTest();

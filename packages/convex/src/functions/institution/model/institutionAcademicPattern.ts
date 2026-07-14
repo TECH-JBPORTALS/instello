@@ -1,7 +1,7 @@
-import type { Id } from "../../_generated/dataModel";
-import * as AcademicPattern from "../../academicPattern/model/academicPattern";
-import { ERROR_CODES, throwAppError } from "../../helpers/constants";
-import type { AppMutationCtx, AppQueryCtx } from "../../model/common.types";
+import type { Id } from "@/_generated/dataModel";
+import * as AcademicPattern from "@/academicPattern/model/academicPattern";
+import { ERROR_CODES, throwAppError } from "@/helpers/constants";
+import type { AppMutationCtx, AppQueryCtx } from "@/model/common.types";
 import type { AdoptedPatternSummary } from "../validator/institutionAcademicPattern";
 
 /** Returns the adoption row for an institution, if one exists. */

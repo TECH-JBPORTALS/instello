@@ -1,6 +1,6 @@
 import { describe, expect } from "vitest";
-import { api } from "../../_generated/api";
-import { ERROR_CODES } from "../../helpers/constants";
+import { api } from "@/_generated/api";
+import { ERROR_CODES } from "@/helpers/constants";
 import {
 	createSubjectInput,
 	expectAppError,
@@ -8,7 +8,7 @@ import {
 	SUBJECT_MATH,
 	subjectTest,
 	withSlug,
-} from "../../tests/fixtures/index.setup";
+} from "@/__fixtures__/index.setup";
 
 describe("subjects.create", () => {
 	const test = institutionTest();

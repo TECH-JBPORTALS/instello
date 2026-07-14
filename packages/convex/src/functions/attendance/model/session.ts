@@ -1,5 +1,5 @@
-import { components } from "../../_generated/api";
-import type { Doc, Id } from "../../_generated/dataModel";
+import { components } from "@/_generated/api";
+import type { Doc, Id } from "@/_generated/dataModel";
 import {
 	ATTENDANCE_GRACE_PERIOD_MS,
 	dayStartMsToSessionDate,
@@ -10,13 +10,13 @@ import {
 	sessionDateToDayStartMs,
 	sessionWindowMs,
 	weekdayFromSessionDate,
-} from "../../helpers/academicSchedule";
-import { ERROR_CODES, throwAppError } from "../../helpers/constants";
-import type { TimetableSessionConfig } from "../../helpers/timetableSchedule";
-import { normalizeSessionConfig } from "../../helpers/timetableSchedule";
-import type { AppQueryCtx } from "../../model/common.types";
-import * as Timetable from "../../timetable/model/timetable";
-import * as TimetableSlot from "../../timetable/model/timetableSlot";
+} from "@/helpers/academicSchedule";
+import { ERROR_CODES, throwAppError } from "@/helpers/constants";
+import type { TimetableSessionConfig } from "@/helpers/timetableSchedule";
+import { normalizeSessionConfig } from "@/helpers/timetableSchedule";
+import type { AppQueryCtx } from "@/model/common.types";
+import * as Timetable from "@/timetable/model/timetable";
+import * as TimetableSlot from "@/timetable/model/timetableSlot";
 import { splitUserName } from "../helpers";
 import type { AttendanceRegisterDto } from "../validator/register";
 import type {

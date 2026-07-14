@@ -4,7 +4,7 @@ import {
 	expectAppError,
 	institutionTest,
 	ownerTest,
-} from "../../tests/fixtures/index.setup";
+} from "@/__fixtures__/index.setup";
 import { ensureInstitution, ensureSession } from "../auth";
 import { ERROR_CODES } from "../constants";
 

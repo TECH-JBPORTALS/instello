@@ -1,5 +1,5 @@
 import type { Infer } from "convex/values";
-import { vv } from "../../schema";
+import { vv } from "@/schema";
 import { BatchNamingConventionSchema } from "./classBatch";
 
 export const ClassStageSummarySchema = vv.object({

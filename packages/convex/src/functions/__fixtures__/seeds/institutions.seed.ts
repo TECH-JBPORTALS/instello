@@ -1,8 +1,8 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: <We know that the institutions are not null> */
 
 import { fakerEN_IN as faker } from "@faker-js/faker";
-import { components } from "../../../_generated/api";
-import type { AppMutationCtx } from "../../../model/common.types";
+import { components } from "@/_generated/api";
+import type { AppMutationCtx } from "@/model/common.types";
 import { FIXED_CREATED_AT } from "../constants.setup";
 
 export type SeededInstitution = {

@@ -1,5 +1,5 @@
-import type { AppMutationCtx } from "../../../model/common.types";
-import * as OwnerOrganization from "../../../model/ownerOrganization";
+import type { AppMutationCtx } from "@/model/common.types";
+import * as OwnerOrganization from "@/model/ownerOrganization";
 
 export const OWNER_ORG_1 = {
 	name: "Walter White Organization",

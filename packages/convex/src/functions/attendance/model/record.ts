@@ -1,7 +1,7 @@
-import type { Doc, Id } from "../../_generated/dataModel";
-import { sessionWindowMs } from "../../helpers/academicSchedule";
-import { ERROR_CODES, throwAppError } from "../../helpers/constants";
-import type { AppMutationCtx, AppQueryCtx } from "../../model/common.types";
+import type { Doc, Id } from "@/_generated/dataModel";
+import { sessionWindowMs } from "@/helpers/academicSchedule";
+import { ERROR_CODES, throwAppError } from "@/helpers/constants";
+import type { AppMutationCtx, AppQueryCtx } from "@/model/common.types";
 import type { MarkEntryInput } from "../validator/record";
 import * as ActivityLog from "./activityLog";
 

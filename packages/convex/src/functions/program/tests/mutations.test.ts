@@ -1,6 +1,6 @@
 import { describe, expect, vi } from "vitest";
-import { api } from "../../_generated/api";
-import { ERROR_CODES } from "../../helpers/constants";
+import { api } from "@/_generated/api";
+import { ERROR_CODES } from "@/helpers/constants";
 import {
 	createProgramInput,
 	expectAppError,
@@ -8,7 +8,7 @@ import {
 	PROGRAM_CS,
 	programTest,
 	withSlug,
-} from "../../tests/fixtures/index.setup";
+} from "@/__fixtures__/index.setup";
 
 describe("programs.create", () => {
 	const test = institutionTest();

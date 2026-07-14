@@ -1,6 +1,6 @@
-import type { Id } from "../../_generated/dataModel";
-import type { AppMutationCtx, AppQueryCtx } from "../../model/common.types";
-import type { SlotInput } from "../../timetable/validator/timetable";
+import type { Id } from "@/_generated/dataModel";
+import type { AppMutationCtx, AppQueryCtx } from "@/model/common.types";
+import type { SlotInput } from "@/timetable/validator/timetable";
 
 const DELETE_BATCH_SIZE = 40;
 

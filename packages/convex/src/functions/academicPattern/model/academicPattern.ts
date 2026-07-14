@@ -1,7 +1,7 @@
-import type { Doc, Id } from "../../_generated/dataModel";
-import { DEFAULT_PATTERN_TEMPLATES } from "../../helpers/academicPatternTemplates";
-import { ERROR_CODES, throwAppError } from "../../helpers/constants";
-import type { AppMutationCtx, AppQueryCtx } from "../../model/common.types";
+import type { Doc, Id } from "@/_generated/dataModel";
+import { DEFAULT_PATTERN_TEMPLATES } from "@/helpers/academicPatternTemplates";
+import { ERROR_CODES, throwAppError } from "@/helpers/constants";
+import type { AppMutationCtx, AppQueryCtx } from "@/model/common.types";
 import type {
 	AcademicPatternDetailDto,
 	AcademicPatternDto,

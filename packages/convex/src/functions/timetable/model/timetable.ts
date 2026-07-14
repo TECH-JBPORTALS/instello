@@ -1,12 +1,12 @@
-import type { Doc, Id } from "../../_generated/dataModel";
-import * as ClassBatch from "../../class/model/classBatch";
-import { ERROR_CODES, throwAppError } from "../../helpers/constants";
+import type { Doc, Id } from "@/_generated/dataModel";
+import * as ClassBatch from "@/class/model/classBatch";
+import { ERROR_CODES, throwAppError } from "@/helpers/constants";
 import {
 	normalizeSessionConfig,
 	validateSessionConfig,
-} from "../../helpers/timetableSchedule";
-import type { AppMutationCtx, AppQueryCtx } from "../../model/common.types";
-import * as Subject from "../../subject/model/subject";
+} from "@/helpers/timetableSchedule";
+import type { AppMutationCtx, AppQueryCtx } from "@/model/common.types";
+import * as Subject from "@/subject/model/subject";
 import type { SlotInput, TimetableSessionConfig } from "../validator/timetable";
 import * as TimetableSlot from "./timetableSlot";
 

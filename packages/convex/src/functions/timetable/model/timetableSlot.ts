@@ -1,5 +1,5 @@
-import type { Id } from "../../_generated/dataModel";
-import type { AppMutationCtx, AppQueryCtx } from "../../model/common.types";
+import type { Id } from "@/_generated/dataModel";
+import type { AppMutationCtx, AppQueryCtx } from "@/model/common.types";
 import type { SlotInput } from "../validator/timetable";
 
 /** Lists all slots for a timetable version. */

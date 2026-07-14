@@ -1,12 +1,12 @@
 import { describe, expect } from "vitest";
-import { api } from "../../_generated/api";
-import { ERROR_CODES } from "../../helpers/constants";
+import { api } from "@/_generated/api";
+import { ERROR_CODES } from "@/helpers/constants";
 import {
 	expectAppError,
 	ownerOrgInstitutionTest,
 	ownerOrgTest,
 	ownerUserIdentity,
-} from "../../tests/fixtures/index.setup";
+} from "@/__fixtures__/index.setup";
 
 describe("ownerOrganizations.create", () => {
 	const test = ownerOrgTest();

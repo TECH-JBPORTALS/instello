@@ -1,10 +1,10 @@
 import { describe, expect } from "vitest";
-import { api } from "../../_generated/api";
+import { api } from "@/_generated/api";
 import {
 	classTest,
 	createStudentInput,
 	withSlug,
-} from "../../tests/fixtures/index.setup";
+} from "@/__fixtures__/index.setup";
 
 const test = classTest();
 

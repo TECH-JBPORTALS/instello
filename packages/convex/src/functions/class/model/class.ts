@@ -1,14 +1,14 @@
 import type { PaginationOptions } from "convex/server";
 import type { Infer } from "convex/values";
-import type { Doc, Id } from "../../_generated/dataModel";
-import * as AcademicStage from "../../academicPattern/model/academicStage";
-import { ERROR_CODES, throwAppError } from "../../helpers/constants";
-import { slugifyName } from "../../helpers/slug";
-import * as InstitutionAcademicPattern from "../../institution/model/institutionAcademicPattern";
-import * as AttendanceRegister from "../../attendance/model/register";
-import type { AppMutationCtx, AppQueryCtx } from "../../model/common.types";
-import * as Program from "../../program/model/program";
-import * as Timetable from "../../timetable/model/timetable";
+import type { Doc, Id } from "@/_generated/dataModel";
+import * as AcademicStage from "@/academicPattern/model/academicStage";
+import { ERROR_CODES, throwAppError } from "@/helpers/constants";
+import { slugifyName } from "@/helpers/slug";
+import * as InstitutionAcademicPattern from "@/institution/model/institutionAcademicPattern";
+import * as AttendanceRegister from "@/attendance/model/register";
+import type { AppMutationCtx, AppQueryCtx } from "@/model/common.types";
+import * as Program from "@/program/model/program";
+import * as Timetable from "@/timetable/model/timetable";
 import type {
 	ClassDto,
 	ClassListItem,

@@ -1,6 +1,6 @@
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
-import { vv } from "../../schema";
+import { vv } from "@/schema";
 
 const GenderSchema = vv.union(
 	vv.literal("male"),
