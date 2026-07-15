@@ -164,7 +164,7 @@ export const updateFacultyEmails = internalMutation({
 
 		for (const staff of faculty.page) {
 			await ctx.db.patch("faculty", staff._id, {
-				email: `${staff.firstName.toLowerCase()}.${staff.lastName.toLowerCase()}.${faker.helpers.rangeToNumber({ min: 1, max: 1000 })}+test@resend.dev`,
+				email: `delivered+${staff.firstName.toLowerCase()}.${staff.lastName.toLowerCase()}.${faker.helpers.rangeToNumber({ min: 1, max: 1000 })}@resend.dev`,
 			});
 
 			console.info(

@@ -58,6 +58,7 @@ import type * as institution_queries from "../institution/queries.js";
 import type * as institution_validator_institution from "../institution/validator/institution.js";
 import type * as institution_validator_institutionAcademicPattern from "../institution/validator/institutionAcademicPattern.js";
 import type * as institution_validator_studentCategory from "../institution/validator/studentCategory.js";
+import type * as invitation_queries from "../invitation/queries.js";
 import type * as model_ownerOrganization from "../model/ownerOrganization.js";
 import type * as ownerOrganizations from "../ownerOrganizations.js";
 import type * as program_model_program from "../program/model/program.js";
@@ -144,6 +145,7 @@ declare const fullApi: ApiFromModules<{
   "institution/validator/institution": typeof institution_validator_institution;
   "institution/validator/institutionAcademicPattern": typeof institution_validator_institutionAcademicPattern;
   "institution/validator/studentCategory": typeof institution_validator_studentCategory;
+  "invitation/queries": typeof invitation_queries;
   "model/ownerOrganization": typeof model_ownerOrganization;
   ownerOrganizations: typeof ownerOrganizations;
   "program/model/program": typeof program_model_program;

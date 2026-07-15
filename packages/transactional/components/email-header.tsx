@@ -10,7 +10,7 @@ export function EmailHeader({ heading }: EmailHeaderProps) {
 			<Row>
 				<Column align="center">
 					<Img
-						src="/static/instello-feather.svg"
+						src="https://instello.in/instello-feather.svg"
 						alt="Instello"
 						width="64"
 						height="64"

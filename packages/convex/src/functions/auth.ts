@@ -45,6 +45,10 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 		secret: betterAuthSecret,
 		database: authComponent.adapter(ctx),
 		advanced: {
+			// Let Convex generate document IDs. Required so organization
+			// invitations don't send a pre-generated `_id` that fails adapter:create.
+			// See: https://github.com/get-convex/better-auth/issues/407
+			database: { generateId: false },
 			crossSubDomainCookies: {
 				enabled: true,
 				domain:
@@ -145,6 +149,9 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 				/** Number of institutions owner can create in his organization */
 				organizationLimit: 10,
 				cancelPendingInvitationsOnReInvite: true,
+				// With generateId: false, Better Auth defaults this to true.
+				// Match emailAndPassword.requireEmailVerification: false.
+				requireEmailVerificationOnInvitation: false,
 
 				/** Send invitation email to the user when being invited to join an institution */
 				async sendInvitationEmail(data) {

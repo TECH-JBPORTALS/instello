@@ -1,5 +1,6 @@
 "use client";
 
+import { api } from "@instello/convex/api";
 import { authClient } from "@instello/convex/better-auth/client";
 import {
 	Alert,
@@ -30,6 +31,7 @@ import {
 import { Skeleton } from "@instello/ui/components/skeleton";
 import { IconAlertCircle, IconEye, IconEyeClosed } from "@tabler/icons-react";
 import { useForm } from "@tanstack/react-form-nextjs";
+import { useQuery } from "convex-helpers/react/cache/hooks";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import * as v from "valibot";
@@ -48,22 +50,22 @@ const SignInSchema = v.object({
 	password: v.pipe(v.string(), v.minLength(2, "Password is required")),
 });
 
-type InvitationInfo = {
-	email: string;
-	organizationName?: string;
-};
-
 export function AcceptInvitation({ token }: { token: string | null }) {
 	const router = useRouter();
 	const { data: session, isPending: isSessionPending } =
 		authClient.useSession();
-	const [invitation, setInvitation] = useState<InvitationInfo | null>(null);
-	const [isLoadingInvitation, setIsLoadingInvitation] = useState(!!token);
-	const [invitationError, setInvitationError] = useState<string | null>(null);
+	const invitation = useQuery(
+		api.invitation.queries.getPreview,
+		token ? { invitationId: token } : "skip",
+	);
 	const [acceptError, setAcceptError] = useState<string | null>(null);
 	const [isAccepting, setIsAccepting] = useState(false);
 	const [hasAccepted, setHasAccepted] = useState(false);
 	const [mode, setMode] = useState<"sign-up" | "sign-in">("sign-up");
+
+	const isLoadingInvitation = !!token && invitation === undefined;
+	const invitationError =
+		token && invitation === null ? "Invitation not found or expired." : null;
 
 	const acceptInvitation = useCallback(async () => {
 		if (!token || hasAccepted) return;
@@ -91,56 +93,12 @@ export function AcceptInvitation({ token }: { token: string | null }) {
 	}, [token, hasAccepted, router]);
 
 	useEffect(() => {
-		if (!token) {
-			setIsLoadingInvitation(false);
-			setInvitationError("Missing invitation token.");
-			return;
-		}
-
-		let cancelled = false;
-
-		async function loadInvitation() {
-			setIsLoadingInvitation(true);
-			const invitationId = token;
-			if (!invitationId) return;
-
-			const { data, error } = await authClient.organization.getInvitation({
-				query: { id: invitationId },
-			});
-
-			if (cancelled) return;
-
-			if (error || !data) {
-				setInvitationError(
-					error?.message ?? "Invitation not found or expired.",
-				);
-				setIsLoadingInvitation(false);
-				return;
-			}
-
-			setInvitation({
-				email: data.email,
-				organizationName:
-					"organizationName" in data &&
-					typeof data.organizationName === "string"
-						? data.organizationName
-						: undefined,
-			});
-			setIsLoadingInvitation(false);
-		}
-
-		void loadInvitation();
-		return () => {
-			cancelled = true;
-		};
-	}, [token]);
-
-	useEffect(() => {
 		if (
 			session &&
 			token &&
 			!isSessionPending &&
 			!isLoadingInvitation &&
+			invitation &&
 			!hasAccepted &&
 			!isAccepting
 		) {
@@ -151,6 +109,7 @@ export function AcceptInvitation({ token }: { token: string | null }) {
 		token,
 		isSessionPending,
 		isLoadingInvitation,
+		invitation,
 		hasAccepted,
 		isAccepting,
 		acceptInvitation,
@@ -208,7 +167,7 @@ export function AcceptInvitation({ token }: { token: string | null }) {
 				<CardFooter>
 					<Button
 						className="w-full"
-						disabled={isAccepting}
+						disabled={isAccepting || !invitation}
 						onClick={() => void acceptInvitation()}
 					>
 						{isAccepting ? "Accepting…" : "Accept invitation"}
@@ -232,31 +191,36 @@ export function AcceptInvitation({ token }: { token: string | null }) {
 							: "Accept your institution invitation"}
 				</CardDescription>
 			</CardHeader>
-			{mode === "sign-up" ? (
-				<InvitationSignUpForm
-					key={`sign-up-${invitation?.email ?? "unknown"}`}
-					defaultEmail={invitation?.email ?? ""}
-					onSuccess={() => void acceptInvitation()}
-					onSwitchToSignIn={() => setMode("sign-in")}
-				/>
-			) : (
-				<InvitationSignInForm
-					key={`sign-in-${invitation?.email ?? "unknown"}`}
-					defaultEmail={invitation?.email ?? ""}
-					onSuccess={() => void acceptInvitation()}
-					onSwitchToSignUp={() => setMode("sign-up")}
-				/>
-			)}
+			{invitation ? (
+				mode === "sign-up" ? (
+					<InvitationSignUpForm
+						key={`sign-up-${invitation.email}`}
+						defaultEmail={invitation.email}
+						defaultName={invitation.suggestedName ?? ""}
+						onSuccess={() => void acceptInvitation()}
+						onSwitchToSignIn={() => setMode("sign-in")}
+					/>
+				) : (
+					<InvitationSignInForm
+						key={`sign-in-${invitation.email}`}
+						defaultEmail={invitation.email}
+						onSuccess={() => void acceptInvitation()}
+						onSwitchToSignUp={() => setMode("sign-up")}
+					/>
+				)
+			) : null}
 		</Card>
 	);
 }
 
 function InvitationSignUpForm({
 	defaultEmail,
+	defaultName,
 	onSuccess,
 	onSwitchToSignIn,
 }: {
 	defaultEmail: string;
+	defaultName: string;
 	onSuccess: () => void;
 	onSwitchToSignIn: () => void;
 }) {
@@ -265,7 +229,7 @@ function InvitationSignUpForm({
 
 	const form = useForm({
 		defaultValues: {
-			name: "",
+			name: defaultName,
 			email: defaultEmail,
 			password: "",
 		},
@@ -341,7 +305,6 @@ function InvitationSignUpForm({
 										onChange={(e) => field.handleChange(e.target.value)}
 										onBlur={field.handleBlur}
 										aria-invalid={isInvalid}
-										readOnly={!!defaultEmail}
 									/>
 									{isInvalid && <FieldError errors={field.state.meta.errors} />}
 								</Field>
@@ -376,20 +339,21 @@ function InvitationSignUpForm({
 							);
 						}}
 					</form.Field>
+					<form.Subscribe selector={(s) => [s.canSubmit, s.isSubmitting]}>
+						{([canSubmit, isSubmitting]) => (
+							<Button
+								type="submit"
+								className="w-full"
+								disabled={!canSubmit || isSubmitting}
+							>
+								{isSubmitting ? "Creating account…" : "Create account & join"}
+							</Button>
+						)}
+					</form.Subscribe>
 				</FieldGroup>
 			</CardContent>
-			<CardFooter className="flex flex-col gap-3">
-				<form.Subscribe selector={(s) => [s.canSubmit, s.isSubmitting]}>
-					{([canSubmit, isSubmitting]) => (
-						<Button
-							type="submit"
-							className="w-full"
-							disabled={!canSubmit || isSubmitting}
-						>
-							{isSubmitting ? "Creating account…" : "Create account & join"}
-						</Button>
-					)}
-				</form.Subscribe>
+
+			<CardFooter className="flex flex-col gap-3 mt-4">
 				<p className="text-center text-sm text-muted-foreground">
 					Already have an account?{" "}
 					<button
