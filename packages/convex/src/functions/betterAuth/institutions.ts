@@ -70,6 +70,7 @@ export const getMembership = query({
 	},
 });
 
+/** Get first institution by user */
 export const firstByUser = query({
 	args: { userId: vv.string() },
 	returns: vv.nullable(vv.doc("institution")),
@@ -92,11 +93,7 @@ export const firstByUser = query({
 	},
 });
 
-/**
- * **List all institutions by given user and role**
- * @param userId
- * @param role
- */
+/** List all institutions by given user and role */
 export const listByUserRole = query({
 	args: { userId: vv.string(), role: vv.string() },
 	returns: vv.array(vv.doc("institution")),

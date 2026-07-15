@@ -16,6 +16,7 @@ export const resolveLandingPath = userQuery({
 			userId: ctx.session.userId,
 		});
 
+		/* 1. Check if user is owner redirect him to the organization page */
 		if (user.role === "owner") {
 			const organization = await OwnerOrganizations.getByUserId(ctx, {
 				userId: ctx.session.userId,
@@ -28,6 +29,7 @@ export const resolveLandingPath = userQuery({
 			};
 		}
 
+		/* 2. Check if user is have any active institution id in his session redirect him to that */
 		if (ctx.session.activeInstitutionId) {
 			const institution = await ctx.runQuery(
 				components.betterAuth.institutions.getById,
@@ -43,6 +45,19 @@ export const resolveLandingPath = userQuery({
 			};
 		}
 
+		/* 3. If he doesn't have active instituion check weather he is part of any institution, redirect him to the first institution */
+		const institution = await ctx.runQuery(
+			components.betterAuth.institutions.firstByUser,
+			{ userId: ctx.session.userId },
+		);
+
+		if (institution) {
+			return {
+				redirectUrl: formInstitutionUrl(institution.slug),
+			};
+		}
+
+		/** 4. If he is not part of any institution just redirect him to the not part of any institution page */
 		return {
 			redirectUrl: "/not-part-of-any-institution",
 		};
@@ -71,6 +86,7 @@ export const resolveStorageUrl = userMutation({
 	},
 });
 
+/** Get current active institution for the user */
 export const getCurrentUserInInstitution = insQuery({
 	args: {},
 	returns: vv.object({
