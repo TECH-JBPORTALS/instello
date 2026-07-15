@@ -11,7 +11,7 @@ export async function seedFaculty(
 		institutionId: string;
 		createdBy: string;
 		overrides?: Partial<CreateFacultyInput> & {
-			status?: "active" | "inactive";
+			status?: "active" | "inactive" | "draft" | "invited";
 			phoneVerified?: boolean;
 		};
 	},
@@ -34,7 +34,7 @@ export async function seedFaculty(
 			number: input.phoneNumber,
 			verified: args.overrides?.phoneVerified ?? false,
 		},
-		status: args.overrides?.status ?? "active",
+		status: args.overrides?.status ?? "draft",
 		createdAt: now,
 		updatedAt: now,
 	});

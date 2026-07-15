@@ -1,6 +1,11 @@
 import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import {
+	isMutationCtx,
+	requireActionCtx,
+	requireRunMutationCtx,
+} from "@convex-dev/better-auth/utils";
+import {
 	BetterAuthError,
 	type BetterAuthOptions,
 	betterAuth,
@@ -14,8 +19,8 @@ import type { DataModel } from "./_generated/dataModel";
 import { env } from "./_generated/server";
 import authConfig from "./auth.config";
 import authSchema from "./betterAuth/schema";
+import * as Faculty from "./faculty/model/faculty";
 import { ERROR_CODES, RESERVED_SUBDOMAINS } from "./helpers/constants";
-import { requireActionCtx } from "@convex-dev/better-auth/utils";
 
 const siteUrl = env.SITE_URL;
 const betterAuthSecret = env.BETTER_AUTH_SECRET;
@@ -171,6 +176,45 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 							);
 
 						return { data };
+					},
+					async afterAcceptInvitation({ invitation, user, organization }) {
+						if (isMutationCtx(ctx)) {
+							await Faculty.activateFromInvitation(ctx, {
+								institutionId: organization.id,
+								email: invitation.email,
+								userId: user.id,
+							});
+							return;
+						}
+
+						const runMutationCtx = requireRunMutationCtx(ctx);
+						await runMutationCtx.runMutation(
+							internal.faculty.mutations.activateFromInvitation,
+							{
+								institutionId: organization.id,
+								email: invitation.email,
+								userId: user.id,
+							},
+						);
+					},
+					async afterCancelInvitation({ invitation, organization }) {
+						if (isMutationCtx(ctx)) {
+							await Faculty.revertToDraftFromInvitationCancellation(ctx, {
+								institutionId: organization.id,
+								email: invitation.email,
+							});
+							return;
+						}
+
+						const runMutationCtx = requireRunMutationCtx(ctx);
+						await runMutationCtx.runMutation(
+							internal.faculty.mutations
+								.revertToDraftFromInvitationCancellation,
+							{
+								institutionId: organization.id,
+								email: invitation.email,
+							},
+						);
 					},
 				},
 			}),

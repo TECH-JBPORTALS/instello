@@ -1,7 +1,3 @@
-export const FACULTY_STATUS_TABS = ["active", "inactive"] as const;
-
-export type FacultyStatusTab = (typeof FACULTY_STATUS_TABS)[number];
-
 export const ADD_FACULTY_STEPS = [
 	"Personal info",
 	"Employment",
@@ -9,6 +5,27 @@ export const ADD_FACULTY_STEPS = [
 ] as const;
 
 export const FACULTY_LIST_PAGE_SIZE = 20;
+
+export const FACULTY_STATUS_FILTERS = [
+	"all",
+	"draft",
+	"invited",
+	"active",
+	"inactive",
+] as const;
+
+export type FacultyStatusFilter = (typeof FACULTY_STATUS_FILTERS)[number];
+
+export type FacultyStatus = Exclude<FacultyStatusFilter, "all">;
+
+export const FACULTY_STATUS_FILTER_LABELS: Record<FacultyStatusFilter, string> =
+	{
+		all: "All statuses",
+		draft: "Draft",
+		invited: "Invited",
+		active: "Active",
+		inactive: "Inactive",
+	};
 
 export const FACULTY_IMPORT_COLUMNS = [
 	"staff_id",

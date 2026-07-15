@@ -1,4 +1,4 @@
-import type { PaginationOptions } from "convex/server";
+import type { PaginationOptions, PaginationResult } from "convex/server";
 import type { Infer } from "convex/values";
 import type { Doc, Id } from "#_generated/dataModel";
 import { ERROR_CODES, throwAppError } from "#helpers/constants";
@@ -24,6 +24,8 @@ export {
 } from "../validator/faculty";
 export type { CreateInput, FacultyDto, PaginatedFacultyList };
 
+export type FacultyStatus = Doc<"faculty">["status"];
+
 export const CreateSchema = vv
 	.doc("faculty")
 	.pick(
@@ -47,33 +49,6 @@ async function deleteStoredImage(
 ) {
 	if (!imageId) return;
 	await ctx.storage.delete(imageId);
-}
-
-export async function toDto(
-	ctx: AppQueryCtx,
-	faculty: Doc<"faculty">,
-): Promise<FacultyDto> {
-	const imageUrl = faculty.image
-		? await ctx.storage.getUrl(faculty.image)
-		: null;
-
-	return {
-		_id: faculty._id,
-		staffId: faculty.staffId,
-		firstName: faculty.firstName,
-		lastName: faculty.lastName,
-		dateOfBirth: faculty.dateOfBirth,
-		email: faculty.email,
-		image: imageUrl ?? undefined,
-		designation: faculty.designation,
-		joinedDate: faculty.joinedDate,
-		qualification: faculty.qualification,
-		specialization: faculty.specialization,
-		phone: faculty.phone,
-		status: faculty.status,
-		createdAt: faculty.createdAt,
-		updatedAt: faculty.updatedAt,
-	};
 }
 
 /**
@@ -151,7 +126,7 @@ export async function create(
 		institutionId: args.institutionId,
 		createdBy: args.createdBy,
 		phone: { number: phoneNumber, verified: false },
-		status: "active",
+		status: "draft",
 		createdAt: now,
 		updatedAt: now,
 	});
@@ -165,10 +140,10 @@ export async function list(
 	ctx: AppQueryCtx,
 	args: {
 		institutionId: string;
-		status?: "active" | "inactive";
+		status?: FacultyStatus;
 		paginationOpts: PaginationOptions;
 	},
-): Promise<PaginatedFacultyList> {
+): Promise<PaginationResult<Doc<"faculty">>> {
 	const { institutionId, status, paginationOpts } = args;
 
 	const query = status
@@ -185,11 +160,7 @@ export async function list(
 
 	const result = await query.order("asc").paginate(paginationOpts);
 
-	return {
-		page: await Promise.all(result.page.map((f) => toDto(ctx, f))),
-		isDone: result.isDone,
-		continueCursor: result.continueCursor,
-	};
+	return result;
 }
 
 /**
@@ -293,10 +264,52 @@ export async function patchPhone(
 export async function setStatus(
 	ctx: AppMutationCtx,
 	faculty: Doc<"faculty">,
-	status: "active" | "inactive",
+	status: FacultyStatus,
 ) {
 	await ctx.db.patch("faculty", faculty._id, {
 		status,
 		updatedAt: Date.now(),
 	});
+}
+
+/**
+ * **Activate faculty after they accept an institution invitation**
+ */
+export async function activateFromInvitation(
+	ctx: AppMutationCtx,
+	args: {
+		institutionId: string;
+		email: string;
+		userId: string;
+	},
+) {
+	const faculty = await findByEmail(ctx, args.institutionId, args.email);
+
+	if (!faculty) return null;
+
+	await ctx.db.patch("faculty", faculty._id, {
+		status: "active",
+		userId: args.userId,
+		updatedAt: Date.now(),
+	});
+
+	return faculty._id;
+}
+
+/**
+ * **Revert invited faculty to draft after invitation cancellation**
+ */
+export async function revertToDraftFromInvitationCancellation(
+	ctx: AppMutationCtx,
+	args: {
+		institutionId: string;
+		email: string;
+	},
+) {
+	const faculty = await findByEmail(ctx, args.institutionId, args.email);
+
+	if (faculty?.status !== "invited") return null;
+
+	await setStatus(ctx, faculty, "draft");
+	return faculty._id;
 }

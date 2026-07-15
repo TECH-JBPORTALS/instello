@@ -28,13 +28,14 @@ import {
 import { useState } from "react";
 import { useInsMutation } from "@/hooks/convex-react";
 import { getConvexErrorMessage } from "@/lib/convex-error";
+import type { FacultyStatus } from "../constants";
 
 type DangerZoneSectionProps = {
 	faculty: {
 		_id: Id<"faculty">;
 		firstName: string;
 		lastName: string;
-		status: "active" | "inactive";
+		status: FacultyStatus;
 	};
 	disabled?: boolean;
 };
@@ -51,6 +52,8 @@ export function DangerZoneSection({
 
 	const displayName = `${faculty.firstName} ${faculty.lastName}`.trim();
 	const isActive = faculty.status === "active";
+	const canToggleStatus =
+		faculty.status === "active" || faculty.status === "inactive";
 
 	async function handleConfirm() {
 		setIsSubmitting(true);
@@ -69,7 +72,7 @@ export function DangerZoneSection({
 		}
 	}
 
-	if (disabled) return null;
+	if (disabled || !canToggleStatus) return null;
 
 	return (
 		<>

@@ -1,3 +1,4 @@
+import { paginationResultValidator } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { vv } from "#schema";
@@ -54,16 +55,25 @@ export const FacultyDtoSchema = vv.object({
 		number: vv.string(),
 		verified: vv.boolean(),
 	}),
-	status: vv.union(vv.literal("active"), vv.literal("inactive")),
+	/**
+	 * Status field can be one of the following values:
+	 * - `active`   The faculty is active and can access the institution.
+	 * - `inactive` The faculty is inactive and cannot access the institution.
+	 * - `draft`    The faculty is a draft and is not yet active.
+	 * - `invited`  The faculty is invited to join the institution but has not yet accepted the invitation.
+	 */
+	status: vv.union(
+		vv.literal("active"),
+		vv.literal("inactive"),
+		vv.literal("draft"),
+		vv.literal("invited"),
+	),
 	createdAt: vv.number(),
 	updatedAt: vv.number(),
 });
 
-export const PaginatedFacultyListSchema = vv.object({
-	page: vv.array(FacultyDtoSchema),
-	isDone: vv.boolean(),
-	continueCursor: vv.string(),
-});
+export const PaginatedFacultyListSchema =
+	paginationResultValidator(FacultyDtoSchema);
 
 export type FacultyDto = Infer<typeof FacultyDtoSchema>;
 export type PaginatedFacultyList = Infer<typeof PaginatedFacultyListSchema>;
