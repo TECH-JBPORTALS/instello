@@ -5,7 +5,7 @@ import { InstitutionPatchSchema } from "./validator/institution";
 
 /** Update institution profile fields (slug and code are not editable) */
 export const update = insMutation({
-	permissions: ["ac:update"],
+	permissions: ["institution:update"],
 	args: {
 		body: InstitutionPatchSchema,
 	},
