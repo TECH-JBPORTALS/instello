@@ -1,4 +1,5 @@
 import { paginationOptsValidator } from "convex/server";
+import { ERROR_CODES, throwAppError } from "#helpers/constants";
 import { insQuery } from "../helpers/customFunctions";
 import { vv } from "../schema";
 import * as Faculty from "./model/faculty";
@@ -50,6 +51,11 @@ export const getById = insQuery({
 	returns: FacultyResultSchema,
 	handler: async (ctx, args) => {
 		const faculty = await Faculty.findOrThrow(ctx.db, args.id);
+
+		if (faculty.institutionId !== ctx.institution._id) {
+			throwAppError(ERROR_CODES.FACULTY.NOT_FOUND);
+		}
+
 		return await FacultyService.toDto(ctx, faculty);
 	},
 });

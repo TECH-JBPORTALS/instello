@@ -147,7 +147,7 @@ describe("faculty.list", () => {
 	});
 });
 
-describe("faculty.getById", () => {
+describe("faculty.find", () => {
 	test("returns faculty by id for the active institution", async ({
 		t,
 		user1,

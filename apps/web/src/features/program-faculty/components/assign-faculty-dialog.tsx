@@ -2,6 +2,7 @@
 
 import { api } from "@instello/convex/api";
 import type { Id } from "@instello/convex/dataModel";
+import { Badge } from "@instello/ui/components/badge";
 import { Button } from "@instello/ui/components/button";
 import {
 	Combobox,
@@ -30,7 +31,6 @@ import { FacultyAvatar } from "@/features/faculty/components/faculty-avatar";
 import { getFacultyDisplayName } from "@/features/faculty/forms/shared-form";
 import { useInsMutation, useInsQuery } from "@/hooks/convex-react";
 import { getConvexErrorMessage } from "@/lib/convex-error";
-import { Badge } from "@instello/ui/components/badge";
 
 type AssignableFaculty = {
 	_id: Id<"faculty">;

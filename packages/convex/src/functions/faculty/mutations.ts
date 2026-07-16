@@ -48,7 +48,7 @@ export const updatePersonalInfo = insMutation({
 	},
 	returns: vv.null(),
 	handler: async (ctx, args) => {
-		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
+		const faculty = await Faculty.find(ctx.db, args.id);
 
 		if (!faculty) {
 			throwAppError(ERROR_CODES.FACULTY.NOT_FOUND);
@@ -71,7 +71,7 @@ export const updateEmployment = insMutation({
 	},
 	returns: vv.null(),
 	handler: async (ctx, args) => {
-		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
+		const faculty = await Faculty.find(ctx.db, args.id);
 
 		if (!faculty) {
 			throwAppError(ERROR_CODES.FACULTY.NOT_FOUND);
@@ -94,7 +94,7 @@ export const updatePhoneNumber = insMutation({
 	},
 	returns: vv.null(),
 	handler: async (ctx, args) => {
-		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
+		const faculty = await Faculty.find(ctx.db, args.id);
 
 		if (!faculty) {
 			throwAppError(ERROR_CODES.FACULTY.NOT_FOUND);
@@ -113,7 +113,7 @@ export const invite = insMutation({
 	args: { id: vv.id("faculty") },
 	returns: vv.null(),
 	handler: async (ctx, args) => {
-		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
+		const faculty = await Faculty.find(ctx.db, args.id);
 
 		if (!faculty) {
 			throwAppError(ERROR_CODES.FACULTY.NOT_FOUND);
@@ -136,7 +136,7 @@ export const cancelInvite = insMutation({
 	args: { id: vv.id("faculty") },
 	returns: vv.null(),
 	handler: async (ctx, args) => {
-		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
+		const faculty = await Faculty.find(ctx.db, args.id);
 
 		if (!faculty) {
 			throwAppError(ERROR_CODES.FACULTY.NOT_FOUND);
@@ -163,7 +163,7 @@ export const activate = insMutation({
 	args: { id: vv.id("faculty") },
 	returns: vv.null(),
 	handler: async (ctx, args) => {
-		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
+		const faculty = await Faculty.find(ctx.db, args.id);
 
 		if (!faculty) {
 			throwAppError(ERROR_CODES.FACULTY.NOT_FOUND);
@@ -182,7 +182,7 @@ export const deactivate = insMutation({
 	args: { id: vv.id("faculty") },
 	returns: vv.null(),
 	handler: async (ctx, args) => {
-		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
+		const faculty = await Faculty.find(ctx.db, args.id);
 
 		if (!faculty) {
 			throwAppError(ERROR_CODES.FACULTY.NOT_FOUND);
