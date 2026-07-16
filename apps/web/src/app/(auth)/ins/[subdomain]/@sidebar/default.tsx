@@ -1,5 +1,5 @@
-import { InstitutionSidebarContent } from "@/components/sidebars/institution-sidebar";
+import { InstitutionOrFacultySidebar } from "@/components/sidebars/institution-or-faculty-sidebar";
 
 export default function SidebarDefault() {
-	return <InstitutionSidebarContent />;
+	return <InstitutionOrFacultySidebar />;
 }

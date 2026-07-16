@@ -1,11 +1,12 @@
 import { api } from "@instello/convex/api";
 import { fetchAuthQuery } from "@instello/convex/better-auth/server";
 import { notFound } from "next/navigation";
-import { ProgramsListPage } from "@/features/programs/pages/programs-list-page";
 
-export default async function Page({
+export default async function Layout({
+	children,
 	params,
 }: {
+	children: React.ReactNode;
 	params: Promise<{ subdomain: string }>;
 }) {
 	const { subdomain } = await params;
@@ -16,5 +17,6 @@ export default async function Page({
 	if (user.role === "faculty") {
 		return notFound();
 	}
-	return <ProgramsListPage />;
+
+	return <>{children}</>;
 }

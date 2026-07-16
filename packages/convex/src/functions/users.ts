@@ -104,7 +104,7 @@ export const getCurrentUserInInstitution = insQuery({
 		return {
 			_id: ctx.session.user._id,
 			email: ctx.session.user.email,
-			image: ctx.session.user.name,
+			image: ctx.session.user.image ?? null,
 			name: ctx.session.user.name,
 			role: ctx.membership.role as InsRole,
 		};
