@@ -1,13 +1,13 @@
 import type { PaginationOptions, PaginationResult } from "convex/server";
 import type { Infer } from "convex/values";
 import type { Doc, Id } from "#_generated/dataModel";
+import type { DatabaseReader } from "#_generated/server";
 import { ERROR_CODES, throwAppError } from "#helpers/constants";
 import { validateIndianPhoneNumber } from "#helpers/phone";
 import type { AppMutationCtx, AppQueryCtx } from "#model/common.types";
 import { vv } from "#schema";
 import type {
 	CreateInput,
-	FacultyDto,
 	PaginatedFacultyList,
 	PatchEmploymentSchema,
 	PatchPersonalInfoSchema,
@@ -16,13 +16,13 @@ import type {
 
 export {
 	CreateInputSchema,
-	FacultyDtoSchema,
 	PaginatedFacultyListSchema,
 	PatchEmploymentSchema,
 	PatchPersonalInfoSchema,
 	PatchPhoneSchema,
 } from "../validator/faculty";
-export type { CreateInput, FacultyDto, PaginatedFacultyList };
+
+export type { CreateInput, PaginatedFacultyList };
 
 export type FacultyStatus = Doc<"faculty">["status"];
 
@@ -163,19 +163,20 @@ export async function list(
 	return result;
 }
 
-/**
- * **Get faculty by id**
- * @returns null if faculty does not exist or does not belong to institutionId
- */
-export async function getById(
-	ctx: AppQueryCtx,
-	id: Id<"faculty">,
-	institutionId?: string,
-) {
-	const faculty = await ctx.db.get("faculty", id);
+/** Get faculty or return null if no faculty found */
+export async function find(db: DatabaseReader, id: Id<"faculty">) {
+	const faculty = await db.get("faculty", id);
 
 	if (!faculty) return null;
-	if (institutionId && faculty.institutionId !== institutionId) return null;
+
+	return faculty;
+}
+
+/** Get faculty or throw an error if no faculty found */
+export async function findOrThrow(db: DatabaseReader, id: Id<"faculty">) {
+	const faculty = await find(db, id);
+
+	if (!faculty) throwAppError(ERROR_CODES.FACULTY.NOT_FOUND);
 
 	return faculty;
 }

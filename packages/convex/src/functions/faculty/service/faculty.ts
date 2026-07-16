@@ -1,11 +1,11 @@
 import type { Doc } from "#_generated/dataModel";
-import type { FacultyDto } from "#faculty/validator/faculty";
+import type { FacultyResult } from "#faculty/validator/faculty";
 import type { AppQueryCtx } from "#model/common.types";
 
 export async function toDto(
 	ctx: AppQueryCtx,
 	faculty: Doc<"faculty">,
-): Promise<FacultyDto> {
+): Promise<FacultyResult> {
 	const imageUrl = faculty.image
 		? await ctx.storage.getUrl(faculty.image)
 		: null;

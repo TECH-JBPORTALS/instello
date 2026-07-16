@@ -39,7 +39,7 @@ export const PatchPhoneSchema = vv.object({
 	number: vv.string(),
 });
 
-export const FacultyDtoSchema = vv.object({
+export const FacultyResultSchema = vv.object({
 	_id: vv.id("faculty"),
 	staffId: vv.string(),
 	firstName: vv.string(),
@@ -73,8 +73,8 @@ export const FacultyDtoSchema = vv.object({
 });
 
 export const PaginatedFacultyListSchema =
-	paginationResultValidator(FacultyDtoSchema);
+	paginationResultValidator(FacultyResultSchema);
 
-export type FacultyDto = Infer<typeof FacultyDtoSchema>;
+export type FacultyResult = Infer<typeof FacultyResultSchema>;
 export type PaginatedFacultyList = Infer<typeof PaginatedFacultyListSchema>;
 export type CreateInput = Infer<typeof CreateInputObjectSchema>;

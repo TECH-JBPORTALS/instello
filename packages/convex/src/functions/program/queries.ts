@@ -1,11 +1,18 @@
+import {
+	paginationOptsValidator,
+	paginationResultValidator,
+} from "convex/server";
 import * as AcademicStage from "../academicPattern/model/academicStage";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
-import { insQuery } from "../helpers/customFunctions";
+import { insMutation, insQuery } from "../helpers/customFunctions";
 import * as InstitutionAcademicPattern from "../institution/model/institutionAcademicPattern";
 import { vv } from "../schema";
+import { ProgramFacultyDto } from "./dto/programFaculty";
 import * as Program from "./model/program";
+import * as ProgramFaculty from "./model/programFaculty";
 import * as ProgramSubject from "./model/programSubject";
 import { ProgramDtoSchema, ProgramListItemSchema } from "./validator/program";
+import { ProgramFacultyResult } from "./validator/programFaculty";
 import {
 	AllocatableSubjectSchema,
 	ProgramSubjectListItemSchema,
@@ -159,5 +166,59 @@ export const listAllocatableSubjects = insQuery({
 			programId: args.programId,
 			academicStageId: args.academicStageId,
 		});
+	},
+});
+
+/** Assign staff to the program */
+export const assignStaff = insMutation({
+	permissions: ["program:update"],
+	args: {
+		programId: vv.id("programs"),
+		facultyId: vv.id("faculty"),
+	},
+	handler(ctx, args) {
+		return ProgramFaculty.assignOrUpdate(
+			ctx.db,
+			args.programId,
+			args.facultyId,
+			false,
+		);
+	},
+});
+
+/** List all faculty in the program with pagination enabled */
+export const listFaculty = insQuery({
+	permissions: ["program:view"],
+	args: {
+		programId: vv.id("programs"),
+		paginationOpts: paginationOptsValidator,
+	},
+	returns: paginationResultValidator(ProgramFacultyResult),
+	handler: async (ctx, args) => {
+		const programFaculty = await ProgramFaculty.listWithPagination(
+			ctx.db,
+			args.programId,
+			args.paginationOpts,
+		);
+
+		return {
+			...programFaculty,
+			page: await Promise.all(
+				programFaculty.page.map(
+					async (pf) => await ProgramFacultyDto.to(ctx, pf),
+				),
+			),
+		};
+	},
+});
+
+/** Remove a staff from the program*/
+export const removeStaff = insMutation({
+	permissions: ["program:update"],
+	args: {
+		programFacultyId: vv.id("programFaculty"),
+	},
+	handler(ctx, args) {
+		return ProgramFaculty.remove(ctx.db, args.programFacultyId);
 	},
 });

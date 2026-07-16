@@ -1,11 +1,10 @@
 import { paginationOptsValidator } from "convex/server";
-import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import { insQuery } from "../helpers/customFunctions";
 import { vv } from "../schema";
 import * as Faculty from "./model/faculty";
 import * as FacultyService from "./service/faculty";
 import {
-	FacultyDtoSchema,
+	FacultyResultSchema,
 	PaginatedFacultyListSchema,
 } from "./validator/faculty";
 
@@ -48,14 +47,9 @@ export const list = insQuery({
 export const getById = insQuery({
 	permissions: ["faculty:view"],
 	args: { id: vv.id("faculty") },
-	returns: FacultyDtoSchema,
+	returns: FacultyResultSchema,
 	handler: async (ctx, args) => {
-		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
-
-		if (!faculty) {
-			throwAppError(ERROR_CODES.FACULTY.NOT_FOUND);
-		}
-
+		const faculty = await Faculty.findOrThrow(ctx.db, args.id);
 		return await FacultyService.toDto(ctx, faculty);
 	},
 });

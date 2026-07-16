@@ -40,4 +40,17 @@ export const programTables = {
 			"subjectId",
 		])
 		.index("by_subject", ["subjectId"]),
+
+	/** Faculty should be assingned to program to access resources under that program */
+	programFaculty: defineTable({
+		facultyId: v.id("faculty"),
+		programId: v.id("programs"),
+		createdAt: v.number(),
+		updatedAt: v.number(),
+
+		/** Only one person can be head of program */
+		isHeadOfProgram: v.boolean(),
+	})
+		.index("by_program", ["programId"])
+		.index("by_faculty", ["facultyId"]),
 };
