@@ -37,4 +37,25 @@ export const classTables = {
 		createdAt: v.number(),
 		updatedAt: v.optional(v.number()),
 	}).index("by_class", ["classId"]),
+
+	/**
+	 * Faculty assigned to teach a program subject allocation within a specific class.
+	 * Curriculum still comes from programSubjects for the class's current head stage.
+	 */
+	classSubjectFaculty: defineTable({
+		classId: v.id("classes"),
+		programSubjectId: v.id("programSubjects"),
+		facultyId: v.id("faculty"),
+		createdAt: v.number(),
+		updatedAt: v.number(),
+	})
+		.index("by_class", ["classId"])
+		.index("by_class_and_program_subject", ["classId", "programSubjectId"])
+		.index("by_class_program_subject_and_faculty", [
+			"classId",
+			"programSubjectId",
+			"facultyId",
+		])
+		.index("by_faculty", ["facultyId"])
+		.index("by_program_subject", ["programSubjectId"]),
 };

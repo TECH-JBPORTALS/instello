@@ -1,10 +1,16 @@
 import { paginationOptsValidator } from "convex/server";
+import * as Faculty from "../faculty/model/faculty";
+import * as FacultyService from "../faculty/service/faculty";
+import { FacultyResultSchema } from "../faculty/validator/faculty";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import { insQuery } from "../helpers/customFunctions";
 import * as Program from "../program/model/program";
+import * as ProgramFaculty from "../program/model/programFaculty";
+import * as ProgramSubject from "../program/model/programSubject";
 import { vv } from "../schema";
 import * as Class from "./model/class";
 import * as ClassBatch from "./model/classBatch";
+import * as ClassSubjectFaculty from "./model/classSubjectFaculty";
 import {
 	ClassDtoSchema,
 	ClassListItemSchema,
@@ -15,6 +21,12 @@ import {
 	MoveTargetDtoSchema,
 	RemovePreviewSchema,
 } from "./validator/classBatch";
+import {
+	type ClassSubjectListItem,
+	ClassSubjectListItemSchema,
+	type MyAssignedClassSubjects,
+	MyAssignedClassSubjectsSchema,
+} from "./validator/classSubjectFaculty";
 
 /** Check if a class name is available in the current program */
 export const checkName = insQuery({
@@ -251,5 +263,165 @@ export const getBatchRemovePreview = insQuery({
 			batch,
 			cls.batchNamingConvention ?? "numeric",
 		);
+	},
+});
+
+/** Lists subjects for a class's current stage, with assigned faculty */
+export const listSubjects = insQuery({
+	permissions: ["class:view"],
+	args: {
+		classId: vv.id("classes"),
+	},
+	returns: vv.array(ClassSubjectListItemSchema),
+	handler: async (ctx, args) => {
+		const cls = await Class.ensureInInstitution(
+			ctx,
+			args.classId,
+			ctx.institution._id,
+		);
+
+		const rows = await ctx.db
+			.query("programSubjects")
+			.withIndex("by_program_and_stage", (q) =>
+				q
+					.eq("programId", cls.programId)
+					.eq("academicStageId", cls.currentHeadStageId),
+			)
+			.take(300);
+
+		const facultyBySubject =
+			await ClassSubjectFaculty.listFacultyByClassProgramSubjects(ctx, {
+				classId: cls._id,
+				programSubjectIds: rows.map((row) => row._id),
+			});
+
+		const items = await Promise.all(
+			rows.map(async (row) => {
+				const subject = await ctx.db.get("subjects", row.subjectId);
+				if (!subject) return null;
+
+				return {
+					_id: row._id,
+					type: row.type,
+					createdAt: row.createdAt,
+					subject: {
+						_id: subject._id,
+						name: subject.name,
+						code: subject.code,
+						color: subject.color,
+						alias: subject.alias,
+					},
+					faculty: facultyBySubject.get(row._id) ?? [],
+				} satisfies ClassSubjectListItem;
+			}),
+		);
+
+		return items
+			.filter((item): item is ClassSubjectListItem => item !== null)
+			.sort((a, b) => a.subject.name.localeCompare(b.subject.name));
+	},
+});
+
+/** List program faculty available for assigning to a class subject */
+export const listFacultyForSubjectAssign = insQuery({
+	permissions: ["class:update"],
+	args: {
+		classId: vv.id("classes"),
+	},
+	returns: vv.array(FacultyResultSchema),
+	handler: async (ctx, args) => {
+		const cls = await Class.ensureInInstitution(
+			ctx,
+			args.classId,
+			ctx.institution._id,
+		);
+
+		const faculty = await ProgramFaculty.listAssigned(ctx, {
+			programId: cls.programId,
+		});
+
+		return await Promise.all(faculty.map((f) => FacultyService.toDto(ctx, f)));
+	},
+});
+
+/**
+ * Lists subjects assigned to the current faculty member, grouped by class.
+ * Matches faculty via the session user's email within the institution.
+ */
+export const listMyAssignedSubjects = insQuery({
+	permissions: ["class:view"],
+	args: {},
+	returns: vv.array(MyAssignedClassSubjectsSchema),
+	handler: async (ctx) => {
+		const faculty = await Faculty.findByEmail(
+			ctx,
+			ctx.institution._id,
+			ctx.session.user.email,
+		);
+
+		if (!faculty) {
+			return [];
+		}
+
+		const assignments = await ClassSubjectFaculty.listByFaculty(
+			ctx,
+			faculty._id,
+		);
+
+		const groups = new Map<string, MyAssignedClassSubjects>();
+
+		for (const assignment of assignments) {
+			const cls = await ctx.db.get("classes", assignment.classId);
+			if (!cls || cls.isDeleting) continue;
+
+			const program = await Program.getById(
+				ctx,
+				cls.programId,
+				ctx.institution._id,
+			);
+			if (!program) continue;
+
+			const programSubject = await ProgramSubject.getById(
+				ctx,
+				assignment.programSubjectId,
+			);
+			if (!programSubject) continue;
+
+			const subject = await ctx.db.get("subjects", programSubject.subjectId);
+			if (!subject) continue;
+
+			let group = groups.get(cls._id);
+			if (!group) {
+				group = {
+					classId: cls._id,
+					className: cls.name,
+					classSlug: cls.slug,
+					programAlias: program.alias,
+					programName: program.name,
+					subjects: [],
+				};
+				groups.set(cls._id, group);
+			}
+
+			group.subjects.push({
+				programSubjectId: programSubject._id,
+				name: subject.name,
+				alias: subject.alias,
+				code: subject.code,
+				color: subject.color,
+				type: programSubject.type,
+			});
+		}
+
+		return [...groups.values()]
+			.map((group) => ({
+				...group,
+				subjects: group.subjects.sort((a, b) => a.name.localeCompare(b.name)),
+			}))
+			.sort((a, b) => {
+				const byProgram = a.programName.localeCompare(b.programName);
+				if (byProgram !== 0) return byProgram;
+				return a.className.localeCompare(b.className);
+			});
 	},
 });

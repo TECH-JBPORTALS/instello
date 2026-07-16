@@ -17,6 +17,7 @@ import type {
 	PaginatedClassList,
 	PatchBasicInfoSchema,
 } from "../validator/class";
+import * as ClassSubjectFaculty from "./classSubjectFaculty";
 
 export type {
 	ClassDto,
@@ -416,6 +417,7 @@ export async function deleteCascadeBatch(
 	if (await deleteStudentsForClass(ctx, cls._id)) return true;
 	if (await deleteBatchesForClass(ctx, cls._id)) return true;
 
+	await ClassSubjectFaculty.removeAllByClass(ctx, cls._id);
 	await ctx.db.delete("classes", cls._id);
 	return false;
 }

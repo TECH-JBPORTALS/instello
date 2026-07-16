@@ -1,5 +1,6 @@
 import type { Doc, Id } from "#_generated/dataModel";
 import type { AppMutationCtx, AppQueryCtx } from "#model/common.types";
+import * as ClassSubjectFaculty from "../../class/model/classSubjectFaculty";
 import type {
 	AllocatableSubject,
 	AllocationType,
@@ -205,6 +206,7 @@ export async function removeById(
 	ctx: AppMutationCtx,
 	id: Id<"programSubjects">,
 ) {
+	await ClassSubjectFaculty.removeAllByProgramSubject(ctx, id);
 	await ctx.db.delete("programSubjects", id);
 }
 
@@ -224,6 +226,10 @@ export async function deleteBatchByProgram(
 
 	if (programSubjects.length > 0) {
 		for (const programSubject of programSubjects) {
+			await ClassSubjectFaculty.removeAllByProgramSubject(
+				ctx,
+				programSubject._id,
+			);
 			await ctx.db.delete("programSubjects", programSubject._id);
 		}
 		return true;

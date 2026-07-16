@@ -11,7 +11,7 @@ export function SubjectAvatar({
 }: {
 	name: string;
 	color: string;
-	size?: "sm" | "default" | "lg" | "xl";
+	size?: "sm" | "default" | "lg" | "xl" | "xs";
 }) {
 	const initials = getSubjectInitials(name);
 
@@ -21,6 +21,7 @@ export function SubjectAvatar({
 				className={cn(
 					"rounded-lg font-semibold text-white",
 					size === "xl" && "text-4xl",
+					size === "xs" && "text-xs",
 				)}
 				style={subjectColorStyles(color)}
 			>

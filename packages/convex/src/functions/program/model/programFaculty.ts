@@ -132,6 +132,35 @@ export async function listWithPagination(
 	return query.paginate(paginationOpts);
 }
 
+/** List faculty documents assigned to a program (bounded) */
+export async function listAssigned(
+	ctx: AppQueryCtx,
+	args: {
+		programId: Id<"programs">;
+		limit?: number;
+	},
+): Promise<Doc<"faculty">[]> {
+	const limit = args.limit ?? 100;
+	const assignments = await ctx.db
+		.query("programFaculty")
+		.withIndex("by_program", (q) => q.eq("programId", args.programId))
+		.take(limit);
+
+	const faculty = await Promise.all(
+		assignments.map((assignment) =>
+			ctx.db.get("faculty", assignment.facultyId),
+		),
+	);
+
+	return faculty
+		.filter((f): f is Doc<"faculty"> => f !== null)
+		.sort((a, b) => {
+			const nameA = `${a.firstName} ${a.lastName}`.trim();
+			const nameB = `${b.firstName} ${b.lastName}`.trim();
+			return nameA.localeCompare(nameB);
+		});
+}
+
 /** Completely remove a faculty from a program */
 export async function remove(
 	db: DatabaseWriter,

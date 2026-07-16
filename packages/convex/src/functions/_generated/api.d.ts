@@ -29,10 +29,12 @@ import type * as attendance_validator_session from "../attendance/validator/sess
 import type * as auth from "../auth.js";
 import type * as class_model_class from "../class/model/class.js";
 import type * as class_model_classBatch from "../class/model/classBatch.js";
+import type * as class_model_classSubjectFaculty from "../class/model/classSubjectFaculty.js";
 import type * as class_mutations from "../class/mutations.js";
 import type * as class_queries from "../class/queries.js";
 import type * as class_validator_class from "../class/validator/class.js";
 import type * as class_validator_classBatch from "../class/validator/classBatch.js";
+import type * as class_validator_classSubjectFaculty from "../class/validator/classSubjectFaculty.js";
 import type * as emails from "../emails.js";
 import type * as faculty_migrations from "../faculty/migrations.js";
 import type * as faculty_model_faculty from "../faculty/model/faculty.js";
@@ -119,10 +121,12 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   "class/model/class": typeof class_model_class;
   "class/model/classBatch": typeof class_model_classBatch;
+  "class/model/classSubjectFaculty": typeof class_model_classSubjectFaculty;
   "class/mutations": typeof class_mutations;
   "class/queries": typeof class_queries;
   "class/validator/class": typeof class_validator_class;
   "class/validator/classBatch": typeof class_validator_classBatch;
+  "class/validator/classSubjectFaculty": typeof class_validator_classSubjectFaculty;
   emails: typeof emails;
   "faculty/migrations": typeof faculty_migrations;
   "faculty/model/faculty": typeof faculty_model_faculty;

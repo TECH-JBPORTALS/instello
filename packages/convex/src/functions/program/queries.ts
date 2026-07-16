@@ -3,6 +3,7 @@ import {
 	paginationResultValidator,
 } from "convex/server";
 import * as AcademicStage from "../academicPattern/model/academicStage";
+import * as ClassSubjectFaculty from "../class/model/classSubjectFaculty";
 import * as FacultyService from "../faculty/service/faculty";
 import { FacultyResultSchema } from "../faculty/validator/faculty";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
@@ -274,7 +275,29 @@ export const removeStaff = insMutation({
 	args: {
 		programFacultyId: vv.id("programFaculty"),
 	},
-	handler(ctx, args) {
-		return ProgramFaculty.remove(ctx.db, args.programFacultyId);
+	returns: vv.null(),
+	handler: async (ctx, args) => {
+		const assignment = await ctx.db.get(
+			"programFaculty",
+			args.programFacultyId,
+		);
+
+		if (!assignment) {
+			return null;
+		}
+
+		const program = await Program.getById(
+			ctx,
+			assignment.programId,
+			ctx.institution._id,
+		);
+
+		if (!program) {
+			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
+		}
+
+		await ClassSubjectFaculty.removeAllByFaculty(ctx, assignment.facultyId);
+		await ProgramFaculty.remove(ctx.db, args.programFacultyId);
+		return null;
 	},
 });

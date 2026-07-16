@@ -219,6 +219,18 @@ export const ERROR_CODES = {
 			message: "Academic stage does not belong to the institution's pattern",
 		},
 	},
+	CLASS_SUBJECT_FACULTY: {
+		NOT_PROGRAM_FACULTY: {
+			code: "CLASS_SUBJECT_FACULTY_NOT_PROGRAM_FACULTY",
+			message:
+				"Faculty must be assigned to the program before assigning to a class subject",
+		},
+		INVALID_SUBJECT: {
+			code: "CLASS_SUBJECT_FACULTY_INVALID_SUBJECT",
+			message:
+				"Subject allocation does not belong to this class's program and current stage",
+		},
+	},
 	TIMETABLE: {
 		NOT_FOUND: {
 			code: "TIMETABLE_NOT_FOUND",

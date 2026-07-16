@@ -1,4 +1,5 @@
 import {
+	IconBook,
 	IconCalendarCheck,
 	IconSettings,
 	IconTable,
@@ -27,12 +28,12 @@ export const classNavGroups: ClassNavGroup[] = [
 				icon: IconUsers,
 				label: "Students",
 			},
-			// {
-			// 	id: "subjects",
-			// 	segment: "subjects",
-			// 	icon: IconBook,
-			// 	label: "Subjects",
-			// },
+			{
+				id: "subjects",
+				segment: "subjects",
+				icon: IconBook,
+				label: "Subjects",
+			},
 			{
 				id: "timetable",
 				segment: "timetable",

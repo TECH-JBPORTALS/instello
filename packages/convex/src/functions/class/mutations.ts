@@ -3,10 +3,13 @@ import { internalMutation } from "../_generated/server";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import { insMutation } from "../helpers/customFunctions";
 import * as Program from "../program/model/program";
+import * as ProgramFaculty from "../program/model/programFaculty";
+import * as ProgramSubject from "../program/model/programSubject";
 import { vv } from "../schema";
 import * as Student from "../student/model/student";
 import * as Class from "./model/class";
 import * as ClassBatch from "./model/classBatch";
+import * as ClassSubjectFaculty from "./model/classSubjectFaculty";
 import { CreateInputSchema, PatchBasicInfoSchema } from "./validator/class";
 import {
 	BatchDtoSchema,
@@ -246,6 +249,91 @@ export const removeBatch = insMutation({
 				batchId: args.batchId,
 			},
 		);
+		return null;
+	},
+});
+
+/** Assign a program faculty member to a class subject allocation */
+export const assignSubjectFaculty = insMutation({
+	permissions: ["class:update"],
+	args: {
+		classId: vv.id("classes"),
+		programSubjectId: vv.id("programSubjects"),
+		facultyId: vv.id("faculty"),
+	},
+	returns: vv.id("classSubjectFaculty"),
+	handler: async (ctx, args) => {
+		const cls = await Class.ensureInInstitution(
+			ctx,
+			args.classId,
+			ctx.institution._id,
+		);
+
+		const programSubject = await ProgramSubject.getById(
+			ctx,
+			args.programSubjectId,
+		);
+
+		if (
+			!programSubject ||
+			programSubject.programId !== cls.programId ||
+			programSubject.academicStageId !== cls.currentHeadStageId
+		) {
+			throwAppError(ERROR_CODES.CLASS_SUBJECT_FACULTY.INVALID_SUBJECT);
+		}
+
+		const programFaculty = await ProgramFaculty.findByProgramAndFaculty(
+			ctx.db,
+			cls.programId,
+			args.facultyId,
+		);
+
+		if (!programFaculty) {
+			throwAppError(ERROR_CODES.CLASS_SUBJECT_FACULTY.NOT_PROGRAM_FACULTY);
+		}
+
+		return await ClassSubjectFaculty.assign(ctx, {
+			classId: args.classId,
+			programSubjectId: args.programSubjectId,
+			facultyId: args.facultyId,
+		});
+	},
+});
+
+/** Unassign a faculty member from a class subject allocation */
+export const unassignSubjectFaculty = insMutation({
+	permissions: ["class:update"],
+	args: {
+		classId: vv.id("classes"),
+		programSubjectId: vv.id("programSubjects"),
+		facultyId: vv.id("faculty"),
+	},
+	returns: vv.null(),
+	handler: async (ctx, args) => {
+		const cls = await Class.ensureInInstitution(
+			ctx,
+			args.classId,
+			ctx.institution._id,
+		);
+
+		const programSubject = await ProgramSubject.getById(
+			ctx,
+			args.programSubjectId,
+		);
+
+		if (
+			!programSubject ||
+			programSubject.programId !== cls.programId ||
+			programSubject.academicStageId !== cls.currentHeadStageId
+		) {
+			throwAppError(ERROR_CODES.CLASS_SUBJECT_FACULTY.INVALID_SUBJECT);
+		}
+
+		await ClassSubjectFaculty.remove(ctx, {
+			classId: cls._id,
+			programSubjectId: args.programSubjectId,
+			facultyId: args.facultyId,
+		});
 		return null;
 	},
 });
