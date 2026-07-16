@@ -33,9 +33,12 @@ import type * as class_mutations from "../class/mutations.js";
 import type * as class_queries from "../class/queries.js";
 import type * as class_validator_class from "../class/validator/class.js";
 import type * as class_validator_classBatch from "../class/validator/classBatch.js";
+import type * as emails from "../emails.js";
+import type * as faculty_migrations from "../faculty/migrations.js";
 import type * as faculty_model_faculty from "../faculty/model/faculty.js";
 import type * as faculty_mutations from "../faculty/mutations.js";
 import type * as faculty_queries from "../faculty/queries.js";
+import type * as faculty_service_faculty from "../faculty/service/faculty.js";
 import type * as faculty_validator_faculty from "../faculty/validator/faculty.js";
 import type * as helpers_academicPatternTemplates from "../helpers/academicPatternTemplates.js";
 import type * as helpers_academicSchedule from "../helpers/academicSchedule.js";
@@ -55,6 +58,7 @@ import type * as institution_queries from "../institution/queries.js";
 import type * as institution_validator_institution from "../institution/validator/institution.js";
 import type * as institution_validator_institutionAcademicPattern from "../institution/validator/institutionAcademicPattern.js";
 import type * as institution_validator_studentCategory from "../institution/validator/studentCategory.js";
+import type * as invitation_queries from "../invitation/queries.js";
 import type * as model_ownerOrganization from "../model/ownerOrganization.js";
 import type * as ownerOrganizations from "../ownerOrganizations.js";
 import type * as program_model_program from "../program/model/program.js";
@@ -116,9 +120,12 @@ declare const fullApi: ApiFromModules<{
   "class/queries": typeof class_queries;
   "class/validator/class": typeof class_validator_class;
   "class/validator/classBatch": typeof class_validator_classBatch;
+  emails: typeof emails;
+  "faculty/migrations": typeof faculty_migrations;
   "faculty/model/faculty": typeof faculty_model_faculty;
   "faculty/mutations": typeof faculty_mutations;
   "faculty/queries": typeof faculty_queries;
+  "faculty/service/faculty": typeof faculty_service_faculty;
   "faculty/validator/faculty": typeof faculty_validator_faculty;
   "helpers/academicPatternTemplates": typeof helpers_academicPatternTemplates;
   "helpers/academicSchedule": typeof helpers_academicSchedule;
@@ -138,6 +145,7 @@ declare const fullApi: ApiFromModules<{
   "institution/validator/institution": typeof institution_validator_institution;
   "institution/validator/institutionAcademicPattern": typeof institution_validator_institutionAcademicPattern;
   "institution/validator/studentCategory": typeof institution_validator_studentCategory;
+  "invitation/queries": typeof invitation_queries;
   "model/ownerOrganization": typeof model_ownerOrganization;
   ownerOrganizations: typeof ownerOrganizations;
   "program/model/program": typeof program_model_program;
@@ -196,4 +204,5 @@ export declare const internal: FilterApi<
 
 export declare const components: {
   betterAuth: import("../betterAuth/_generated/component.js").ComponentApi<"betterAuth">;
+  resend: import("@convex-dev/resend/_generated/component.js").ComponentApi<"resend">;
 };

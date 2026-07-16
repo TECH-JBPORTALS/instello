@@ -108,6 +108,14 @@ export const ERROR_CODES = {
 			code: "FACULTY_STAFF_ID_ALREADY_EXISTS",
 			message: "Faculty staff ID already exists in this institution",
 		},
+		NOT_DRAFT: {
+			code: "FACULTY_NOT_DRAFT",
+			message: "Only draft faculty can be invited",
+		},
+		NOT_INVITED: {
+			code: "FACULTY_NOT_INVITED",
+			message: "Only invited faculty can have their invitation cancelled",
+		},
 	},
 	SUBJECT: {
 		NOT_FOUND: {

@@ -44,7 +44,7 @@ describe("faculty.list", () => {
 		expect(result.page).toHaveLength(1);
 		expect(result.page[0]).toMatchObject({
 			email: FACULTY_EMAIL,
-			status: "active",
+			status: "draft",
 		});
 	});
 
@@ -71,6 +71,17 @@ describe("faculty.list", () => {
 				},
 			}),
 		);
+		await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: {
+					email: "draft@example.com",
+					staffId: "STAFF-D",
+					status: "draft",
+				},
+			}),
+		);
 
 		const activeResult = await asOwner(user1, ins1).query(
 			api.faculty.queries.list,
@@ -82,6 +93,17 @@ describe("faculty.list", () => {
 
 		expect(activeResult.page).toHaveLength(1);
 		expect(activeResult.page[0]?.email).toBe("active@example.com");
+
+		const draftResult = await asOwner(user1, ins1).query(
+			api.faculty.queries.list,
+			withSlug(ins1, {
+				paginationOpts: { numItems: 10, cursor: null },
+				status: "draft",
+			}),
+		);
+
+		expect(draftResult.page).toHaveLength(1);
+		expect(draftResult.page[0]?.email).toBe("draft@example.com");
 	});
 
 	test("paginates faculty results", async ({ t, user1, ins1, asOwner }) => {

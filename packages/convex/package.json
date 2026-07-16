@@ -50,6 +50,9 @@
 	"license": "ISC",
 	"dependencies": {
 		"@convex-dev/better-auth": "^0.12.4",
+		"@convex-dev/resend": "^0.2.5",
+		"@instello/transactional": "workspace:*",
+		"@react-email/render": "^2.1.0",
 		"better-auth": "~1.6.15",
 		"convex": "catalog:",
 		"convex-helpers": "catalog:",

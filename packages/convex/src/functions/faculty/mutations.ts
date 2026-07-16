@@ -1,3 +1,4 @@
+import { internalMutation } from "../_generated/server";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import { insMutation } from "../helpers/customFunctions";
 import { vv } from "../schema";
@@ -104,6 +105,56 @@ export const updatePhoneNumber = insMutation({
 	},
 });
 
+/** Mark draft faculty as invited after an org invitation is sent
+ * @param id - faculty id
+ */
+export const invite = insMutation({
+	permissions: ["faculty:create"],
+	args: { id: vv.id("faculty") },
+	returns: vv.null(),
+	handler: async (ctx, args) => {
+		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
+
+		if (!faculty) {
+			throwAppError(ERROR_CODES.FACULTY.NOT_FOUND);
+		}
+
+		if (faculty.status !== "draft") {
+			throwAppError(ERROR_CODES.FACULTY.NOT_DRAFT);
+		}
+
+		await Faculty.setStatus(ctx, faculty, "invited");
+		return null;
+	},
+});
+
+/** Revert invited faculty to draft after cancelling their invitation
+ * @param id - faculty id
+ */
+export const cancelInvite = insMutation({
+	permissions: ["faculty:create"],
+	args: { id: vv.id("faculty") },
+	returns: vv.null(),
+	handler: async (ctx, args) => {
+		const faculty = await Faculty.getById(ctx, args.id, ctx.institution._id);
+
+		if (!faculty) {
+			throwAppError(ERROR_CODES.FACULTY.NOT_FOUND);
+		}
+
+		if (faculty.status === "draft") {
+			return null;
+		}
+
+		if (faculty.status !== "invited") {
+			throwAppError(ERROR_CODES.FACULTY.NOT_INVITED);
+		}
+
+		await Faculty.setStatus(ctx, faculty, "draft");
+		return null;
+	},
+});
+
 /** Activate faculty
  * @param id - faculty id
  */
@@ -139,5 +190,30 @@ export const deactivate = insMutation({
 
 		await Faculty.setStatus(ctx, faculty, "inactive");
 		return null;
+	},
+});
+
+/** Link a user to faculty and activate after invitation acceptance */
+export const activateFromInvitation = internalMutation({
+	args: {
+		institutionId: vv.string(),
+		email: vv.string(),
+		userId: vv.string(),
+	},
+	returns: vv.union(vv.id("faculty"), vv.null()),
+	handler: async (ctx, args) => {
+		return await Faculty.activateFromInvitation(ctx, args);
+	},
+});
+
+/** Revert faculty to draft after an invitation is cancelled */
+export const revertToDraftFromInvitationCancellation = internalMutation({
+	args: {
+		institutionId: vv.string(),
+		email: vv.string(),
+	},
+	returns: vv.union(vv.id("faculty"), vv.null()),
+	handler: async (ctx, args) => {
+		return await Faculty.revertToDraftFromInvitationCancellation(ctx, args);
 	},
 });

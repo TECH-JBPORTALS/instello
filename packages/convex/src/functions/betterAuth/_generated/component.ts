@@ -1712,6 +1712,19 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         Name
       >;
     };
+    invitations: {
+      getPreview: FunctionReference<
+        "query",
+        "internal",
+        { invitationId: string },
+        {
+          email: string;
+          organizationId: string;
+          organizationName: string;
+        } | null,
+        Name
+      >;
+    };
     users: {
       getById: FunctionReference<
         "query",

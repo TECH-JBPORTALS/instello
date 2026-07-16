@@ -8,6 +8,7 @@ import {
 
 const statement = {
 	...defaultStatements,
+	institution: ["update", "create", "delete", "view"],
 	program: ["view", "create", "update", "delete"],
 	class: ["view", "create", "update", "delete"],
 	faculty: ["view", "create", "update", "activate"],
@@ -24,6 +25,7 @@ export const ac = createAccessControl(statement);
  */
 export const owner = ac.newRole({
 	...ownerAc.statements,
+	institution: ["update", "create", "delete", "view"],
 	program: ["create", "update", "delete", "view"],
 	class: ["create", "update", "delete", "view"],
 	faculty: ["create", "update", "activate", "view"],
@@ -39,6 +41,7 @@ export const owner = ac.newRole({
 export const principal = ac.newRole({
 	...adminAc.statements,
 	program: ["update", "view"],
+	institution: ["update", "view"],
 	class: ["create", "update", "delete", "view"],
 	faculty: ["create", "update", "activate", "view"],
 	subject: ["update", "view"],
@@ -53,6 +56,7 @@ export const principal = ac.newRole({
  */
 export const faculty = ac.newRole({
 	...memberAc.statements,
+	institution: ["view"],
 	program: ["view"],
 	class: ["view"],
 	faculty: ["view"],

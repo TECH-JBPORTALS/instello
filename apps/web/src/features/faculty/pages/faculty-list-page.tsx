@@ -6,7 +6,14 @@ import {
 	InputGroupAddon,
 	InputGroupInput,
 } from "@instello/ui/components/input-group";
-import { IconSearch } from "@tabler/icons-react";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@instello/ui/components/select";
+import { IconFilter, IconSearch } from "@tabler/icons-react";
 import { useState } from "react";
 import Container from "@/components/common/container";
 import {
@@ -19,13 +26,16 @@ import {
 import { useInsQuery, useInstitutionSlug } from "@/hooks/convex-react";
 import { AddFacultyButton } from "../components/add-faculty-button";
 import { FacultyList } from "../components/faculty-list";
-import { FacultyStatusTabs } from "../components/faculty-status-tabs";
-import type { FacultyStatusTab } from "../constants";
+import {
+	FACULTY_STATUS_FILTER_LABELS,
+	FACULTY_STATUS_FILTERS,
+	type FacultyStatusFilter,
+} from "../constants";
 
 export function FacultyListPage() {
 	const slug = useInstitutionSlug();
 	const institution = useInsQuery(api.institution.queries.getBySlug, { slug });
-	const [statusTab, setStatusTab] = useState<FacultyStatusTab>("active");
+	const [statusFilter, setStatusFilter] = useState<FacultyStatusFilter>("all");
 	const [searchQuery, setSearchQuery] = useState("");
 
 	return (
@@ -42,6 +52,29 @@ export function FacultyListPage() {
 				</PageHeaderStart>
 
 				<PageHeaderEnd className="w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+					<Select
+						value={statusFilter}
+						onValueChange={(value) => {
+							if (
+								value &&
+								FACULTY_STATUS_FILTERS.includes(value as FacultyStatusFilter)
+							) {
+								setStatusFilter(value as FacultyStatusFilter);
+							}
+						}}
+					>
+						<SelectTrigger size="sm" className="w-full sm:min-w-40">
+							<IconFilter className="size-4 text-muted-foreground" />
+							<SelectValue placeholder="Filter by status" />
+						</SelectTrigger>
+						<SelectContent>
+							{FACULTY_STATUS_FILTERS.map((status) => (
+								<SelectItem key={status} value={status}>
+									{FACULTY_STATUS_FILTER_LABELS[status]}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
 					<InputGroup className="w-full sm:w-64">
 						<InputGroupAddon>
 							<IconSearch />
@@ -56,9 +89,7 @@ export function FacultyListPage() {
 				</PageHeaderEnd>
 			</PageHeader>
 
-			<FacultyStatusTabs value={statusTab} onChange={setStatusTab} />
-
-			<FacultyList status={statusTab} searchQuery={searchQuery} />
+			<FacultyList statusFilter={statusFilter} searchQuery={searchQuery} />
 		</Container>
 	);
 }

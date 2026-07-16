@@ -19,7 +19,12 @@ export const facultyTables = {
 			number: v.string(),
 			verified: v.boolean(),
 		}),
-		status: v.union(v.literal("inactive"), v.literal("active")),
+		status: v.union(
+			v.literal("inactive"),
+			v.literal("active"),
+			v.literal("draft"),
+			v.literal("invited"),
+		),
 		userId: v.optional(v.string()),
 		createdBy: v.string(),
 		createdAt: v.number(),

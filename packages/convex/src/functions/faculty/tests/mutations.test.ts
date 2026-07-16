@@ -47,7 +47,7 @@ describe("faculty.create", () => {
 			lastName: "Doe",
 			email: FACULTY_EMAIL,
 			designation: "Professor",
-			status: "active",
+			status: "draft",
 			phone: { number: FACULTY_PHONE, verified: false },
 			institutionId: ins1._id,
 			createdBy: user1._id,
@@ -258,12 +258,147 @@ describe("faculty.updatePhoneNumber", () => {
 	});
 });
 
+describe("faculty.invite", () => {
+	test("marks draft faculty as invited", async ({
+		t,
+		user1,
+		ins1,
+		asOwner,
+	}) => {
+		const facultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: { status: "draft" },
+			}),
+		);
+
+		const authed = asOwner(user1, ins1);
+
+		await authed.mutation(
+			api.faculty.mutations.invite,
+			withSlug(ins1, { id: facultyId }),
+		);
+
+		const faculty = await authed.query(
+			api.faculty.queries.getById,
+			withSlug(ins1, { id: facultyId }),
+		);
+		expect(faculty.status).toBe("invited");
+	});
+
+	test("rejects inviting non-draft faculty", async ({
+		t,
+		user1,
+		ins1,
+		asOwner,
+	}) => {
+		const facultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: { status: "active" },
+			}),
+		);
+
+		await expectAppError(
+			asOwner(user1, ins1).mutation(
+				api.faculty.mutations.invite,
+				withSlug(ins1, { id: facultyId }),
+			),
+			ERROR_CODES.FACULTY.NOT_DRAFT,
+		);
+	});
+});
+
+describe("faculty.cancelInvite", () => {
+	test("reverts invited faculty to draft", async ({
+		t,
+		user1,
+		ins1,
+		asOwner,
+	}) => {
+		const facultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: { status: "invited" },
+			}),
+		);
+
+		const authed = asOwner(user1, ins1);
+
+		await authed.mutation(
+			api.faculty.mutations.cancelInvite,
+			withSlug(ins1, { id: facultyId }),
+		);
+
+		const faculty = await authed.query(
+			api.faculty.queries.getById,
+			withSlug(ins1, { id: facultyId }),
+		);
+		expect(faculty.status).toBe("draft");
+	});
+
+	test("no-ops when faculty is already draft", async ({
+		t,
+		user1,
+		ins1,
+		asOwner,
+	}) => {
+		const facultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: { status: "draft" },
+			}),
+		);
+
+		const authed = asOwner(user1, ins1);
+
+		await authed.mutation(
+			api.faculty.mutations.cancelInvite,
+			withSlug(ins1, { id: facultyId }),
+		);
+
+		const faculty = await authed.query(
+			api.faculty.queries.getById,
+			withSlug(ins1, { id: facultyId }),
+		);
+		expect(faculty.status).toBe("draft");
+	});
+
+	test("rejects cancelling non-invited faculty", async ({
+		t,
+		user1,
+		ins1,
+		asOwner,
+	}) => {
+		const facultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: { status: "active" },
+			}),
+		);
+
+		await expectAppError(
+			asOwner(user1, ins1).mutation(
+				api.faculty.mutations.cancelInvite,
+				withSlug(ins1, { id: facultyId }),
+			),
+			ERROR_CODES.FACULTY.NOT_INVITED,
+		);
+	});
+});
+
 describe("faculty.deactivate", () => {
 	test("deactivates a faculty member", async ({ t, user1, ins1, asOwner }) => {
 		const facultyId = await t.run((ctx) =>
 			seedFaculty(ctx, {
 				institutionId: ins1._id,
 				createdBy: user1._id,
+				overrides: { status: "active" },
 			}),
 		);
 

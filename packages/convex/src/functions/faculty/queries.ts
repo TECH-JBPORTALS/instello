@@ -3,6 +3,7 @@ import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import { insQuery } from "../helpers/customFunctions";
 import { vv } from "../schema";
 import * as Faculty from "./model/faculty";
+import * as FacultyService from "./service/faculty";
 import {
 	FacultyDtoSchema,
 	PaginatedFacultyListSchema,
@@ -15,15 +16,29 @@ export const list = insQuery({
 	permissions: ["faculty:view"],
 	args: {
 		paginationOpts: paginationOptsValidator,
-		status: vv.optional(vv.union(vv.literal("active"), vv.literal("inactive"))),
+		status: vv.optional(
+			vv.union(
+				vv.literal("draft"),
+				vv.literal("invited"),
+				vv.literal("active"),
+				vv.literal("inactive"),
+			),
+		),
 	},
 	returns: PaginatedFacultyListSchema,
 	handler: async (ctx, args) => {
-		return await Faculty.list(ctx, {
+		const faculty = await Faculty.list(ctx, {
 			institutionId: ctx.institution._id,
 			status: args.status,
 			paginationOpts: args.paginationOpts,
 		});
+
+		return {
+			...faculty,
+			page: await Promise.all(
+				faculty.page.map((f) => FacultyService.toDto(ctx, f)),
+			),
+		};
 	},
 });
 
@@ -41,6 +56,6 @@ export const getById = insQuery({
 			throwAppError(ERROR_CODES.FACULTY.NOT_FOUND);
 		}
 
-		return await Faculty.toDto(ctx, faculty);
+		return await FacultyService.toDto(ctx, faculty);
 	},
 });

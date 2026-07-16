@@ -1,6 +1,11 @@
 import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import {
+	isMutationCtx,
+	requireActionCtx,
+	requireRunMutationCtx,
+} from "@convex-dev/better-auth/utils";
+import {
 	BetterAuthError,
 	type BetterAuthOptions,
 	betterAuth,
@@ -9,11 +14,12 @@ import { admin } from "better-auth/plugins/admin";
 import { organization } from "better-auth/plugins/organization";
 import * as InsPermissions from "../better-auth/ins-permissions";
 import * as UserPermissions from "../better-auth/user-permissions";
-import { components } from "./_generated/api";
+import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import { env } from "./_generated/server";
 import authConfig from "./auth.config";
 import authSchema from "./betterAuth/schema";
+import * as Faculty from "./faculty/model/faculty";
 import { ERROR_CODES, RESERVED_SUBDOMAINS } from "./helpers/constants";
 
 const siteUrl = env.SITE_URL;
@@ -39,6 +45,10 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 		secret: betterAuthSecret,
 		database: authComponent.adapter(ctx),
 		advanced: {
+			// Let Convex generate document IDs. Required so organization
+			// invitations don't send a pre-generated `_id` that fails adapter:create.
+			// See: https://github.com/get-convex/better-auth/issues/407
+			database: { generateId: false },
 			crossSubDomainCookies: {
 				enabled: true,
 				domain:
@@ -139,6 +149,22 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 				/** Number of institutions owner can create in his organization */
 				organizationLimit: 10,
 				cancelPendingInvitationsOnReInvite: true,
+				// With generateId: false, Better Auth defaults this to true.
+				// Match emailAndPassword.requireEmailVerification: false.
+				requireEmailVerificationOnInvitation: false,
+
+				/** Send invitation email to the user when being invited to join an institution */
+				async sendInvitationEmail(data) {
+					const actionCtx = requireActionCtx(ctx);
+					await actionCtx.runAction(internal.emails.sendInvitationEmail, {
+						email: data.email,
+						institutionName: data.organization.name,
+						invitedByEmail: data.inviter.user.email,
+						invitedByName: data.inviter.user.name,
+						role: data.role as "faculty" | "principal",
+						token: data.id,
+					});
+				},
 				organizationHooks: {
 					async beforeCreateOrganization(data) {
 						if (RESERVED_SUBDOMAINS.has(data.organization.code))
@@ -157,6 +183,45 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
 							);
 
 						return { data };
+					},
+					async afterAcceptInvitation({ invitation, user, organization }) {
+						if (isMutationCtx(ctx)) {
+							await Faculty.activateFromInvitation(ctx, {
+								institutionId: organization.id,
+								email: invitation.email,
+								userId: user.id,
+							});
+							return;
+						}
+
+						const runMutationCtx = requireRunMutationCtx(ctx);
+						await runMutationCtx.runMutation(
+							internal.faculty.mutations.activateFromInvitation,
+							{
+								institutionId: organization.id,
+								email: invitation.email,
+								userId: user.id,
+							},
+						);
+					},
+					async afterCancelInvitation({ invitation, organization }) {
+						if (isMutationCtx(ctx)) {
+							await Faculty.revertToDraftFromInvitationCancellation(ctx, {
+								institutionId: organization.id,
+								email: invitation.email,
+							});
+							return;
+						}
+
+						const runMutationCtx = requireRunMutationCtx(ctx);
+						await runMutationCtx.runMutation(
+							internal.faculty.mutations
+								.revertToDraftFromInvitationCancellation,
+							{
+								institutionId: organization.id,
+								email: invitation.email,
+							},
+						);
 					},
 				},
 			}),

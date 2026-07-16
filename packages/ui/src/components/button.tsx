@@ -61,13 +61,8 @@ function Button({
 			className={cn(buttonVariants({ variant, size, className }))}
 			{...props}
 		>
-			{children}
-			{loading && (
-				<>
-					<IconLoader2 className="size-4 animate-spin" />
-					{loadingText && <span className="ml-2">{loadingText}</span>}
-				</>
-			)}
+			{loading && <IconLoader2 className="size-4 animate-spin" />}
+			{loadingText && loading ? loadingText : children}
 		</ButtonPrimitive>
 	);
 }

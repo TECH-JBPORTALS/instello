@@ -100,14 +100,16 @@ export function InstitutionSidebarFooter() {
 							align="end"
 							sideOffset={4}
 						>
-							<DropdownMenuItem
-								onClick={() => {
-									router.push("/institution-settings");
-								}}
-							>
-								<IconBuilding className="size-4" />
-								Institution settings
-							</DropdownMenuItem>
+							{user?.role !== "faculty" ? (
+								<DropdownMenuItem
+									onClick={() => {
+										router.push("/institution-settings");
+									}}
+								>
+									<IconBuilding className="size-4" />
+									Institution settings
+								</DropdownMenuItem>
+							) : null}
 							<DropdownMenuItem
 								onClick={() => {
 									window.location.href = settingsUrl();

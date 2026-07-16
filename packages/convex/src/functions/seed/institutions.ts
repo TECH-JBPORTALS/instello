@@ -11,7 +11,9 @@
  * ```
  */
 
+import { faker } from "@faker-js/faker";
 import { v } from "convex/values";
+import * as Faculty from "#faculty/model/faculty";
 import { components } from "../_generated/api";
 import { env, internalMutation, type MutationCtx } from "../_generated/server";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
@@ -140,3 +142,36 @@ async function getInstitutionOwnerId(
 
 	return owner.userId;
 }
+
+/**
+ * Update email addresses to resend test emails for all faculty in the given institution.
+ *
+ * Requires SEED_MODE=true. Pass an institution id from your dev deployment.
+ */
+export const updateFacultyEmails = internalMutation({
+	args: {
+		institutionId: v.string(),
+	},
+	handler: async (ctx, args) => {
+		if (!env.SEED_MODE) {
+			throwAppError(ERROR_CODES.SEED.NOT_ALLOWED_IN_PRODUCTION);
+		}
+
+		const faculty = await Faculty.list(ctx, {
+			institutionId: args.institutionId,
+			paginationOpts: { numItems: 1000, cursor: null },
+		});
+
+		for (const staff of faculty.page) {
+			await ctx.db.patch("faculty", staff._id, {
+				email: `delivered+${staff.firstName.toLowerCase()}.${staff.lastName.toLowerCase()}.${faker.helpers.rangeToNumber({ min: 1, max: 1000 })}@resend.dev`,
+			});
+
+			console.info(
+				` ✅ ${staff.firstName} ${staff.lastName} (${staff.email}) updated`,
+			);
+		}
+
+		return faculty.page.map((f) => f._id.toString());
+	},
+});
