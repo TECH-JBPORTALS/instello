@@ -19,7 +19,13 @@ import { FacultySettingsSection } from "../components/faculty-settings-section";
 import { facultyListPath } from "../faculty-path";
 import { getFacultyDisplayName } from "../forms/shared-form";
 
-export function FacultyDetailPage() {
+type FacultyDetailPageProps = {
+	listHref?: string;
+};
+
+export function FacultyDetailPage({
+	listHref = facultyListPath(),
+}: FacultyDetailPageProps) {
 	const { facultyId } = useParams<{ facultyId: string }>();
 	const faculty = useInsQuery(
 		api.faculty.queries.getById,
@@ -48,7 +54,7 @@ export function FacultyDetailPage() {
 						variant="ghost"
 						size="sm"
 						className="-ml-2 h-8 rounded-full px-2 text-muted-foreground"
-						render={<Link href={facultyListPath()} />}
+						render={<Link href={listHref} />}
 					>
 						<IconChevronLeft className="size-4" />
 						Faculty

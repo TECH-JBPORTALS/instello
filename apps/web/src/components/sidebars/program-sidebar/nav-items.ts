@@ -1,7 +1,7 @@
 "use client";
 
 import type { Icon } from "@tabler/icons-react";
-import { IconBook, IconSchool, IconTable } from "@tabler/icons-react";
+import { IconBook, IconSchool, IconTable, IconUser } from "@tabler/icons-react";
 
 export type ProgramNavItem = {
 	id: string;
@@ -24,7 +24,7 @@ export const programNavItems: ProgramNavItem[] = [
 		icon: IconTable,
 		label: "Timetables",
 	},
-	// { id: "faculty", segment: "faculty", icon: IconUser, label: "Faculty" },
+	{ id: "faculty", segment: "faculty", icon: IconUser, label: "Faculty" },
 ];
 
 export function isProgramNavActive(

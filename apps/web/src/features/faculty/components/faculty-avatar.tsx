@@ -17,7 +17,7 @@ export function FacultyAvatar({
 	firstName: string;
 	lastName: string;
 	image?: string;
-	size?: "sm" | "lg" | "default" | "xl";
+	size?: "sm" | "xs" | "lg" | "default" | "xl";
 }) {
 	const displayName = `${firstName} ${lastName}`.trim();
 

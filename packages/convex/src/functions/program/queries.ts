@@ -3,6 +3,8 @@ import {
 	paginationResultValidator,
 } from "convex/server";
 import * as AcademicStage from "../academicPattern/model/academicStage";
+import * as FacultyService from "../faculty/service/faculty";
+import { FacultyResultSchema } from "../faculty/validator/faculty";
 import { ERROR_CODES, throwAppError } from "../helpers/constants";
 import { insMutation, insQuery } from "../helpers/customFunctions";
 import * as InstitutionAcademicPattern from "../institution/model/institutionAcademicPattern";
@@ -176,6 +178,7 @@ export const assignStaff = insMutation({
 		programId: vv.id("programs"),
 		facultyId: vv.id("faculty"),
 	},
+	returns: vv.id("programFaculty"),
 	handler(ctx, args) {
 		return ProgramFaculty.assignOrUpdate(
 			ctx.db,
@@ -183,6 +186,59 @@ export const assignStaff = insMutation({
 			args.facultyId,
 			false,
 		);
+	},
+});
+
+/** Assign multiple staff to the program; already-assigned faculty are skipped */
+export const assignStaffMany = insMutation({
+	permissions: ["program:update"],
+	args: {
+		programId: vv.id("programs"),
+		facultyIds: vv.array(vv.id("faculty")),
+	},
+	returns: vv.array(vv.id("programFaculty")),
+	handler: async (ctx, args) => {
+		const program = await Program.getById(
+			ctx,
+			args.programId,
+			ctx.institution._id,
+		);
+
+		if (!program) {
+			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
+		}
+
+		return await ProgramFaculty.assignMany(ctx, {
+			programId: args.programId,
+			facultyIds: args.facultyIds,
+		});
+	},
+});
+
+/** List institution faculty that can still be assigned to the program */
+export const listAssignableFaculty = insQuery({
+	permissions: ["program:update"],
+	args: {
+		programId: vv.id("programs"),
+	},
+	returns: vv.array(FacultyResultSchema),
+	handler: async (ctx, args) => {
+		const program = await Program.getById(
+			ctx,
+			args.programId,
+			ctx.institution._id,
+		);
+
+		if (!program) {
+			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
+		}
+
+		const faculty = await ProgramFaculty.listAssignable(ctx, {
+			institutionId: ctx.institution._id,
+			programId: args.programId,
+		});
+
+		return await Promise.all(faculty.map((f) => FacultyService.toDto(ctx, f)));
 	},
 });
 

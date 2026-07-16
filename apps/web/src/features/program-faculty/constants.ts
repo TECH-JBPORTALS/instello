@@ -1,0 +1,1 @@
+export const PROGRAM_FACULTY_LIST_PAGE_SIZE = 20;

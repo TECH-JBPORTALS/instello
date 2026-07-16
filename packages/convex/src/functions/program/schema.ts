@@ -52,5 +52,6 @@ export const programTables = {
 		isHeadOfProgram: v.boolean(),
 	})
 		.index("by_program", ["programId"])
-		.index("by_faculty", ["facultyId"]),
+		.index("by_faculty", ["facultyId"])
+		.index("by_program_and_faculty", ["programId", "facultyId"]),
 };

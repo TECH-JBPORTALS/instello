@@ -286,7 +286,7 @@ describe("programs.assignStaff", () => {
 		});
 	});
 
-	test("updates existing assignment when program already has staff", async ({
+	test("assigns a second faculty to the same program", async ({
 		t,
 		user1,
 		ins1,
@@ -318,15 +318,7 @@ describe("programs.assignStaff", () => {
 			}),
 		);
 
-		const existing = await t.run((ctx) =>
-			ctx.db
-				.query("programFaculty")
-				.withIndex("by_program", (q) => q.eq("programId", programs.cs._id))
-				.unique(),
-		);
-		expect(existing).not.toBeNull();
-
-		const secondResult = await asOwner(user1, ins1).mutation(
+		await asOwner(user1, ins1).mutation(
 			api.program.queries.assignStaff,
 			withSlug(ins1, {
 				programId: programs.cs._id,
@@ -334,12 +326,50 @@ describe("programs.assignStaff", () => {
 			}),
 		);
 
-		expect(secondResult).toMatchObject({
-			_id: existing?._id,
-			programId: programs.cs._id,
-			facultyId,
-			isHeadOfProgram: false,
-		});
+		const assignments = await t.run((ctx) =>
+			ctx.db
+				.query("programFaculty")
+				.withIndex("by_program", (q) => q.eq("programId", programs.cs._id))
+				.collect(),
+		);
+
+		expect(assignments).toHaveLength(2);
+		expect(assignments.map((a) => a.facultyId).sort()).toEqual(
+			[facultyId, otherFacultyId].sort(),
+		);
+	});
+
+	test("is a no-op when the same faculty is already assigned", async ({
+		t,
+		user1,
+		ins1,
+		programs,
+		asOwner,
+	}) => {
+		const facultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+			}),
+		);
+
+		const firstId = await asOwner(user1, ins1).mutation(
+			api.program.queries.assignStaff,
+			withSlug(ins1, {
+				programId: programs.cs._id,
+				facultyId,
+			}),
+		);
+
+		const secondId = await asOwner(user1, ins1).mutation(
+			api.program.queries.assignStaff,
+			withSlug(ins1, {
+				programId: programs.cs._id,
+				facultyId,
+			}),
+		);
+
+		expect(secondId).toBe(firstId);
 
 		const assignments = await t.run((ctx) =>
 			ctx.db
@@ -349,10 +379,135 @@ describe("programs.assignStaff", () => {
 		);
 
 		expect(assignments).toHaveLength(1);
-		expect(assignments[0]).toMatchObject({
-			_id: existing?._id,
-			facultyId,
-			isHeadOfProgram: false,
+	});
+});
+
+describe("programs.assignStaffMany", () => {
+	const test = programTest();
+
+	test("rejects unthencticated user", async ({ t, ins1, programs }) => {
+		await expectAppError(
+			t.mutation(
+				api.program.queries.assignStaffMany,
+				withSlug(ins1, {
+					programId: programs.cs._id,
+					facultyIds: [],
+				}),
+			),
+			ERROR_CODES.BASE.UNAUTHORIZED,
+		);
+	});
+
+	test("assigns multiple faculty and skips already assigned", async ({
+		t,
+		user1,
+		ins1,
+		programs,
+		asOwner,
+	}) => {
+		const facultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: { email: "a@example.com", staffId: "STAFF-A" },
+			}),
+		);
+		const facultyId2 = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: { email: "b@example.com", staffId: "STAFF-B" },
+			}),
+		);
+		const facultyId3 = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: { email: "c@example.com", staffId: "STAFF-C" },
+			}),
+		);
+
+		await asOwner(user1, ins1).mutation(
+			api.program.queries.assignStaff,
+			withSlug(ins1, {
+				programId: programs.cs._id,
+				facultyId,
+			}),
+		);
+
+		const inserted = await asOwner(user1, ins1).mutation(
+			api.program.queries.assignStaffMany,
+			withSlug(ins1, {
+				programId: programs.cs._id,
+				facultyIds: [facultyId, facultyId2, facultyId3],
+			}),
+		);
+
+		expect(inserted).toHaveLength(2);
+
+		const assignments = await t.run((ctx) =>
+			ctx.db
+				.query("programFaculty")
+				.withIndex("by_program", (q) => q.eq("programId", programs.cs._id))
+				.collect(),
+		);
+
+		expect(assignments).toHaveLength(3);
+	});
+});
+
+describe("programs.listAssignableFaculty", () => {
+	const test = programTest();
+
+	test("rejects unthencticated user", async ({ t, ins1, programs }) => {
+		await expectAppError(
+			t.query(
+				api.program.queries.listAssignableFaculty,
+				withSlug(ins1, { programId: programs.cs._id }),
+			),
+			ERROR_CODES.BASE.UNAUTHORIZED,
+		);
+	});
+
+	test("lists institution faculty not already assigned to the program", async ({
+		t,
+		user1,
+		ins1,
+		programs,
+		asOwner,
+	}) => {
+		const assignedId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: { email: "assigned@example.com", staffId: "STAFF-A" },
+			}),
+		);
+		const availableId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: { email: "available@example.com", staffId: "STAFF-B" },
+			}),
+		);
+
+		await asOwner(user1, ins1).mutation(
+			api.program.queries.assignStaff,
+			withSlug(ins1, {
+				programId: programs.cs._id,
+				facultyId: assignedId,
+			}),
+		);
+
+		const result = await asOwner(user1, ins1).query(
+			api.program.queries.listAssignableFaculty,
+			withSlug(ins1, { programId: programs.cs._id }),
+		);
+
+		expect(result.map((f) => f._id)).toEqual([availableId]);
+		expect(result[0]).toMatchObject({
+			email: "available@example.com",
+			staffId: "STAFF-B",
 		});
 	});
 });

@@ -1,5 +1,5 @@
-import { FacultyPage } from "@/features/p/[alias]/pages/program-section-pages";
+import { ProgramFacultyListPage } from "@/features/program-faculty/pages/program-faculty-list-page";
 
 export default function Page() {
-	return <FacultyPage />;
+	return <ProgramFacultyListPage />;
 }
