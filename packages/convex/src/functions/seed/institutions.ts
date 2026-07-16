@@ -11,6 +11,7 @@
  * ```
  */
 
+import { faker } from "@faker-js/faker";
 import { v } from "convex/values";
 import * as Faculty from "#faculty/model/faculty";
 import { components } from "../_generated/api";
@@ -20,7 +21,6 @@ import * as Program from "../program/model/program";
 import { vv } from "../schema";
 import * as Subject from "../subject/model/subject";
 import { SEED_SUBJECTS } from "./mock";
-import { faker } from "@faker-js/faker";
 
 const SEED_PROGRAMS = [
 	{ name: "Mechanical Engineering", alias: "ME" },
