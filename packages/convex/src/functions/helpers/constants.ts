@@ -116,6 +116,14 @@ export const ERROR_CODES = {
 			code: "FACULTY_NOT_INVITED",
 			message: "Only invited faculty can have their invitation cancelled",
 		},
+		INACTIVE: {
+			code: "FACULTY_INACTIVE",
+			message: "Inactive faculty cannot be assigned as principal",
+		},
+		CANNOT_ASSIGN_OWNER: {
+			code: "FACULTY_CANNOT_ASSIGN_OWNER",
+			message: "The institution owner cannot be assigned as principal",
+		},
 	},
 	SUBJECT: {
 		NOT_FOUND: {

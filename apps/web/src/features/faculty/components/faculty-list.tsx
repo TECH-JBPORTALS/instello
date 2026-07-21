@@ -36,13 +36,23 @@ import {
 	ItemTitle,
 } from "@instello/ui/components/item";
 import { Skeleton } from "@instello/ui/components/skeleton";
-import { IconDots, IconMail, IconUser, IconUserOff } from "@tabler/icons-react";
+import {
+	IconDots,
+	IconMail,
+	IconSchool,
+	IconUser,
+	IconUserOff,
+} from "@tabler/icons-react";
 import { isEmpty } from "lodash";
 import Link from "next/link";
 import { type MouseEvent, useMemo, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { toast } from "sonner";
-import { useInsMutation, useInsPaginatedQuery } from "@/hooks/convex-react";
+import {
+	useInsMutation,
+	useInsPaginatedQuery,
+	useInsQuery,
+} from "@/hooks/convex-react";
 import { getConvexErrorMessage } from "@/lib/convex-error";
 import {
 	FACULTY_LIST_PAGE_SIZE,
@@ -53,6 +63,8 @@ import { facultyPath } from "../faculty-path";
 import { getFacultyDisplayName } from "../forms/shared-form";
 import { FacultyAvatar } from "./faculty-avatar";
 
+type FacultyInsRole = "faculty" | "principal";
+
 type FacultyListProps = {
 	statusFilter: FacultyStatusFilter;
 	searchQuery: string;
@@ -61,6 +73,11 @@ type FacultyListProps = {
 export function FacultyList({ statusFilter, searchQuery }: FacultyListProps) {
 	const status =
 		statusFilter === "all" ? undefined : (statusFilter as FacultyStatus);
+
+	const currentPrincipal = useInsQuery(
+		api.faculty.queries.getCurrentPrincipal,
+		{},
+	);
 
 	const {
 		results,
@@ -128,7 +145,11 @@ export function FacultyList({ statusFilter, searchQuery }: FacultyListProps) {
 					loader={<FacultyListSkeleton count={3} />}
 				>
 					{filteredResults.map((faculty) => (
-						<FacultyListItem key={faculty._id} faculty={faculty} />
+						<FacultyListItem
+							key={faculty._id}
+							faculty={faculty}
+							currentPrincipal={currentPrincipal ?? null}
+						/>
 					))}
 					{isLoading && <FacultyListSkeleton count={3} />}
 				</InfiniteScroll>
@@ -147,15 +168,24 @@ type FacultyListItemProps = {
 		designation: string;
 		image?: string;
 		status: FacultyStatus;
+		insRole: FacultyInsRole;
 	};
+	currentPrincipal: {
+		_id: Id<"faculty">;
+		firstName: string;
+		lastName: string;
+	} | null;
 };
 
-function FacultyListItem({ faculty }: FacultyListItemProps) {
-	const [confirmOpen, setConfirmOpen] = useState(false);
+function FacultyListItem({ faculty, currentPrincipal }: FacultyListItemProps) {
+	const [deactivateOpen, setDeactivateOpen] = useState(false);
+	const [principalOpen, setPrincipalOpen] = useState(false);
 	const [isDeactivating, setIsDeactivating] = useState(false);
+	const [isSettingPrincipal, setIsSettingPrincipal] = useState(false);
 	const [isInviting, setIsInviting] = useState(false);
 	const [isCancellingInvite, setIsCancellingInvite] = useState(false);
 	const deactivateFaculty = useInsMutation(api.faculty.mutations.deactivate);
+	const setAsPrincipal = useInsMutation(api.faculty.mutations.setAsPrincipal);
 	const inviteFaculty = useInsMutation(api.faculty.mutations.invite);
 	const cancelInviteFaculty = useInsMutation(
 		api.faculty.mutations.cancelInvite,
@@ -165,6 +195,19 @@ function FacultyListItem({ faculty }: FacultyListItemProps) {
 		faculty.firstName,
 		faculty.lastName,
 	);
+	const isPrincipal = faculty.insRole === "principal";
+	const canMakePrincipal =
+		!isPrincipal &&
+		(faculty.status === "draft" ||
+			faculty.status === "invited" ||
+			faculty.status === "active");
+	const otherPrincipal =
+		currentPrincipal && currentPrincipal._id !== faculty._id
+			? currentPrincipal
+			: null;
+	const otherPrincipalName = otherPrincipal
+		? getFacultyDisplayName(otherPrincipal.firstName, otherPrincipal.lastName)
+		: null;
 
 	async function handleInvite(e: MouseEvent) {
 		e.preventDefault();
@@ -173,7 +216,7 @@ function FacultyListItem({ faculty }: FacultyListItemProps) {
 		try {
 			const { error } = await authClient.organization.inviteMember({
 				email: faculty.email,
-				role: "faculty",
+				role: faculty.insRole,
 				resend: true,
 			});
 
@@ -235,10 +278,31 @@ function FacultyListItem({ faculty }: FacultyListItemProps) {
 		setIsDeactivating(true);
 		try {
 			await deactivateFaculty({ id: faculty._id });
-			setConfirmOpen(false);
+			setDeactivateOpen(false);
 		} finally {
 			setIsDeactivating(false);
 		}
+	}
+
+	async function handleSetAsPrincipal() {
+		setIsSettingPrincipal(true);
+		try {
+			await setAsPrincipal({ id: faculty._id });
+			toast.success(`${displayName} is now the principal`);
+			setPrincipalOpen(false);
+		} catch (error) {
+			toast.error(
+				getConvexErrorMessage(error, "Failed to assign principal role"),
+			);
+		} finally {
+			setIsSettingPrincipal(false);
+		}
+	}
+
+	function openPrincipalConfirm(e: MouseEvent) {
+		e.preventDefault();
+		e.stopPropagation();
+		setPrincipalOpen(true);
 	}
 
 	return (
@@ -254,40 +318,75 @@ function FacultyListItem({ faculty }: FacultyListItemProps) {
 					/>
 				</ItemMedia>
 				<ItemContent>
-					<ItemTitle>{displayName}</ItemTitle>
+					<ItemTitle className="gap-2">
+						{displayName}
+						{isPrincipal && (
+							<Badge variant="secondary" className="relative z-10">
+								Principal
+							</Badge>
+						)}
+					</ItemTitle>
 					<ItemDescription>
 						{faculty.staffId} · {faculty.designation} · {faculty.email}
 					</ItemDescription>
 				</ItemContent>
 				<ItemActions>
 					{faculty.status === "draft" && (
-						<Button
-							variant="secondary"
-							size="sm"
-							className="relative z-10"
-							disabled={isInviting}
-							onClick={(e) => void handleInvite(e)}
-						>
-							<IconMail className="size-4" />
-							{isInviting ? "Inviting…" : "Invite"}
-						</Button>
+						<>
+							{canMakePrincipal && (
+								<Button
+									variant="outline"
+									size="sm"
+									className="relative z-10"
+									onClick={openPrincipalConfirm}
+								>
+									<IconSchool className="size-4" />
+									Make principal
+								</Button>
+							)}
+							<Button
+								variant="secondary"
+								size="sm"
+								className="relative z-10"
+								disabled={isInviting}
+								onClick={(e) => void handleInvite(e)}
+							>
+								<IconMail className="size-4" />
+								{isInviting ? "Inviting…" : "Invite"}
+							</Button>
+						</>
 					)}
 					{faculty.status === "invited" && (
-						<Button
-							variant="outline"
-							size="sm"
-							className="relative z-10"
-							disabled={isCancellingInvite}
-							onClick={(e) => void handleCancelInvite(e)}
-						>
-							{isCancellingInvite ? "Cancelling…" : "Cancel invitation"}
-						</Button>
+						<>
+							{canMakePrincipal && (
+								<Button
+									variant="outline"
+									size="sm"
+									className="relative z-10"
+									onClick={openPrincipalConfirm}
+								>
+									<IconSchool className="size-4" />
+									Make principal
+								</Button>
+							)}
+							<Button
+								variant="outline"
+								size="sm"
+								className="relative z-10"
+								disabled={isCancellingInvite}
+								onClick={(e) => void handleCancelInvite(e)}
+							>
+								{isCancellingInvite ? "Cancelling…" : "Cancel invitation"}
+							</Button>
+						</>
 					)}
 					{faculty.status === "active" && (
 						<>
-							<Badge variant="secondary" className="relative z-10">
-								Active
-							</Badge>
+							{!isPrincipal && (
+								<Badge variant="secondary" className="relative z-10">
+									Active
+								</Badge>
+							)}
 							<DropdownMenu>
 								<DropdownMenuTrigger
 									render={
@@ -302,11 +401,17 @@ function FacultyListItem({ faculty }: FacultyListItemProps) {
 									<IconDots />
 								</DropdownMenuTrigger>
 								<DropdownMenuContent align="end">
+									{canMakePrincipal && (
+										<DropdownMenuItem onClick={openPrincipalConfirm}>
+											<IconSchool className="size-4" />
+											Make principal
+										</DropdownMenuItem>
+									)}
 									<DropdownMenuItem
 										variant="destructive"
 										onClick={(e) => {
 											e.stopPropagation();
-											setConfirmOpen(true);
+											setDeactivateOpen(true);
 										}}
 									>
 										<IconUserOff className="size-4" />
@@ -324,7 +429,7 @@ function FacultyListItem({ faculty }: FacultyListItemProps) {
 				</ItemActions>
 			</Item>
 
-			<Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+			<Dialog open={deactivateOpen} onOpenChange={setDeactivateOpen}>
 				<DialogContent className="sm:max-w-md" showCloseButton={false}>
 					<DialogHeader>
 						<DialogTitle>Deactivate {displayName}?</DialogTitle>
@@ -334,7 +439,7 @@ function FacultyListItem({ faculty }: FacultyListItemProps) {
 						</DialogDescription>
 					</DialogHeader>
 					<DialogFooter>
-						<Button variant="outline" onClick={() => setConfirmOpen(false)}>
+						<Button variant="outline" onClick={() => setDeactivateOpen(false)}>
 							Cancel
 						</Button>
 						<Button
@@ -343,6 +448,30 @@ function FacultyListItem({ faculty }: FacultyListItemProps) {
 							onClick={() => void handleDeactivate()}
 						>
 							Deactivate
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			<Dialog open={principalOpen} onOpenChange={setPrincipalOpen}>
+				<DialogContent className="sm:max-w-md" showCloseButton={false}>
+					<DialogHeader>
+						<DialogTitle>Make {displayName} the principal?</DialogTitle>
+						<DialogDescription>
+							{otherPrincipalName
+								? `${otherPrincipalName} will be demoted to faculty. There can only be one principal per institution.`
+								: "They will become the principal of this institution."}
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter>
+						<Button variant="outline" onClick={() => setPrincipalOpen(false)}>
+							Cancel
+						</Button>
+						<Button
+							disabled={isSettingPrincipal}
+							onClick={() => void handleSetAsPrincipal()}
+						>
+							{isSettingPrincipal ? "Assigning…" : "Make principal"}
 						</Button>
 					</DialogFooter>
 				</DialogContent>

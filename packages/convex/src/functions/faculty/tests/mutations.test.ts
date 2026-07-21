@@ -10,7 +10,7 @@ import {
 	seedFacultyMember,
 	withSlug,
 } from "#__fixtures__/index.setup";
-import { api } from "#_generated/api";
+import { api, components } from "#_generated/api";
 import { ERROR_CODES } from "#helpers/constants";
 
 const test = institutionTest();
@@ -48,6 +48,7 @@ describe("faculty.create", () => {
 			email: FACULTY_EMAIL,
 			designation: "Professor",
 			status: "draft",
+			insRole: "faculty",
 			phone: { number: FACULTY_PHONE, verified: false },
 			institutionId: ins1._id,
 			createdBy: user1._id,
@@ -467,5 +468,243 @@ describe("faculty.updateEmployment", () => {
 		const updated = await t.run((ctx) => ctx.db.get("faculty", facultyId));
 
 		expect(updated?.designation).toBe("Associate Professor");
+	});
+});
+
+describe("faculty.setAsPrincipal", () => {
+	test("sets principal on draft faculty", async ({
+		t,
+		user1,
+		ins1,
+		asOwner,
+	}) => {
+		const facultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: { status: "draft" },
+			}),
+		);
+
+		await asOwner(user1, ins1).mutation(
+			api.faculty.mutations.setAsPrincipal,
+			withSlug(ins1, { id: facultyId }),
+		);
+
+		const faculty = await t.run((ctx) => ctx.db.get("faculty", facultyId));
+		expect(faculty?.insRole).toBe("principal");
+
+		const principal = await asOwner(user1, ins1).query(
+			api.faculty.queries.getCurrentPrincipal,
+			withSlug(ins1, {}),
+		);
+		expect(principal?._id).toBe(facultyId);
+	});
+
+	test("demotes previous principal faculty when assigning a new one", async ({
+		t,
+		user1,
+		ins1,
+		asOwner,
+	}) => {
+		const previousId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: {
+					email: "previous@example.com",
+					staffId: "STAFF-P",
+					status: "draft",
+					insRole: "principal",
+				},
+			}),
+		);
+
+		const nextId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: {
+					email: "next@example.com",
+					staffId: "STAFF-N",
+					status: "draft",
+				},
+			}),
+		);
+
+		await asOwner(user1, ins1).mutation(
+			api.faculty.mutations.setAsPrincipal,
+			withSlug(ins1, { id: nextId }),
+		);
+
+		const previous = await t.run((ctx) => ctx.db.get("faculty", previousId));
+		const next = await t.run((ctx) => ctx.db.get("faculty", nextId));
+
+		expect(previous?.insRole).toBe("faculty");
+		expect(next?.insRole).toBe("principal");
+	});
+
+	test("syncs membership role for active faculty and demotes previous principal membership", async ({
+		t,
+		user1,
+		ins1,
+		asOwner,
+	}) => {
+		const previousUser = await t.run((ctx) =>
+			seedFacultyMember(ctx, {
+				institutionId: ins1._id,
+				role: "principal",
+				email: "previous.principal+test@resend.dev",
+				name: "Previous Principal",
+			}),
+		);
+
+		const previousFacultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: {
+					email: "previous.principal+test@resend.dev",
+					staffId: "STAFF-PP",
+					status: "active",
+					insRole: "principal",
+					userId: previousUser._id,
+				},
+			}),
+		);
+
+		const nextUser = await t.run((ctx) =>
+			seedFacultyMember(ctx, {
+				institutionId: ins1._id,
+				role: "faculty",
+				email: "next.principal+test@resend.dev",
+				name: "Next Principal",
+			}),
+		);
+
+		const nextFacultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: {
+					email: "next.principal+test@resend.dev",
+					staffId: "STAFF-NP",
+					status: "active",
+					userId: nextUser._id,
+				},
+			}),
+		);
+
+		await asOwner(user1, ins1).mutation(
+			api.faculty.mutations.setAsPrincipal,
+			withSlug(ins1, { id: nextFacultyId }),
+		);
+
+		const previousFaculty = await t.run((ctx) =>
+			ctx.db.get("faculty", previousFacultyId),
+		);
+		const nextFaculty = await t.run((ctx) =>
+			ctx.db.get("faculty", nextFacultyId),
+		);
+
+		expect(previousFaculty?.insRole).toBe("faculty");
+		expect(nextFaculty?.insRole).toBe("principal");
+
+		const previousMembership = await t.run((ctx) =>
+			ctx.runQuery(components.betterAuth.adapter.findOne, {
+				model: "institutionMember",
+				where: [
+					{
+						field: "organizationId",
+						operator: "eq",
+						value: ins1._id,
+					},
+					{ field: "userId", operator: "eq", value: previousUser._id },
+				],
+			}),
+		);
+		const nextMembership = await t.run((ctx) =>
+			ctx.runQuery(components.betterAuth.adapter.findOne, {
+				model: "institutionMember",
+				where: [
+					{
+						field: "organizationId",
+						operator: "eq",
+						value: ins1._id,
+					},
+					{ field: "userId", operator: "eq", value: nextUser._id },
+				],
+			}),
+		);
+
+		expect(previousMembership?.role).toBe("faculty");
+		expect(nextMembership?.role).toBe("principal");
+	});
+
+	test("rejects inactive faculty", async ({ t, user1, ins1, asOwner }) => {
+		const facultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: { status: "inactive" },
+			}),
+		);
+
+		await expectAppError(
+			asOwner(user1, ins1).mutation(
+				api.faculty.mutations.setAsPrincipal,
+				withSlug(ins1, { id: facultyId }),
+			),
+			ERROR_CODES.FACULTY.INACTIVE,
+		);
+	});
+
+	test("is idempotent when faculty is already principal", async ({
+		t,
+		user1,
+		ins1,
+		asOwner,
+	}) => {
+		const facultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: { status: "draft", insRole: "principal" },
+			}),
+		);
+
+		await asOwner(user1, ins1).mutation(
+			api.faculty.mutations.setAsPrincipal,
+			withSlug(ins1, { id: facultyId }),
+		);
+
+		const faculty = await t.run((ctx) => ctx.db.get("faculty", facultyId));
+		expect(faculty?.insRole).toBe("principal");
+	});
+
+	test("rejects assigning the institution owner as principal", async ({
+		t,
+		user1,
+		ins1,
+		asOwner,
+	}) => {
+		const facultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: {
+					status: "active",
+					userId: user1._id,
+				},
+			}),
+		);
+
+		await expectAppError(
+			asOwner(user1, ins1).mutation(
+				api.faculty.mutations.setAsPrincipal,
+				withSlug(ins1, { id: facultyId }),
+			),
+			ERROR_CODES.FACULTY.CANNOT_ASSIGN_OWNER,
+		);
 	});
 });

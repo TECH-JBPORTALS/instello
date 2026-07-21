@@ -68,6 +68,7 @@ export const FacultyResultSchema = vv.object({
 		vv.literal("draft"),
 		vv.literal("invited"),
 	),
+	insRole: vv.union(vv.literal("faculty"), vv.literal("principal")),
 	createdAt: vv.number(),
 	updatedAt: vv.number(),
 });

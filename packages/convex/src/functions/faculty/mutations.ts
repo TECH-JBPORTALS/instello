@@ -155,6 +155,25 @@ export const cancelInvite = insMutation({
 	},
 });
 
+/** Designate faculty as the institution principal (demotes any existing principal)
+ * @param id - faculty id
+ */
+export const setAsPrincipal = insMutation({
+	permissions: ["faculty:activate"],
+	args: { id: vv.id("faculty") },
+	returns: vv.null(),
+	handler: async (ctx, args) => {
+		const faculty = await Faculty.find(ctx.db, args.id);
+
+		if (!faculty || faculty.institutionId !== ctx.institution._id) {
+			throwAppError(ERROR_CODES.FACULTY.NOT_FOUND);
+		}
+
+		await Faculty.setAsPrincipal(ctx, faculty);
+		return null;
+	},
+});
+
 /** Activate faculty
  * @param id - faculty id
  */

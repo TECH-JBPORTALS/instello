@@ -1,5 +1,6 @@
 import type { PaginationOptions, PaginationResult } from "convex/server";
 import type { Infer } from "convex/values";
+import { components } from "#_generated/api";
 import type { Doc, Id } from "#_generated/dataModel";
 import type { DatabaseReader } from "#_generated/server";
 import { ERROR_CODES, throwAppError } from "#helpers/constants";
@@ -13,6 +14,8 @@ import type {
 	PatchPersonalInfoSchema,
 	PatchPhoneSchema,
 } from "../validator/faculty";
+
+export type FacultyInsRole = Doc<"faculty">["insRole"];
 
 export {
 	CreateInputSchema,
@@ -127,6 +130,7 @@ export async function create(
 		createdBy: args.createdBy,
 		phone: { number: phoneNumber, verified: false },
 		status: "draft",
+		insRole: "faculty",
 		createdAt: now,
 		updatedAt: now,
 	});
@@ -313,4 +317,171 @@ export async function revertToDraftFromInvitationCancellation(
 
 	await setStatus(ctx, faculty, "draft");
 	return faculty._id;
+}
+
+/**
+ * **Find the designated principal faculty for an institution**
+ * @returns null if no principal is designated
+ */
+export async function findPrincipal(
+	ctx: AppQueryCtx | AppMutationCtx,
+	institutionId: string,
+) {
+	return await ctx.db
+		.query("faculty")
+		.withIndex("by_institution_and_ins_role", (q) =>
+			q.eq("institutionId", institutionId).eq("insRole", "principal"),
+		)
+		.first();
+}
+
+async function demotePrincipalFaculty(
+	ctx: AppMutationCtx,
+	institutionId: string,
+	exceptFacultyId?: Id<"faculty">,
+) {
+	const principals = await ctx.db
+		.query("faculty")
+		.withIndex("by_institution_and_ins_role", (q) =>
+			q.eq("institutionId", institutionId).eq("insRole", "principal"),
+		)
+		.take(10);
+
+	const now = Date.now();
+
+	for (const principal of principals) {
+		if (exceptFacultyId && principal._id === exceptFacultyId) continue;
+
+		await ctx.db.patch("faculty", principal._id, {
+			insRole: "faculty",
+			updatedAt: now,
+		});
+	}
+}
+
+async function demotePrincipalMemberships(
+	ctx: AppMutationCtx,
+	organizationId: string,
+) {
+	const members = await ctx.runQuery(components.betterAuth.adapter.findMany, {
+		model: "institutionMember",
+		paginationOpts: { numItems: 10, cursor: null },
+		where: [
+			{ field: "organizationId", operator: "eq", value: organizationId },
+			{ field: "role", operator: "eq", value: "principal" },
+		],
+	});
+
+	for (const member of members.page) {
+		await ctx.runMutation(components.betterAuth.adapter.updateOne, {
+			input: {
+				model: "institutionMember",
+				where: [{ field: "_id", value: member._id }],
+				update: { role: "faculty" },
+			},
+		});
+	}
+}
+
+async function promoteMembershipToPrincipal(
+	ctx: AppMutationCtx,
+	args: { organizationId: string; userId: string },
+) {
+	const membership = await ctx.runQuery(components.betterAuth.adapter.findOne, {
+		model: "institutionMember",
+		where: [
+			{
+				field: "organizationId",
+				operator: "eq",
+				value: args.organizationId,
+			},
+			{ field: "userId", operator: "eq", value: args.userId },
+		],
+	});
+
+	if (!membership) return;
+
+	if (membership.role === "owner") {
+		throwAppError(ERROR_CODES.FACULTY.CANNOT_ASSIGN_OWNER);
+	}
+
+	if (membership.role === "principal") return;
+
+	await ctx.runMutation(components.betterAuth.adapter.updateOne, {
+		input: {
+			model: "institutionMember",
+			where: [{ field: "_id", value: membership._id }],
+			update: { role: "principal" },
+		},
+	});
+}
+
+async function syncPendingInvitationRole(
+	ctx: AppMutationCtx,
+	args: { organizationId: string; email: string; role: FacultyInsRole },
+) {
+	const invitation = await ctx.runQuery(components.betterAuth.adapter.findOne, {
+		model: "institutionInvitation",
+		where: [
+			{
+				field: "organizationId",
+				operator: "eq",
+				value: args.organizationId,
+			},
+			{ field: "email", operator: "eq", value: args.email },
+			{ field: "status", operator: "eq", value: "pending" },
+		],
+	});
+
+	if (!invitation) return;
+
+	await ctx.runMutation(components.betterAuth.adapter.updateOne, {
+		input: {
+			model: "institutionInvitation",
+			where: [{ field: "_id", value: invitation._id }],
+			update: { role: args.role },
+		},
+	});
+}
+
+/**
+ * **Designate faculty as the institution principal**
+ *
+ * Demotes any existing principal (faculty designation + membership) to faculty,
+ * then promotes the target. Works for draft, invited, and active faculty.
+ */
+export async function setAsPrincipal(
+	ctx: AppMutationCtx,
+	faculty: Doc<"faculty">,
+) {
+	if (faculty.status === "inactive") {
+		throwAppError(ERROR_CODES.FACULTY.INACTIVE);
+	}
+
+	if (faculty.insRole === "principal") {
+		return;
+	}
+
+	await demotePrincipalFaculty(ctx, faculty.institutionId, faculty._id);
+	await demotePrincipalMemberships(ctx, faculty.institutionId);
+
+	await ctx.db.patch("faculty", faculty._id, {
+		insRole: "principal",
+		updatedAt: Date.now(),
+	});
+
+	if (faculty.userId) {
+		await promoteMembershipToPrincipal(ctx, {
+			organizationId: faculty.institutionId,
+			userId: faculty.userId,
+		});
+	}
+
+	if (faculty.status === "invited") {
+		await syncPendingInvitationRole(ctx, {
+			organizationId: faculty.institutionId,
+			email: faculty.email,
+			role: "principal",
+		});
+	}
 }

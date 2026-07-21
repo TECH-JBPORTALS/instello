@@ -62,3 +62,62 @@ export const setAllStatusToDraft = internalMutation({
 		return { updated, isDone: page.isDone };
 	},
 });
+
+/**
+ * Backfill `insRole: "faculty"` on faculty records missing the field.
+ *
+ * ```bash
+ * # development
+ * bun x convex run faculty/migrations:backfillInsRole
+ *
+ * # production
+ * bun x convex run faculty/migrations:backfillInsRole --prod
+ * ```
+ */
+export const backfillInsRole = internalMutation({
+	args: {
+		cursor: v.optional(v.union(v.string(), v.null())),
+		batchSize: v.optional(v.number()),
+	},
+	returns: v.object({
+		updated: v.number(),
+		isDone: v.boolean(),
+	}),
+	handler: async (ctx, args) => {
+		const batchSize = args.batchSize ?? 100;
+		const page = await ctx.db.query("faculty").paginate({
+			numItems: batchSize,
+			cursor: args.cursor ?? null,
+		});
+
+		const now = Date.now();
+		let updated = 0;
+
+		for (const faculty of page.page) {
+			if ("insRole" in faculty && faculty.insRole != null) continue;
+
+			await ctx.db.patch("faculty", faculty._id, {
+				insRole: "faculty",
+				updatedAt: now,
+			});
+			updated += 1;
+		}
+
+		if (!page.isDone) {
+			await ctx.scheduler.runAfter(
+				0,
+				internal.faculty.migrations.backfillInsRole,
+				{
+					cursor: page.continueCursor,
+					batchSize,
+				},
+			);
+		}
+
+		console.info(
+			`Faculty insRole backfill: updated ${updated} in batch (done=${page.isDone})`,
+		);
+
+		return { updated, isDone: page.isDone };
+	},
+});

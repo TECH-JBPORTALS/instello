@@ -25,6 +25,8 @@ export const facultyTables = {
 			v.literal("draft"),
 			v.literal("invited"),
 		),
+		/** Institution membership role designation. At most one `principal` per institution. */
+		insRole: v.optional(v.union(v.literal("faculty"), v.literal("principal"))),
 		userId: v.optional(v.string()),
 		createdBy: v.string(),
 		createdAt: v.number(),
@@ -38,5 +40,6 @@ export const facultyTables = {
 			"institutionId",
 			"status",
 			"staffId",
-		]),
+		])
+		.index("by_institution_and_ins_role", ["institutionId", "insRole"]),
 };

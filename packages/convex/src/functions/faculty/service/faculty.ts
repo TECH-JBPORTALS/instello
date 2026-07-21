@@ -24,6 +24,7 @@ export async function toDto(
 		specialization: faculty.specialization,
 		phone: faculty.phone,
 		status: faculty.status,
+		insRole: faculty.insRole ?? "faculty",
 		createdAt: faculty.createdAt,
 		updatedAt: faculty.updatedAt,
 	};

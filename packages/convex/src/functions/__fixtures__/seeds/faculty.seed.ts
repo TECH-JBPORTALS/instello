@@ -12,6 +12,8 @@ export async function seedFaculty(
 		createdBy: string;
 		overrides?: Partial<CreateFacultyInput> & {
 			status?: "active" | "inactive" | "draft" | "invited";
+			insRole?: "faculty" | "principal";
+			userId?: string;
 			phoneVerified?: boolean;
 		};
 	},
@@ -35,6 +37,8 @@ export async function seedFaculty(
 			verified: args.overrides?.phoneVerified ?? false,
 		},
 		status: args.overrides?.status ?? "draft",
+		insRole: args.overrides?.insRole ?? "faculty",
+		userId: args.overrides?.userId,
 		createdAt: now,
 		updatedAt: now,
 	});
@@ -42,7 +46,12 @@ export async function seedFaculty(
 
 export async function seedFacultyMember(
 	ctx: AppMutationCtx,
-	args: { institutionId: string },
+	args: {
+		institutionId: string;
+		role?: "faculty" | "principal";
+		email?: string;
+		name?: string;
+	},
 ) {
 	const createdAt = Date.now();
 
@@ -50,8 +59,8 @@ export async function seedFacultyMember(
 		input: {
 			model: "user",
 			data: {
-				name: "Faculty Member",
-				email: "faculty.member+test@resend.dev",
+				name: args.name ?? "Faculty Member",
+				email: args.email ?? "faculty.member+test@resend.dev",
 				createdAt,
 				emailVerified: true,
 				updatedAt: createdAt,
@@ -66,7 +75,7 @@ export async function seedFacultyMember(
 			data: {
 				organizationId: args.institutionId,
 				userId: user._id,
-				role: "faculty",
+				role: args.role ?? "faculty",
 				createdAt,
 			},
 		},

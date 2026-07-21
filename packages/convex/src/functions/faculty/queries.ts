@@ -59,3 +59,19 @@ export const getById = insQuery({
 		return await FacultyService.toDto(ctx, faculty);
 	},
 });
+
+/** Get the designated principal faculty for the current institution
+ * @returns principal faculty record, or null if none is designated
+ */
+export const getCurrentPrincipal = insQuery({
+	permissions: ["faculty:view"],
+	args: {},
+	returns: vv.union(FacultyResultSchema, vv.null()),
+	handler: async (ctx) => {
+		const principal = await Faculty.findPrincipal(ctx, ctx.institution._id);
+
+		if (!principal) return null;
+
+		return await FacultyService.toDto(ctx, principal);
+	},
+});
