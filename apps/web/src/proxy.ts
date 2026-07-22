@@ -1,5 +1,6 @@
 import { RESERVED_SUBDOMAINS } from "@instello/convex/constants";
 import { type NextRequest, NextResponse } from "next/server";
+import { resolveHopHomePath } from "@/lib/hop-proxy-redirect";
 import { rootDomain } from "@/lib/utils";
 
 function extractSubdomain(request: NextRequest): string | null {
@@ -38,6 +39,13 @@ export async function proxy(request: NextRequest) {
 
 	if (!subdomain || RESERVED_SUBDOMAINS.has(subdomain)) {
 		return NextResponse.next();
+	}
+
+	if (pathname === "/" || pathname === "/programs") {
+		const hopHomePath = await resolveHopHomePath(request, subdomain);
+		if (hopHomePath) {
+			return NextResponse.redirect(new URL(hopHomePath, request.url));
+		}
 	}
 
 	return NextResponse.rewrite(

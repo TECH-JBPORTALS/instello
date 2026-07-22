@@ -28,7 +28,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useInsMutation } from "@/hooks/convex-react";
+import { useInsMutation, useInsQuery } from "@/hooks/convex-react";
 import { getConvexErrorMessage } from "@/lib/convex-error";
 import type { ProgramDto } from "../types";
 
@@ -40,6 +40,7 @@ export function ProgramDangerZoneSection({
 	program,
 }: ProgramDangerZoneSectionProps) {
 	const router = useRouter();
+	const user = useInsQuery(api.users.getCurrentUserInInstitution);
 	const removeProgram = useInsMutation(api.program.mutations.remove);
 	const [confirmOpen, setConfirmOpen] = useState(false);
 	const [confirmation, setConfirmation] = useState("");
@@ -51,6 +52,10 @@ export function ProgramDangerZoneSection({
 		[program.name],
 	);
 	const canConfirm = confirmation.trim() === expectedPhrase;
+
+	if (user !== undefined && user.role !== "owner") {
+		return null;
+	}
 
 	async function handleConfirm() {
 		if (!canConfirm) return;

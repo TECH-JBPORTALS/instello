@@ -143,7 +143,12 @@ export const insQuery = customQuery(query, {
 		);
 
 		if (permissions) {
-			await ensureInsPermission(membership.role as InsRole, permissions);
+			await ensureInsPermission(ctx, {
+				role: membership.role as InsRole,
+				permissions,
+				institutionId: institution._id,
+				userId: session.userId,
+			});
 		}
 
 		return {
@@ -207,7 +212,12 @@ export const insMutation = customMutation(mutation, {
 		);
 
 		if (permissions) {
-			await ensureInsPermission(membership.role as InsRole, permissions);
+			await ensureInsPermission(ctx, {
+				role: membership.role as InsRole,
+				permissions,
+				institutionId: institution._id,
+				userId: session.userId,
+			});
 		}
 
 		return {

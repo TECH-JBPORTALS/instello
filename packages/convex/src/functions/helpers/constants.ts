@@ -44,6 +44,12 @@ export const ERROR_CODES = {
 			message: "Program alias already exists in this institution",
 		},
 	},
+	PROGRAM_FACULTY: {
+		NOT_FOUND: {
+			code: "PROGRAM_FACULTY_NOT_FOUND",
+			message: "Faculty is not assigned to this program",
+		},
+	},
 	CLASS: {
 		NOT_FOUND: {
 			code: "CLASS_NOT_FOUND",

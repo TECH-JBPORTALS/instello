@@ -4,6 +4,7 @@ import { components } from "./_generated/api";
 import { insQuery, userMutation, userQuery } from "./helpers/customFunctions";
 import { formInstitutionUrl } from "./helpers/utils";
 import * as OwnerOrganizations from "./model/ownerOrganization";
+import * as ProgramFaculty from "./program/model/programFaculty";
 import { vv } from "./schema";
 
 export const resolveLandingPath = userQuery({
@@ -99,14 +100,33 @@ export const getCurrentUserInInstitution = insQuery({
 			vv.literal("faculty"),
 			vv.literal("principal"),
 		),
+		isHeadOfProgram: vv.boolean(),
+		hopProgram: vv.nullable(
+			vv.object({
+				_id: vv.id("programs"),
+				alias: vv.string(),
+				name: vv.string(),
+			}),
+		),
 	}),
-	handler: (ctx) => {
+	handler: async (ctx) => {
+		const hopProgram =
+			(ctx.membership.role as InsRole) === "faculty"
+				? await ProgramFaculty.getHopProgramForUser(
+						ctx,
+						ctx.institution._id,
+						ctx.session.userId,
+					)
+				: null;
+
 		return {
 			_id: ctx.session.user._id,
 			email: ctx.session.user.email,
 			image: ctx.session.user.image ?? null,
 			name: ctx.session.user.name,
 			role: ctx.membership.role as InsRole,
+			isHeadOfProgram: hopProgram !== null,
+			hopProgram,
 		};
 	},
 });

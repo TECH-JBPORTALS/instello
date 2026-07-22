@@ -41,5 +41,6 @@ export const facultyTables = {
 			"status",
 			"staffId",
 		])
-		.index("by_institution_and_ins_role", ["institutionId", "insRole"]),
+		.index("by_institution_and_ins_role", ["institutionId", "insRole"])
+		.index("by_institution_and_user_id", ["institutionId", "userId"]),
 };

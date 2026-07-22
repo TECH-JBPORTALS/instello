@@ -1,5 +1,6 @@
 "use client";
 
+import { api } from "@instello/convex/api";
 import {
 	Sidebar,
 	SidebarContent,
@@ -11,7 +12,9 @@ import { type ReactNode, useLayoutEffect, useRef } from "react";
 import { AppSidebarHeader } from "@/components/common/app-sidebar-header";
 import { InstitutionSidebarFooter } from "@/components/sidebars/institution-sidebar/institution-sidebar-footer";
 import { ClassSwitcher } from "@/components/sidebars/switchers/class-switcher";
+import { HopProgramHeader } from "@/components/sidebars/switchers/hop-program-header";
 import { ProgramSwitcher } from "@/components/sidebars/switchers/program-switcher";
+import { useInsQuery } from "@/hooks/convex-react";
 import { getSidebarMode, type SidebarMode } from "@/lib/sidebar-mode";
 
 const OFFSET = 120;
@@ -57,6 +60,7 @@ const variants = {
 export function SidebarLayoutClient({ sidebar }: { sidebar: ReactNode }) {
 	const pathname = usePathname();
 	const mode = getSidebarMode(pathname);
+	const user = useInsQuery(api.users.getCurrentUserInInstitution);
 	const prevModeRef = useRef(mode);
 	const directionRef = useRef<"left" | "right">("right");
 
@@ -68,14 +72,21 @@ export function SidebarLayoutClient({ sidebar }: { sidebar: ReactNode }) {
 		prevModeRef.current = mode;
 	}, [mode]);
 
+	const isHop =
+		user?.role === "faculty" &&
+		user.isHeadOfProgram &&
+		user.hopProgram !== null;
 	const showSwitchers = mode === "program" || mode === "class";
 
 	return (
 		<Sidebar>
 			<AppSidebarHeader />
+			{isHop && user.hopProgram ? (
+				<HopProgramHeader name={user.hopProgram.name} />
+			) : null}
 			{showSwitchers ? (
 				<SidebarHeader>
-					<ProgramSwitcher />
+					{isHop ? null : <ProgramSwitcher />}
 					<ClassSwitcher />
 				</SidebarHeader>
 			) : null}

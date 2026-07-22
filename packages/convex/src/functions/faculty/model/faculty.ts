@@ -72,6 +72,23 @@ export async function findByEmail(
 }
 
 /**
+ * **Find faculty by linked user ID within an institution**
+ * @returns null if no matching faculty exists
+ */
+export async function findByInstitutionAndUserId(
+	ctx: { db: DatabaseReader },
+	institutionId: string,
+	userId: string,
+) {
+	return await ctx.db
+		.query("faculty")
+		.withIndex("by_institution_and_user_id", (q) =>
+			q.eq("institutionId", institutionId).eq("userId", userId),
+		)
+		.unique();
+}
+
+/**
  * **Find faculty by staff ID within an institution**
  * @returns null if no matching faculty exists
  */

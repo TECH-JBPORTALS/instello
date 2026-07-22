@@ -14,7 +14,7 @@ export default async function Layout({
 		slug: subdomain,
 	});
 
-	if (user.role === "faculty") {
+	if (user.role === "faculty" && !user.isHeadOfProgram) {
 		return notFound();
 	}
 

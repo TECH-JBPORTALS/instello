@@ -2,6 +2,8 @@ import type { GenericCtx } from "@convex-dev/better-auth";
 import * as insPermissions from "../../better-auth/ins-permissions";
 import { components } from "../_generated/api";
 import type { DataModel } from "../_generated/dataModel";
+import type { DatabaseReader } from "../_generated/server";
+import * as ProgramFaculty from "../program/model/programFaculty";
 import { ERROR_CODES, throwAppError } from "./constants";
 
 /**
@@ -60,20 +62,42 @@ export const ensureInstitution = async (
 };
 
 /**
- * Helper function to validate the permissions for given role in the institution
- * @param ctx
- * @param institutionId
- * @param permissions
+ * Helper function to validate the permissions for given role in the institution.
+ * Faculty who are Head of Program (HOP) are elevated to principal statements.
  */
 export const ensureInsPermission = async (
-	role: insPermissions.InsRole,
-	permissions: insPermissions.InsPermission[],
+	ctx: { db: DatabaseReader },
+	args: {
+		role: insPermissions.InsRole;
+		permissions: insPermissions.InsPermission[];
+		institutionId: string;
+		userId: string;
+	},
 ) => {
-	const required = insPermissions.toPermissionObject(permissions);
+	const required = insPermissions.toPermissionObject(args.permissions);
+	const roleStatements = insPermissions.insRoles[args.role].statements;
 
-	const statements = insPermissions.insRoles[role].statements;
+	if (insPermissions.hasPermission(roleStatements, required)) {
+		return;
+	}
 
-	const hasAccess = insPermissions.hasPermission(statements, required);
+	if (args.role === "faculty") {
+		const isHop = await ProgramFaculty.isHeadOfProgramForUser(
+			ctx,
+			args.institutionId,
+			args.userId,
+		);
 
-	if (!hasAccess) throwAppError(ERROR_CODES.BASE.ACCESS_DENIED);
+		if (
+			isHop &&
+			insPermissions.hasPermission(
+				insPermissions.insRoles.principal.statements,
+				required,
+			)
+		) {
+			return;
+		}
+	}
+
+	throwAppError(ERROR_CODES.BASE.ACCESS_DENIED);
 };

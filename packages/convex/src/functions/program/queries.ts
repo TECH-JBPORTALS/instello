@@ -2,6 +2,7 @@ import {
 	paginationOptsValidator,
 	paginationResultValidator,
 } from "convex/server";
+import type { InsRole } from "../../better-auth/ins-permissions";
 import * as AcademicStage from "../academicPattern/model/academicStage";
 import * as ClassSubjectFaculty from "../class/model/classSubjectFaculty";
 import * as FacultyService from "../faculty/service/faculty";
@@ -50,10 +51,26 @@ export const list = insQuery({
 	},
 	returns: vv.array(ProgramListItemSchema),
 	handler: async (ctx, args) => {
-		return await Program.list(ctx, {
+		const programs = await Program.list(ctx, {
 			institutionId: ctx.institution._id,
 			query: args.query,
 		});
+
+		if ((ctx.membership.role as InsRole) !== "faculty") {
+			return programs;
+		}
+
+		const hopProgram = await ProgramFaculty.getHopProgramForUser(
+			ctx,
+			ctx.institution._id,
+			ctx.session.userId,
+		);
+
+		if (!hopProgram) {
+			return programs;
+		}
+
+		return programs.filter((program) => program._id === hopProgram._id);
 	},
 });
 
@@ -298,6 +315,62 @@ export const removeStaff = insMutation({
 
 		await ClassSubjectFaculty.removeAllByFaculty(ctx, assignment.facultyId);
 		await ProgramFaculty.remove(ctx.db, args.programFacultyId);
+		return null;
+	},
+});
+
+/** Designate a program faculty member as Head of Program (sole HOP per program; one program per person) */
+export const setAsHeadOfProgram = insMutation({
+	permissions: ["program:update"],
+	args: {
+		programId: vv.id("programs"),
+		facultyId: vv.id("faculty"),
+	},
+	returns: vv.null(),
+	handler: async (ctx, args) => {
+		const program = await Program.getById(
+			ctx,
+			args.programId,
+			ctx.institution._id,
+		);
+
+		if (!program) {
+			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
+		}
+
+		await ProgramFaculty.setAsHeadOfProgram(
+			ctx.db,
+			args.programId,
+			args.facultyId,
+		);
+		return null;
+	},
+});
+
+/** Remove Head of Program designation from a program faculty member */
+export const removeAsHeadOfProgram = insMutation({
+	permissions: ["program:update"],
+	args: {
+		programId: vv.id("programs"),
+		facultyId: vv.id("faculty"),
+	},
+	returns: vv.null(),
+	handler: async (ctx, args) => {
+		const program = await Program.getById(
+			ctx,
+			args.programId,
+			ctx.institution._id,
+		);
+
+		if (!program) {
+			throwAppError(ERROR_CODES.PROGRAM.NOT_FOUND);
+		}
+
+		await ProgramFaculty.removeAsHeadOfProgram(
+			ctx.db,
+			args.programId,
+			args.facultyId,
+		);
 		return null;
 	},
 });

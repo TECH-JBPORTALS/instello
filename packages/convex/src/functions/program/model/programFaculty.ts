@@ -3,7 +3,9 @@
 import type { PaginationOptions, PaginationResult } from "convex/server";
 import type { Doc, Id } from "#_generated/dataModel";
 import type { DatabaseReader, DatabaseWriter } from "#_generated/server";
+import { ERROR_CODES, throwAppError } from "#helpers/constants";
 import type { AppMutationCtx, AppQueryCtx } from "#model/common.types";
+import * as Faculty from "../../faculty/model/faculty";
 
 /** Find an existing faculty assignment for a program, or null */
 export async function findByProgramAndFaculty(
@@ -17,6 +19,136 @@ export async function findByProgramAndFaculty(
 			q.eq("programId", programId).eq("facultyId", facultyId),
 		)
 		.unique();
+}
+
+/**
+ * Whether the user is Head of Program for a program in the institution.
+ * Used to elevate faculty membership to principal-equivalent permissions.
+ */
+export async function isHeadOfProgramForUser(
+	ctx: { db: DatabaseReader },
+	institutionId: string,
+	userId: string,
+): Promise<boolean> {
+	const hopProgram = await getHopProgramForUser(ctx, institutionId, userId);
+	return hopProgram !== null;
+}
+
+/**
+ * The live program where the user is Head of Program, or null.
+ * A faculty member can be HOP of at most one program.
+ */
+export async function getHopProgramForUser(
+	ctx: { db: DatabaseReader },
+	institutionId: string,
+	userId: string,
+): Promise<{ _id: Id<"programs">; alias: string; name: string } | null> {
+	const faculty = await Faculty.findByInstitutionAndUserId(
+		ctx,
+		institutionId,
+		userId,
+	);
+
+	if (!faculty) return null;
+
+	const assignments = await ctx.db
+		.query("programFaculty")
+		.withIndex("by_faculty", (q) => q.eq("facultyId", faculty._id))
+		.take(100);
+
+	for (const assignment of assignments) {
+		if (!assignment.isHeadOfProgram) continue;
+
+		const program = await ctx.db.get("programs", assignment.programId);
+		if (!program) continue;
+		if (program.institutionId !== institutionId) continue;
+		if (program.isDeleting === true) continue;
+
+		return {
+			_id: program._id,
+			alias: program.alias,
+			name: program.name,
+		};
+	}
+
+	return null;
+}
+
+/**
+ * Designate faculty as the sole Head of Program for a program.
+ * Clears any existing HOP on the same program, and clears this faculty's
+ * HOP designation on any other program (one HOP program per person).
+ */
+export async function setAsHeadOfProgram(
+	db: DatabaseWriter,
+	programId: Id<"programs">,
+	facultyId: Id<"faculty">,
+) {
+	const assignment = await findByProgramAndFaculty(db, programId, facultyId);
+
+	if (!assignment) {
+		throwAppError(ERROR_CODES.PROGRAM_FACULTY.NOT_FOUND);
+	}
+
+	if (assignment.isHeadOfProgram) {
+		return;
+	}
+
+	const now = Date.now();
+	const programAssignments = await db
+		.query("programFaculty")
+		.withIndex("by_program", (q) => q.eq("programId", programId))
+		.take(300);
+
+	for (const existing of programAssignments) {
+		if (existing.isHeadOfProgram) {
+			await db.patch(existing._id, {
+				isHeadOfProgram: false,
+				updatedAt: now,
+			});
+		}
+	}
+
+	const facultyAssignments = await db
+		.query("programFaculty")
+		.withIndex("by_faculty", (q) => q.eq("facultyId", facultyId))
+		.take(100);
+
+	for (const existing of facultyAssignments) {
+		if (existing._id === assignment._id) continue;
+		if (!existing.isHeadOfProgram) continue;
+		await db.patch(existing._id, {
+			isHeadOfProgram: false,
+			updatedAt: now,
+		});
+	}
+
+	await db.patch(assignment._id, {
+		isHeadOfProgram: true,
+		updatedAt: now,
+	});
+}
+
+/** Remove Head of Program designation from a program faculty assignment */
+export async function removeAsHeadOfProgram(
+	db: DatabaseWriter,
+	programId: Id<"programs">,
+	facultyId: Id<"faculty">,
+) {
+	const assignment = await findByProgramAndFaculty(db, programId, facultyId);
+
+	if (!assignment) {
+		throwAppError(ERROR_CODES.PROGRAM_FACULTY.NOT_FOUND);
+	}
+
+	if (!assignment.isHeadOfProgram) {
+		return;
+	}
+
+	await db.patch(assignment._id, {
+		isHeadOfProgram: false,
+		updatedAt: Date.now(),
+	});
 }
 
 /** Assign a faculty to the program or return the existing assignment */

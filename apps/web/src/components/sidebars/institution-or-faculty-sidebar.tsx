@@ -27,7 +27,7 @@ export function InstitutionOrFacultySidebar() {
 		);
 	}
 
-	if (user.role === "faculty") {
+	if (user.role === "faculty" && !user.isHeadOfProgram) {
 		return <FacultySidebarContent />;
 	}
 

@@ -48,10 +48,13 @@ export function ProgramSwitcher() {
 		<Select
 			value={programAlias}
 			onValueChange={(value) => {
-				if (!value || value === "__all__") {
+				if (!value) return;
+
+				if (value === "__all__") {
 					router.push("/programs");
 					return;
 				}
+
 				if (getSidebarMode(pathname) === "class") {
 					router.push(programPath(value, "classes"));
 					return;
@@ -67,9 +70,7 @@ export function ProgramSwitcher() {
 				<SelectValue>
 					<span className="flex items-center gap-2">
 						<ProgramAvatar name={program.name} size="sm" />
-						<span className="flex min-w-0 flex-col items-start gap-0.5">
-							<span className="truncate font-medium">{program.name}</span>
-						</span>
+						<span className="truncate font-medium">{program.name}</span>
 					</span>
 				</SelectValue>
 			</SelectTrigger>

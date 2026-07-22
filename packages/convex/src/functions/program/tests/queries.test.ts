@@ -5,9 +5,11 @@ import {
 	FACULTY_EMAIL,
 	FACULTY_STAFF_ID,
 	OWNER_1_NAME,
+	ownerIdentity,
 	PROGRAM_CS,
 	programTest,
 	seedFaculty,
+	seedFacultyMember,
 	withSlug,
 } from "#__fixtures__/index.setup";
 import { api } from "#_generated/api";
@@ -768,5 +770,554 @@ describe("programs.removeStaff", () => {
 			}),
 		);
 		expect(listed.page).toHaveLength(0);
+	});
+});
+
+describe("programs.setAsHeadOfProgram", () => {
+	const test = programTest();
+
+	test("rejects unauthenticated user", async ({ t, user1, ins1, programs }) => {
+		const facultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+			}),
+		);
+
+		await t.run(async (ctx) => {
+			const now = Date.now();
+			await ctx.db.insert("programFaculty", {
+				programId: programs.cs._id,
+				facultyId,
+				isHeadOfProgram: false,
+				createdAt: now,
+				updatedAt: now,
+			});
+		});
+
+		await expectAppError(
+			t.mutation(
+				api.program.queries.setAsHeadOfProgram,
+				withSlug(ins1, {
+					programId: programs.cs._id,
+					facultyId,
+				}),
+			),
+			ERROR_CODES.BASE.UNAUTHORIZED,
+		);
+	});
+
+	test("rejects faculty not assigned to the program", async ({
+		t,
+		user1,
+		ins1,
+		programs,
+		asOwner,
+	}) => {
+		const facultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+			}),
+		);
+
+		await expectAppError(
+			asOwner(user1, ins1).mutation(
+				api.program.queries.setAsHeadOfProgram,
+				withSlug(ins1, {
+					programId: programs.cs._id,
+					facultyId,
+				}),
+			),
+			ERROR_CODES.PROGRAM_FACULTY.NOT_FOUND,
+		);
+	});
+
+	test("sets faculty as HOP and demotes previous HOP on the same program", async ({
+		t,
+		user1,
+		ins1,
+		programs,
+		asOwner,
+	}) => {
+		const previousFacultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: {
+					email: "previous.hop@example.com",
+					staffId: "STAFF-HOP-1",
+				},
+			}),
+		);
+		const nextFacultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: {
+					email: "next.hop@example.com",
+					staffId: "STAFF-HOP-2",
+				},
+			}),
+		);
+
+		await t.run(async (ctx) => {
+			const now = Date.now();
+			await ctx.db.insert("programFaculty", {
+				programId: programs.cs._id,
+				facultyId: previousFacultyId,
+				isHeadOfProgram: true,
+				createdAt: now,
+				updatedAt: now,
+			});
+			await ctx.db.insert("programFaculty", {
+				programId: programs.cs._id,
+				facultyId: nextFacultyId,
+				isHeadOfProgram: false,
+				createdAt: now,
+				updatedAt: now,
+			});
+		});
+
+		await asOwner(user1, ins1).mutation(
+			api.program.queries.setAsHeadOfProgram,
+			withSlug(ins1, {
+				programId: programs.cs._id,
+				facultyId: nextFacultyId,
+			}),
+		);
+
+		const assignments = await t.run((ctx) =>
+			ctx.db
+				.query("programFaculty")
+				.withIndex("by_program", (q) => q.eq("programId", programs.cs._id))
+				.collect(),
+		);
+
+		const previous = assignments.find((a) => a.facultyId === previousFacultyId);
+		const next = assignments.find((a) => a.facultyId === nextFacultyId);
+
+		expect(previous?.isHeadOfProgram).toBe(false);
+		expect(next?.isHeadOfProgram).toBe(true);
+	});
+
+	test("clears HOP on another program for the same faculty", async ({
+		t,
+		user1,
+		ins1,
+		programs,
+		asOwner,
+	}) => {
+		const facultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: {
+					email: "single.hop@example.com",
+					staffId: "STAFF-HOP-ONE",
+				},
+			}),
+		);
+
+		await t.run(async (ctx) => {
+			const now = Date.now();
+			await ctx.db.insert("programFaculty", {
+				programId: programs.cs._id,
+				facultyId,
+				isHeadOfProgram: true,
+				createdAt: now,
+				updatedAt: now,
+			});
+			await ctx.db.insert("programFaculty", {
+				programId: programs.me._id,
+				facultyId,
+				isHeadOfProgram: false,
+				createdAt: now,
+				updatedAt: now,
+			});
+		});
+
+		await asOwner(user1, ins1).mutation(
+			api.program.queries.setAsHeadOfProgram,
+			withSlug(ins1, {
+				programId: programs.me._id,
+				facultyId,
+			}),
+		);
+
+		const assignments = await t.run(async (ctx) => {
+			const cs = await ctx.db
+				.query("programFaculty")
+				.withIndex("by_program_and_faculty", (q) =>
+					q.eq("programId", programs.cs._id).eq("facultyId", facultyId),
+				)
+				.unique();
+			const me = await ctx.db
+				.query("programFaculty")
+				.withIndex("by_program_and_faculty", (q) =>
+					q.eq("programId", programs.me._id).eq("facultyId", facultyId),
+				)
+				.unique();
+			return { cs, me };
+		});
+
+		expect(assignments.cs?.isHeadOfProgram).toBe(false);
+		expect(assignments.me?.isHeadOfProgram).toBe(true);
+	});
+});
+
+describe("programs.removeAsHeadOfProgram", () => {
+	const test = programTest();
+
+	test("removes HOP designation", async ({
+		t,
+		user1,
+		ins1,
+		programs,
+		asOwner,
+	}) => {
+		const facultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+			}),
+		);
+
+		await t.run(async (ctx) => {
+			const now = Date.now();
+			await ctx.db.insert("programFaculty", {
+				programId: programs.cs._id,
+				facultyId,
+				isHeadOfProgram: true,
+				createdAt: now,
+				updatedAt: now,
+			});
+		});
+
+		await asOwner(user1, ins1).mutation(
+			api.program.queries.removeAsHeadOfProgram,
+			withSlug(ins1, {
+				programId: programs.cs._id,
+				facultyId,
+			}),
+		);
+
+		const assignment = await t.run((ctx) =>
+			ctx.db
+				.query("programFaculty")
+				.withIndex("by_program_and_faculty", (q) =>
+					q.eq("programId", programs.cs._id).eq("facultyId", facultyId),
+				)
+				.unique(),
+		);
+
+		expect(assignment?.isHeadOfProgram).toBe(false);
+	});
+});
+
+describe("HOP permission elevation", () => {
+	const test = programTest();
+
+	test("HOP can update a program name", async ({
+		t,
+		user1,
+		ins1,
+		programs,
+	}) => {
+		const facultyUser = await t.run((ctx) =>
+			seedFacultyMember(ctx, {
+				institutionId: ins1._id,
+				role: "faculty",
+				email: "hop.member+test@resend.dev",
+				name: "HOP Member",
+			}),
+		);
+
+		const facultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: {
+					email: "hop.member+test@resend.dev",
+					staffId: "STAFF-HOP",
+					status: "active",
+					userId: facultyUser._id,
+				},
+			}),
+		);
+
+		await t.run(async (ctx) => {
+			const now = Date.now();
+			await ctx.db.insert("programFaculty", {
+				programId: programs.cs._id,
+				facultyId,
+				isHeadOfProgram: true,
+				createdAt: now,
+				updatedAt: now,
+			});
+		});
+
+		await t.withIdentity(ownerIdentity(facultyUser._id, ins1._id)).mutation(
+			api.program.mutations.updateName,
+			withSlug(ins1, {
+				id: programs.cs._id,
+				body: { name: "Updated by HOP" },
+			}),
+		);
+
+		const program = await t.run((ctx) =>
+			ctx.db.get("programs", programs.cs._id),
+		);
+		expect(program?.name).toBe("Updated by HOP");
+	});
+
+	test("HOP cannot delete a program", async ({ t, user1, ins1, programs }) => {
+		const facultyUser = await t.run((ctx) =>
+			seedFacultyMember(ctx, {
+				institutionId: ins1._id,
+				role: "faculty",
+				email: "hop.delete+test@resend.dev",
+				name: "HOP Member",
+			}),
+		);
+
+		const facultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: {
+					email: "hop.delete+test@resend.dev",
+					staffId: "STAFF-HOP-DEL",
+					status: "active",
+					userId: facultyUser._id,
+				},
+			}),
+		);
+
+		await t.run(async (ctx) => {
+			const now = Date.now();
+			await ctx.db.insert("programFaculty", {
+				programId: programs.cs._id,
+				facultyId,
+				isHeadOfProgram: true,
+				createdAt: now,
+				updatedAt: now,
+			});
+		});
+
+		await expectAppError(
+			t
+				.withIdentity(ownerIdentity(facultyUser._id, ins1._id))
+				.mutation(
+					api.program.mutations.remove,
+					withSlug(ins1, { id: programs.cs._id }),
+				),
+			ERROR_CODES.BASE.ACCESS_DENIED,
+		);
+	});
+
+	test("non-HOP faculty cannot update a program", async ({
+		t,
+		user1,
+		ins1,
+		programs,
+	}) => {
+		const facultyUser = await t.run((ctx) =>
+			seedFacultyMember(ctx, {
+				institutionId: ins1._id,
+				role: "faculty",
+				email: "regular.faculty+test@resend.dev",
+				name: "Regular Faculty",
+			}),
+		);
+
+		await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: {
+					email: "regular.faculty+test@resend.dev",
+					staffId: "STAFF-REG",
+					status: "active",
+					userId: facultyUser._id,
+				},
+			}),
+		);
+
+		await expectAppError(
+			t.withIdentity(ownerIdentity(facultyUser._id, ins1._id)).mutation(
+				api.program.mutations.updateName,
+				withSlug(ins1, {
+					id: programs.cs._id,
+					body: { name: "Should fail" },
+				}),
+			),
+			ERROR_CODES.BASE.ACCESS_DENIED,
+		);
+	});
+
+	test("removing HOP restores faculty-only access", async ({
+		t,
+		user1,
+		ins1,
+		programs,
+		asOwner,
+	}) => {
+		const facultyUser = await t.run((ctx) =>
+			seedFacultyMember(ctx, {
+				institutionId: ins1._id,
+				role: "faculty",
+				email: "hop.removed+test@resend.dev",
+				name: "HOP Member",
+			}),
+		);
+
+		const facultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: {
+					email: "hop.removed+test@resend.dev",
+					staffId: "STAFF-HOP-RM",
+					status: "active",
+					userId: facultyUser._id,
+				},
+			}),
+		);
+
+		await t.run(async (ctx) => {
+			const now = Date.now();
+			await ctx.db.insert("programFaculty", {
+				programId: programs.cs._id,
+				facultyId,
+				isHeadOfProgram: true,
+				createdAt: now,
+				updatedAt: now,
+			});
+		});
+
+		await asOwner(user1, ins1).mutation(
+			api.program.queries.removeAsHeadOfProgram,
+			withSlug(ins1, {
+				programId: programs.cs._id,
+				facultyId,
+			}),
+		);
+
+		await expectAppError(
+			t.withIdentity(ownerIdentity(facultyUser._id, ins1._id)).mutation(
+				api.program.mutations.updateName,
+				withSlug(ins1, {
+					id: programs.cs._id,
+					body: { name: "Should fail after remove" },
+				}),
+			),
+			ERROR_CODES.BASE.ACCESS_DENIED,
+		);
+	});
+
+	test("getCurrentUserInInstitution reports isHeadOfProgram", async ({
+		t,
+		user1,
+		ins1,
+		programs,
+	}) => {
+		const facultyUser = await t.run((ctx) =>
+			seedFacultyMember(ctx, {
+				institutionId: ins1._id,
+				role: "faculty",
+				email: "hop.current+test@resend.dev",
+				name: "HOP Member",
+			}),
+		);
+
+		const facultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: {
+					email: "hop.current+test@resend.dev",
+					staffId: "STAFF-HOP-CUR",
+					status: "active",
+					userId: facultyUser._id,
+				},
+			}),
+		);
+
+		await t.run(async (ctx) => {
+			const now = Date.now();
+			await ctx.db.insert("programFaculty", {
+				programId: programs.cs._id,
+				facultyId,
+				isHeadOfProgram: true,
+				createdAt: now,
+				updatedAt: now,
+			});
+		});
+
+		const user = await t
+			.withIdentity(ownerIdentity(facultyUser._id, ins1._id))
+			.query(api.users.getCurrentUserInInstitution, withSlug(ins1, {}));
+
+		expect(user).toMatchObject({
+			role: "faculty",
+			isHeadOfProgram: true,
+			hopProgram: {
+				_id: programs.cs._id,
+				alias: programs.cs.alias,
+				name: programs.cs.name,
+			},
+		});
+	});
+
+	test("lists only HOP programs for a Head of Program", async ({
+		t,
+		user1,
+		ins1,
+		programs,
+	}) => {
+		const facultyUser = await t.run((ctx) =>
+			seedFacultyMember(ctx, {
+				institutionId: ins1._id,
+				role: "faculty",
+				email: "hop.list+test@resend.dev",
+				name: "HOP Member",
+			}),
+		);
+
+		const facultyId = await t.run((ctx) =>
+			seedFaculty(ctx, {
+				institutionId: ins1._id,
+				createdBy: user1._id,
+				overrides: {
+					email: "hop.list+test@resend.dev",
+					staffId: "STAFF-HOP-LIST",
+					status: "active",
+					userId: facultyUser._id,
+				},
+			}),
+		);
+
+		await t.run(async (ctx) => {
+			const now = Date.now();
+			await ctx.db.insert("programFaculty", {
+				programId: programs.cs._id,
+				facultyId,
+				isHeadOfProgram: true,
+				createdAt: now,
+				updatedAt: now,
+			});
+		});
+
+		const result = await t
+			.withIdentity(ownerIdentity(facultyUser._id, ins1._id))
+			.query(api.program.queries.list, withSlug(ins1, {}));
+
+		expect(result).toHaveLength(1);
+		expect(result[0]).toMatchObject({
+			_id: programs.cs._id,
+			alias: programs.cs.alias,
+			name: programs.cs.name,
+		});
 	});
 });

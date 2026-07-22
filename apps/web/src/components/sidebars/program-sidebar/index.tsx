@@ -1,5 +1,6 @@
 "use client";
 
+import { api } from "@instello/convex/api";
 import {
 	SidebarGroup,
 	SidebarGroupContent,
@@ -12,6 +13,7 @@ import {
 import { IconArrowLeft } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useInsQuery } from "@/hooks/convex-react";
 import { getProgramSegment } from "@/lib/sidebar-mode";
 import { isProgramNavActive, programNavItems } from "./nav-items";
 import { ProgramLink } from "./program-link";
@@ -19,18 +21,22 @@ import { ProgramLink } from "./program-link";
 export function ProgramSidebarContent() {
 	const pathname = usePathname();
 	const currentSegment = getProgramSegment(pathname);
+	const user = useInsQuery(api.users.getCurrentUserInInstitution);
+	const isHop = user?.role === "faculty" && user.isHeadOfProgram;
 
 	return (
 		<>
-			<SidebarHeader>
-				<SidebarMenu>
-					<SidebarMenuItem>
-						<SidebarMenuButton render={<Link href={"/programs"} />}>
-							<IconArrowLeft /> Programs
-						</SidebarMenuButton>
-					</SidebarMenuItem>
-				</SidebarMenu>
-			</SidebarHeader>
+			{!isHop && (
+				<SidebarHeader>
+					<SidebarMenu>
+						<SidebarMenuItem>
+							<SidebarMenuButton render={<Link href={"/programs"} />}>
+								<IconArrowLeft /> Programs
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+					</SidebarMenu>
+				</SidebarHeader>
+			)}
 			<SidebarGroup>
 				<SidebarGroupLabel>PROGRAM</SidebarGroupLabel>
 				<SidebarGroupContent>

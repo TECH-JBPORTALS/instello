@@ -45,7 +45,7 @@ import {
 } from "@tabler/icons-react";
 import { isEmpty } from "lodash";
 import Link from "next/link";
-import { type MouseEvent, useMemo, useState } from "react";
+import { type MouseEvent, type ReactNode, useMemo, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { toast } from "sonner";
 import {
@@ -333,17 +333,6 @@ function FacultyListItem({ faculty, currentPrincipal }: FacultyListItemProps) {
 				<ItemActions>
 					{faculty.status === "draft" && (
 						<>
-							{canMakePrincipal && (
-								<Button
-									variant="outline"
-									size="sm"
-									className="relative z-10"
-									onClick={openPrincipalConfirm}
-								>
-									<IconSchool className="size-4" />
-									Make principal
-								</Button>
-							)}
 							<Button
 								variant="secondary"
 								size="sm"
@@ -354,21 +343,18 @@ function FacultyListItem({ faculty, currentPrincipal }: FacultyListItemProps) {
 								<IconMail className="size-4" />
 								{isInviting ? "Inviting…" : "Invite"}
 							</Button>
+							{canMakePrincipal && (
+								<MoreActionsMenu>
+									<DropdownMenuItem onClick={openPrincipalConfirm}>
+										<IconSchool className="size-4" />
+										Make principal
+									</DropdownMenuItem>
+								</MoreActionsMenu>
+							)}
 						</>
 					)}
 					{faculty.status === "invited" && (
 						<>
-							{canMakePrincipal && (
-								<Button
-									variant="outline"
-									size="sm"
-									className="relative z-10"
-									onClick={openPrincipalConfirm}
-								>
-									<IconSchool className="size-4" />
-									Make principal
-								</Button>
-							)}
 							<Button
 								variant="outline"
 								size="sm"
@@ -378,6 +364,14 @@ function FacultyListItem({ faculty, currentPrincipal }: FacultyListItemProps) {
 							>
 								{isCancellingInvite ? "Cancelling…" : "Cancel invitation"}
 							</Button>
+							{canMakePrincipal && (
+								<MoreActionsMenu>
+									<DropdownMenuItem onClick={openPrincipalConfirm}>
+										<IconSchool className="size-4" />
+										Make principal
+									</DropdownMenuItem>
+								</MoreActionsMenu>
+							)}
 						</>
 					)}
 					{faculty.status === "active" && (
@@ -387,38 +381,24 @@ function FacultyListItem({ faculty, currentPrincipal }: FacultyListItemProps) {
 									Active
 								</Badge>
 							)}
-							<DropdownMenu>
-								<DropdownMenuTrigger
-									render={
-										<Button
-											variant="outline"
-											size="icon-sm"
-											className="relative z-10"
-											onClick={(e) => e.stopPropagation()}
-										/>
-									}
-								>
-									<IconDots />
-								</DropdownMenuTrigger>
-								<DropdownMenuContent align="end">
-									{canMakePrincipal && (
-										<DropdownMenuItem onClick={openPrincipalConfirm}>
-											<IconSchool className="size-4" />
-											Make principal
-										</DropdownMenuItem>
-									)}
-									<DropdownMenuItem
-										variant="destructive"
-										onClick={(e) => {
-											e.stopPropagation();
-											setDeactivateOpen(true);
-										}}
-									>
-										<IconUserOff className="size-4" />
-										Deactivate
+							<MoreActionsMenu>
+								{canMakePrincipal && (
+									<DropdownMenuItem onClick={openPrincipalConfirm}>
+										<IconSchool className="size-4" />
+										Make principal
 									</DropdownMenuItem>
-								</DropdownMenuContent>
-							</DropdownMenu>
+								)}
+								<DropdownMenuItem
+									variant="destructive"
+									onClick={(e) => {
+										e.stopPropagation();
+										setDeactivateOpen(true);
+									}}
+								>
+									<IconUserOff className="size-4" />
+									Deactivate
+								</DropdownMenuItem>
+							</MoreActionsMenu>
 						</>
 					)}
 					{faculty.status === "inactive" && (
@@ -477,6 +457,26 @@ function FacultyListItem({ faculty, currentPrincipal }: FacultyListItemProps) {
 				</DialogContent>
 			</Dialog>
 		</>
+	);
+}
+
+function MoreActionsMenu({ children }: { children: ReactNode }) {
+	return (
+		<DropdownMenu>
+			<DropdownMenuTrigger
+				render={
+					<Button
+						variant="outline"
+						size="icon-sm"
+						className="relative z-10"
+						onClick={(e) => e.stopPropagation()}
+					/>
+				}
+			>
+				<IconDots />
+			</DropdownMenuTrigger>
+			<DropdownMenuContent align="end">{children}</DropdownMenuContent>
+		</DropdownMenu>
 	);
 }
 
